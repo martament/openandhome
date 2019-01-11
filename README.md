@@ -1,4 +1,6 @@
 # openandhome
+
+<img src="https://raw.githubusercontent.com/martament/openandhome/master/images/logo.gif">
 Files for Openandhome
 
 We build and deploy sensors and actors on top of:
