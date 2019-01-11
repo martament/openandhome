@@ -1,0 +1,7 @@
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Fr 11. Jan 13:27:35 CET 2019
+
+#Datei mit den Releasesnotes für sonoff

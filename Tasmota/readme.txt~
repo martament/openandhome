@@ -1,0 +1,7 @@
+Meine Anpassungen sind in sonoff/user_config.h
+# In Sonoff-Tasmota ist der Master von GITHUB
+Befehle siehe : https://rogerdudler.github.io/git-guide/index.de.html
+git pull #Änderungen holen
+git pull origin master
+git fetch origin/master #Meine Anpassungen überschreiben. Achtung user_config.h sichern !!!
+

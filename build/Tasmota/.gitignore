@@ -1,0 +1,6 @@
+## Ignore Source-Files from  ########
+Sonoff-Tasmota
+
+
+## Visual Studio Code specific ######
+.vscode

@@ -1,0 +1,58 @@
+#
+# PlatformIO Project Configuration File
+#
+# Please make sure to read documentation with examples first
+# http://docs.platformio.org/en/stable/projectconf.html
+#
+
+#minimal version for esps with 512K or less flash (only has minimal plugin set)
+; [env:mini_512]
+; platform = espressif8266@1.5.0
+; framework = arduino
+; board = esp01
+; upload_speed=460800
+; build_flags = !echo -Wl,-Tesp8266.flash.512k64.ld -D BUILD_GIT=\'\"$(git describe)\"\'
+; # upload_port = /dev/ttyUSB0
+
+# add these:
+# -Werror -Wall -Wextra -pedantic -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op
+#                    -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-null-sentinel
+#                    -Wstrict-overflow=5 -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option
+# thanks @chouffe103
+
+[common]
+build_flags = -D BUILD_GIT='"$(git describe)"' -DUSE_CUSTOM_H
+
+#normal version with stable plugins, 1024k version
+#[env:normal_ESP8266_1024]
+#platform = espressif8266@1.5.0
+#framework = arduino
+#board = esp12e
+#upload_speed=460800
+#build_flags = ${common.build_flags} -Wl,-Tesp8266.flash.1m128.ld
+
+#normal version with stable plugins, 4096k version
+[env:normal_ESP8266_4096]
+platform = espressif8266@1.5.0
+framework = arduino
+board = esp12e
+upload_speed=460800
+build_flags = ${common.build_flags} -Wl,-Tesp8266.flash.4m1m.ld -D FEATURE_ADC_VCC=true
+
+#version with additional plugins (and dependend code) that is in development (probably broken or incomplete) 1024k
+#[env:dev_ESP8266_1024]
+#platform = espressif8266@1.5.0
+#framework = arduino
+#board = esp12e
+#upload_speed=460800
+#build_flags = ${common.build_flags} -Wl,-Tesp8266.flash.1m128.ld -D PLUGIN_BUILD_TESTING -D PLUGIN_BUILD_DEV
+
+#version with additional plugins (and dependend code) that is in development (probably broken or incomplete) 4096k
+[env:dev_ESP8266_4096]
+platform = espressif8266@1.5.0
+framework = arduino
+board = esp12e
+upload_speed=460800
+build_flags = ${common.build_flags} -Wl,-Tesp8266.flash.4m1m.ld -D PLUGIN_BUILD_TESTING -D PLUGIN_BUILD_DEV -D FEATURE_ADC_VCC=true
+#extra_scripts = post:extra_script.py
+#
