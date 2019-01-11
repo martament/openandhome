@@ -1,3 +1,0 @@
-on Wassersensor#Analog>100 do
- notify 1
-endon 
