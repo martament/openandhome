@@ -1,10 +1,4 @@
-#! /bin/bash
-echo "Dieses Skript schiebt die aktuelle Configuration auf den ESPEasy"
-echo
-echo "Leider stellt der ESP-Easy kein so komfortable CMD-Schnittstelle zur Verfügung wie der SONOFF. Daher sind mehrere Manuelle Schritte notwendig."
-echo
-echo "Bitte zuerst den AP setzen mittels: esp_sendap"
-echo "Dann die entsprechende Config laden"
-
-echo "Folgende Befehlskürzel stehen zur Verfügung: "
-alias | grep esp_
+configurations for the openandhome sensors.
+There are two kinds of sensors:
+- mqtt => these configs are for sensors included in a smarthome with mqtt enabled and configured for the openandhome-Server
+- standalone => these confis are for sensors without mqtt and smarthome
