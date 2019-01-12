@@ -39,7 +39,7 @@ then
  else
   cp .pioenvs/normal_ESP8266_4096/firmware.bin ../releases/mega_ESP8266_4096_openandhome.bin
  fi
-mv .pioenvs/normal_ESP8266_4096/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_$my_pfad_normal_ESP8266_4096.bin
+mv .pioenvs/normal_ESP8266_4096/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_mega_normal_ESP8266_4096.bin
 else
 	echo ".pioenvs/normal_ESP8266_4096/firmware.bin nicht gefunden"
 fi

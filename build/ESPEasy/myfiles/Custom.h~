@@ -29,20 +29,13 @@ Your Own Default Settings
 #define DEFAULT_NAME		"NAME_AENDERN"			// Enter your device friendly name
 
 #undef	DEFAULT_SSID
-#define DEFAULT_SSID		"installnetwork"			   // Enter your network SSID
+#define DEFAULT_SSID		""			   // Enter your network SSID
 
 #undef	DEFAULT_KEY
-#define DEFAULT_KEY			"Install@Network"		// Enter your network WPA key
+#define DEFAULT_KEY			""		// Enter your network WPA key
 
 #undef	DEFAULT_AP_KEY
 #define DEFAULT_AP_KEY		"configesp"		// Enter network WPA key for AP (config) mode
-
-#undef DEFAULT_IPRANGE_LOW
-#define DEFAULT_IPRANGE_LOW  "192.168.0.0"          // Allowed IP range to access webserver
-#undef DEFAULT_IPRANGE_HIGH
-#define DEFAULT_IPRANGE_HIGH "192.168.255.255"  // Allowed IP range to access webserver
-#undef DEFAULT_IP_BLOCK_LEVEL
-#define DEFAULT_IP_BLOCK_LEVEL 2                // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2: ONLY_IP_RANGE_ALLOWED
 
 #undef DEFAULT_DELAY
 #define DEFAULT_DELAY       1800                  // Sleep Delay in seconds
