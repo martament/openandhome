@@ -64,7 +64,7 @@ wget -O/dev/null http://$1/cm?cmnd=WebLog%202
 wget -O/dev/null http://$1/cm?cmnd=LedState%200
 wget -O/dev/null http://$1/cm?cmnd=FriendlyName%20$2
 #Client durchstarten um 20 nach 12
-wget -O/dev/null http://$1/cm?cmnd=rule1%20on%20Time%23Minute=10%20do%20restart%201%20endon
+wget -O/dev/null http://$1/cm?cmnd=rule1%20on%20Time%23Minute=345%20do%20restart%201%20endon
 wget -O/dev/null http://$1/cm?cmnd=rule1%20on
 echo "Setzte sonstige Parameter"
 wget -O/dev/null http://$1/cm?cmnd=LogHost%20openhabianpi
