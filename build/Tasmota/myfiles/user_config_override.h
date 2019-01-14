@@ -22,6 +22,7 @@
 
 // force the compiler to show a warning to confirm that this file is inlcuded
 #warning **** user_config_override.h: Using Settings from this File ****
+#warning **** Compile with extensions for openandhome ****
 
 /*****************************************************************************************************\
  * USAGE:
@@ -151,8 +152,8 @@ Examples :
 // -- Time - Start Standard Time and timezone offset from UTC in minutes
 #undef TIME_STD
 #define TIME_STD               North, Last, Sun, Oct, 3, +60   // Northern Hemisphere, Last sunday in october 02:00 +60 minutes
-
-
+// Enable support for rules
+#define USE_RULES          
 // -- Application ---------------------------------
 #undef APP_TIMEZONE
 #define APP_TIMEZONE           1                 // [Timezone] +1 hour (Amsterdam) (-12 .. 12 = hours from UTC, 99 = use TIME_DST/TIME_STD)
@@ -204,33 +205,31 @@ Examples :
 #define WIFI_DNS          MY_DNS                 // If not using DHCP set DNS IP address (might be equal to WIFI_GATEWAY)
 #endif
 
-#ifdef USE_RULES
-#undef  USE_RULES
-#define USE_RULES          / Enable support for rules
-#endif
+
+
 
 
 #undef USE_DOMOTICZ  
 #undef USE_I2C
-#undef USE_DS18x20 
+#define USE_DS18x20 
 // -- Serial sensors ------------------------------
 #undef USE_MHZ19                                // Add support for MH-Z19 CO2 sensor (+2k code)
 #undef USE_SENSEAIR                             // Add support for SenseAir K30, K70 and S8 CO2 sensor (+2k3 code)
-  #undef CO2_LOW              800               // Below this CO2 value show green light (needs PWM or WS2812 RG(B) led and enable with SetOption18 1)
-  #undef CO2_HIGH             1200              // Above this CO2 value show red light (needs PWM or WS2812 RG(B) led and enable with SetOption18 1)
+#undef CO2_LOW              800               // Below this CO2 value show green light (needs PWM or WS2812 RG(B) led and enable with SetOption18 1)
+#undef CO2_HIGH             1200              // Above this CO2 value show red light (needs PWM or WS2812 RG(B) led and enable with SetOption18 1)
 #undef USE_PMS5003                              // Add support for PMS5003 and PMS7003 particle concentration sensor (+1k3 code)
 #undef USE_NOVA_SDS                             // Add support for SDS011 and SDS021 particle concentration sensor (+0k7 code)
 #undef USE_PZEM004T                             // Add support for PZEM004T Energy monitor (+2k code)
 #undef USE_SERIAL_BRIDGE                        // Add support for software Serial Bridge (+0k8 code)
 //#undef USE_SDM120                               // Add support for Eastron SDM120-Modbus energy meter (+1k7 code)
-  #undef SDM120_SPEED         9600              // SDM120-Modbus RS485 serial speed (default: 2400 baud)
+#undef SDM120_SPEED         9600              // SDM120-Modbus RS485 serial speed (default: 2400 baud)
 //#undef USE_SDM630                               // Add support for Eastron SDM630-Modbus energy meter (+2k code)
-  #undef SDM630_SPEED         9600              // SDM630-Modbus RS485 serial speed (default: 9600 baud)
+#undef SDM630_SPEED         9600              // SDM630-Modbus RS485 serial speed (default: 9600 baud)
 
 // -- Low level interface devices -----------------
 #undef USE_IR_REMOTE                            // Send IR remote commands using library IRremoteESP8266 and ArduinoJson (+4k code, 0k3 mem, 48 iram)
 //  #undef USE_IR_HVAC                            // Support for HVAC system using IR (+2k code)
-  #undef USE_IR_RECEIVE                         // Support for IR receiver (+5k5 code, 264 iram)
+#undef USE_IR_RECEIVE                         // Support for IR receiver (+5k5 code, 264 iram)
 
 #undef USE_WS2812                               // WS2812 Led string using library NeoPixelBus (+5k code, +1k mem, 232 iram) - Disable by //
 //  #undef USE_WS2812_DMA                         // DMA supports only GPIO03 (= Serial RXD) (+1k mem). When USE_WS2812_DMA is enabled expect Exceptions on Pow
