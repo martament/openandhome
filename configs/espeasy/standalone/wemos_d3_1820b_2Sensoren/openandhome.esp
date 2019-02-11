@@ -13,7 +13,7 @@
   <td>&nbsp;</td>
   <td>Sensor 1:</td>
   <td>&nbsp;</td>
-  <td>[DS18b20_1#Temperature]</td>
+  <td>[DS18b20#Temperature]</td>
  </tr>
  <tr>
   <br>
@@ -23,7 +23,7 @@
   <td>&nbsp;</td>
   <td>Sensor 2:</td>
   <td>&nbsp;</td>
-  <td>[DS18b20_2#Temperature]</td>
+  <td>[DS18b20_1#Temperature]</td>
  </tr>
 </table>
 <br>
