@@ -1,11 +1,8 @@
 #!/bin/bash
 set -e
-if [[ $1 == "20" ]]
-then
- my_pfad="ESPEasy_20"
-else
- my_pfad="ESPEasy_mega"
-fi
+
+my_pfad="ESPEasy_mega"
+
 
 echo "Creating release from $my_pfad"
 
@@ -24,28 +21,27 @@ cat "$NOTES" >> "$NOTES.new"
 mv "$NOTES.new" "$NOTES"
 cd $my_pfad
 pwd
-if [ -f ".pioenvs/dev_ESP8266_4096/firmware.bin" ]
+if [ -f ".pioenvs/dev_ESP8266_4M/firmware.bin" ]
 then
-	mv .pioenvs/dev_ESP8266_4096/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_$my_pfad_dev_ESP8266_4096.bin
+	mv .pioenvs/dev_ESP8266_4M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_dev_ESP8266_4096.bin
 else
-	echo ".pioenvs/dev_ESP8266_4096/firmware.bin nicht gefunden"
+	echo "No Devel-Firmware"	
+	echo ".pioenvs/dev_ESP8266_4M/firmware.bin not found"
+	echo "No Devel-Firmware"
 fi
 
-if [ -f ".pioenvs/normal_ESP8266_4096/firmware.bin" ]
+if [ -f ".pioenvs/normal_ESP8266_4M/firmware.bin" ]
 then
- if [ $1 == "20" ]
- then
-  cp .pioenvs/normal_ESP8266_4096/firmware.bin ../releases/ESP8266_4096_openandhome.bin
- else
-  cp .pioenvs/normal_ESP8266_4096/firmware.bin ../releases/mega_ESP8266_4096_openandhome.bin
- fi
-mv .pioenvs/normal_ESP8266_4096/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_mega_normal_ESP8266_4096.bin
+  cp .pioenvs/normal_ESP8266_4M/firmware.bin ../releases/ESP8266_4096_openandhome.bin
+  mv .pioenvs/normal_ESP8266_4M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_normal_ESP8266_4096.bin
 else
-	echo ".pioenvs/normal_ESP8266_4096/firmware.bin nicht gefunden"
+	echo "No Normal-Firmware"	
+	echo ".pioenvs/normal_ESP8266_4M/firmware.bin not found"
+	echo "No Normal-Firmware"	
 fi
 
 cd ../releases
 ls -lrtah ./
 echo
-echo "Das aktuelle Release kann mittels flashesp geflashed werden"
+echo "The current Normal-Release can be flashed via flashesp"
 echo
