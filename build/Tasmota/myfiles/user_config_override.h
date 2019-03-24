@@ -55,7 +55,7 @@ Examples :
 #define MY_LANGUAGE            de-DE           // German in Germany
 
 //PROJECT
-#define PROJECT                "sonoff"          // PROJECT is used as the default topic delimiter and OTA file name
+#define PROJECT                "openandhome"          // PROJECT is used as the default topic delimiter and OTA file name
                                                  //   As an IDE restriction it needs to be the same as the main .ino file
 
 #undef SAVE_DATA
@@ -91,7 +91,7 @@ Examples :
 #define MQTT_USER         "openhabian"         // [MqttUser] Optional user
 
 #undef  MQTT_PASS
-#define MQTT_PASS         "openandhome@Raspi"         // [MqttPassword] Optional password
+#define MQTT_PASS         "xxxx"         // [MqttPassword] Optional password
 
 #undef MQTT_BUTTON_RETAIN
 #define MQTT_BUTTON_RETAIN     1                 // [ButtonRetain] Button may send retain flag (0 = off, 1 = on)
