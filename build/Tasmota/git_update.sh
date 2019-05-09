@@ -12,4 +12,4 @@ git config --get remote.origin.url
 git branch
 cd ..
 cp -v myfiles/user_config_override.h Sonoff-Tasmota/sonoff/
-cp -v myfiles/platformio.ini Sonoff-Tasmota/
+#cp -v myfiles/platformio.ini Sonoff-Tasmota/
