@@ -94,11 +94,11 @@ Examples :
 #define MQTT_PASS         "xxxx"         // [MqttPassword] Optional password
 
 #undef MQTT_BUTTON_RETAIN
-#define MQTT_BUTTON_RETAIN     1                 // [ButtonRetain] Button may send retain flag (0 = off, 1 = on)
+#define MQTT_BUTTON_RETAIN     0                 // [ButtonRetain] Button may send retain flag (0 = off, 1 = on)
 #undef MQTT_POWER_RETAIN
-#define MQTT_POWER_RETAIN      1                 // [PowerRetain] Power status message may send retain flag (0 = off, 1 = on)
+#define MQTT_POWER_RETAIN      0                // [PowerRetain] Power status message may send retain flag (0 = off, 1 = on)
 #undef MQTT_SWITCH_RETAIN
-#define MQTT_SWITCH_RETAIN     1                 // [SwitchRetain] Switch may send retain flag (0 = off, 1 = on)
+#define MQTT_SWITCH_RETAIN     0                // [SwitchRetain] Switch may send retain flag (0 = off, 1 = on)
 
 #undef MQTT_FULLTOPIC
 #define MQTT_FULLTOPIC         "%prefix%/%topic%/S20_%06X/" // [FullTopic] Subscribe and Publish full topic name - Legacy topic
@@ -127,7 +127,7 @@ Examples :
 
 // -- Syslog --------------------------------------
 #undef SYS_LOG_HOST
-#define SYS_LOG_HOST           "openandhome"          // [LogHost] (Linux) syslog host
+#define SYS_LOG_HOST           "openhabianpi"          // [LogHost] (Linux) syslog host
 #undef SYS_LOG_PORT
 #define SYS_LOG_PORT           514               // [LogPort] default syslog UDP port
 #undef SYS_LOG_LEVEL
