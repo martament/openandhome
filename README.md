@@ -1,6 +1,6 @@
 # openandhome
 
-<img src="https://raw.githubusercontent.com/martament/openandhome/master/images/logo.gif">
+<a href="https://www.openandhome.de"><img src="https://raw.githubusercontent.com/martament/openandhome/master/images/logo.gif"><a/>
 Files for Openandhome
 
 We build and deploy sensors and actors on top of:
@@ -11,3 +11,5 @@ This Repo is for the following files:
 - scripts for building
 - configs 
 - download of prebuild images
+
+You can find our <a href="https://www.openandhome.de">shop here...</a>
