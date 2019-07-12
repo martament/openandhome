@@ -1,5 +1,5 @@
 #Openandhome
-Witch this file you can configure your sonoff once it is in your network.
+With this file you can configure your sonoff once it is in your network.
 Usage:
 #./set_config_global.sh $IP $ITEMNAME
 
