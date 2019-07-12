@@ -127,7 +127,7 @@ Examples :
 
 // -- Syslog --------------------------------------
 #undef SYS_LOG_HOST
-#define SYS_LOG_HOST           "openandhome"          // [LogHost] (Linux) syslog host
+#define SYS_LOG_HOST           "openhabianpi"          // [LogHost] (Linux) syslog host
 #undef SYS_LOG_PORT
 #define SYS_LOG_PORT           514               // [LogPort] default syslog UDP port
 #undef SYS_LOG_LEVEL
