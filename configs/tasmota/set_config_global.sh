@@ -68,5 +68,5 @@ wget -O/dev/null http://$1/cm?cmnd=rule1%20on%20Time%23Minute=345%20do%20restart
 wget -O/dev/null http://$1/cm?cmnd=rule1%20on
 echo "Setzte sonstige Parameter"
 wget -O/dev/null http://$1/cm?cmnd=LogHost%20openhabianpi
-wget -O/dev/null http://$1/cm?cmnd=OTAUrl%20http://openhabianpi:80/arduino/sonoff-openandhome.bin
+wget -O/dev/null http://$1/cm?cmnd=OTAUrl%20http://openhabianpi/firmware/sonoff-openandhome.bin
 echo "Fertig mit set_config_global.sh"
