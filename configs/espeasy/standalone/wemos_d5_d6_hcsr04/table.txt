@@ -1,0 +1,7 @@
+<table>
+ <tr>
+  <td><img src="distance.png"></td>
+  <td>&nbsp;&nbsp;</td>
+  <td>[HC-SR04#Distance]</td>
+</tr>
+</table>

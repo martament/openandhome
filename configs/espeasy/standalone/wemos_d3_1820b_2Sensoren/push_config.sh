@@ -1,6 +1,8 @@
 #! /bin/bash
 echo "Dieses Skript schiebt die aktuelle Configuration auf den ESP"
 echo "Bitte die IP übergeben"
+echo "Erstelle aktuelle Version des Dashboards"
+cat ../resources/header.txt table.txt ../resources/footer.txt > openandhome.esp
 echo
 echo "Sende Icon und Openandhome-Dashboard"
 curl -v -F Upload=@openandhome.esp http://$1/upload
