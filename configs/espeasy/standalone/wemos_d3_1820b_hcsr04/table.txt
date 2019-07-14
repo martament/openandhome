@@ -1,0 +1,12 @@
+<table>
+ <tr>
+  <td><img src="temperature.png"></td>
+  <td>&nbsp;&nbsp;</td>
+  <td>[DS18b20#Temperature]</td>
+</tr>
+ <tr>
+  <td><img src="distance.png"></td>
+  <td>&nbsp;&nbsp;</td>
+  <td>[HC-SR04#Distance]</td>
+</tr>
+</table>
