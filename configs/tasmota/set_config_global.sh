@@ -31,10 +31,14 @@ wget -O/dev/null http://$1/cm?cmnd=Module%20$l_module
 
 echo
 echo "Setze MQTT-Parameter"
-wget -O/dev/null http://$1/cm?cmnd=PowerRetain%201
-wget -O/dev/null http://$1/cm?cmnd=ButtonRetain%201
-wget -O/dev/null http://$1/cm?cmnd=SensorRetain%201
-wget -O/dev/null http://$1/cm?cmnd=SwitchRetain%201
+
+wget -O/dev/null http://$1/cm?cmnd=PowerRetain%20On
+wget -O/dev/null http://$1/cm?cmnd=ButtonRetain%20On
+wget -O/dev/null http://$1/cm?cmnd=ButtonRetain%20Off
+wget -O/dev/null http://$1/cm?cmnd=SensorRetain%20Off
+#Switch Retain nur on, wenn es ein Door-sensor ist. Sonst off
+wget -O/dev/null http://$1/cm?cmnd=SwitchRetain%20Off
+wget -O/dev/null http://$1/cm?cmnd=PowerOnState%203
 wget -O/dev/null http://$1/cm?cmnd=MqttClient%20$2
 wget -O/dev/null http://$1/cm?cmnd=MqttUser%20openhabian
 wget -O/dev/null http://$1/cm?cmnd=StateText1%20OFF
@@ -49,7 +53,7 @@ echo "Setze MQTT-Host"
 wget -O/dev/null http://$1/cm?cmnd=MqttHost%20openhabianpi
 wget -O/dev/null http://$1/cm?cmnd=MqttPassword%20openandhome@Raspi
 echo "Setze Netzwerk-Parameter"
-wget -O/dev/null http://$1/cm?cmnd=Hostname%20Schaltsteckdose$2
+wget -O/dev/null http://$1/cm?cmnd=Hostname%20Sonoff_$2
 wget -O/dev/null http://$1/cm?cmnd=IPAddress1%200.0.0.0
 wget -O/dev/null http://$1/cm?cmnd=IPAddress2%20192.168.178.1
 wget -O/dev/null http://$1/cm?cmnd=IPAddress3%20255.255.255.0

@@ -1,10 +1,5 @@
 #! /bin/bash
-if [[ $1 == "20" ]]
-then
- my_pfad="ESPEasy_20"
-else
- my_pfad="ESPEasy_mega"
-fi
+ my_pfad="ESPEasy"
 
 echo Mache das Git-Update
 echo
