@@ -53,7 +53,7 @@ echo "Setze MQTT-Host"
 wget -O/dev/null http://$1/cm?cmnd=MqttHost%20openhabianpi
 wget -O/dev/null http://$1/cm?cmnd=MqttPassword%20openandhome@Raspi
 echo "Setze Netzwerk-Parameter"
-wget -O/dev/null http://$1/cm?cmnd=Hostname%20Sonoff_$2
+wget -O/dev/null http://$1/cm?cmnd=Hostname%20Sonoff-$2
 wget -O/dev/null http://$1/cm?cmnd=IPAddress1%200.0.0.0
 wget -O/dev/null http://$1/cm?cmnd=IPAddress2%20192.168.178.1
 wget -O/dev/null http://$1/cm?cmnd=IPAddress3%20255.255.255.0
