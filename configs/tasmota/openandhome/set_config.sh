@@ -16,13 +16,19 @@ fi
 if [[ $3 == "setwifi" ]]; then
  echo "Wir sind in der initialen Konfiguration. Setzen die Wifi-Parameter und brechen dann ab."
  echo "Setze Wifi-Parameter"
- 
+ sleep 1
  wget -O/dev/null http://$1/cm?cmnd=Password%20Install@Network
+ sleep 1
  wget -O/dev/null http://$1/cm?cmnd=Password1%20Install@Network
+ sleep 1
  wget -O/dev/null http://$1/cm?cmnd=Password2%20Install@Network
+ sleep 1
  wget -O/dev/null http://$1/cm?cmnd=SSId%20installnetwork
+ sleep 1
  wget -O/dev/null http://$1/cm?cmnd=SSId1%20installnetwork
+ sleep 1
  wget -O/dev/null http://$1/cm?cmnd=SSId2%20installnetwork
+ sleep 1
  exit
 fi
 
@@ -38,8 +44,9 @@ echo "Lade globale Einstellungen"
 echo
 echo
 
-wget -O/dev/null http://$1/cm?cmnd=MqttHost%20OpenAndHome
-wget -O/dev/null http://$1/cm?cmnd=OTAUrl%20http://OpenAndHome:8080/sonoff-openandhome.bin
-
+echo "Schalte MQTT an"
+sleep 1
+wget -O/dev/null http://$1/cm?cmnd=SetOption3%201
+sleep 1
 wget -O/dev/null http://$1/cm?cmnd=restart%201
 echo "Bin Fertig"
