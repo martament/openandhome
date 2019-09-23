@@ -36,7 +36,7 @@ else:
     "USES_P085",  # AcuDC24x
     "USES_P087",  # Serial Proxy
 
-    "USES_C018"
+    "USE_SETTINGS_ARCHIVE"
   ])
 
 print(env['CPPDEFINES'])
