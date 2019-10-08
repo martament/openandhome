@@ -21,22 +21,22 @@ cat "$NOTES" >> "$NOTES.new"
 mv "$NOTES.new" "$NOTES"
 cd $my_pfad
 pwd
-if [ -f ".pio/build/dev_ESP8266_4M/firmware.bin" ]
+if [ -f ".pio/build/dev_ESP8266_4M1M/firmware.bin" ]
 then
-	mv .pio/build/dev_ESP8266_4M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_dev_ESP8266_4096.bin
+	mv .pio/build/dev_ESP8266_4M1M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_dev_ESP8266_4096.bin
 else
 	echo "No Devel-Firmware"	
 	echo ".pio/build/dev_ESP8266_4M/firmware.bin not found"
 	echo "No Devel-Firmware"
 fi
 
-if [ -f ".pio/build/normal_ESP8266_4M/firmware.bin" ]
+if [ -f ".pio/build/normal_ESP8266_4M1M/firmware.bin" ]
 then
-  cp .pio/build/normal_ESP8266_4M/firmware.bin ../releases/ESP8266_4096_openandhome.bin
-  mv .pio/build/normal_ESP8266_4M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_normal_ESP8266_4096.bin
+  cp .pio/build/normal_ESP8266_4M1M/firmware.bin ../releases/ESP8266_4096_openandhome.bin
+  mv .pio/build/normal_ESP8266_4M1M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_normal_ESP8266_4096.bin
 else
 	echo "No Normal-Firmware"	
-	echo ".pio/build/normal_ESP8266_4M/firmware.bin not found"
+	echo ".pio/build/normal_ESP8266_4M1M/firmware.bin not found"
 	echo "No Normal-Firmware"	
 fi
 
