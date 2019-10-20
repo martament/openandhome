@@ -306,5 +306,4 @@ Examples :
 // +++ ENDE von Abschnitt 2 (SECTION 2)                                                     +++
 // +++ Folgende Zeilen nicht aendern                                                        +++
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-./
 #endif  // _USER_CONFIG_OVERRIDE_H_
