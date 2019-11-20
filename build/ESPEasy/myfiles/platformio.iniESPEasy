@@ -498,17 +498,17 @@ debug_extra_cmds          = break Misc.ino:3011
 ;lib_deps                  = ${core_esp32.lib_deps}
 ;lib_ignore                = ${core_esp32.lib_ignore}
 
-[env:esp32test_1M8_partition]
-platform                  = ${core_esp32.platform}
-build_unflags             = ${core_esp32.build_unflags}
-build_flags               = ${core_esp32.build_flags}  -DPLUGIN_SET_TEST_ESP32
-lib_deps                  = ${core_esp32.lib_deps}
-lib_ignore                = ${core_esp32.lib_ignore}
-board                     = esp32dev
-board_build.partitions    = esp32_partition_app1810k_spiffs316k.csv
-board_build.f_flash       = 80000000L
-board_build.flash_mode    = dout
-board_upload.maximum_size = 1900544
+;[env:esp32test_1M8_partition]
+;platform                  = ${core_esp32.platform}
+;build_unflags             = ${core_esp32.build_unflags}
+;build_flags               = ${core_esp32.build_flags}  -DPLUGIN_SET_TEST_ESP32
+;lib_deps                  = ${core_esp32.lib_deps}
+;lib_ignore                = ${core_esp32.lib_ignore}
+;board                     = esp32dev
+;board_build.partitions    = esp32_partition_app1810k_spiffs316k.csv
+;board_build.f_flash       = 80000000L
+;board_build.flash_mode    = dout
+;board_upload.maximum_size = 1900544
 
 
 
