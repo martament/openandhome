@@ -1,7 +1,6 @@
-<table>
-    <tr>
+<table id="sensordata" >
+ <tr>
     <td><img src="temperature.png"></td>
-    <td>&nbsp;&nbsp;</td>
     <td>[DS18b20#Temperature]</td>
     </tr>
 </table>
