@@ -86,12 +86,12 @@ Your Own Default Settings
 #undef BUILD_GIT
 #endif
 
-#define BUILD_GIT "openandhome 0.2"
+#define BUILD_GIT "openandhome 0.3"
 
 //MQTT-Retain um nach einem Neustart die Werte zu behalten
 #undef DEFAULT_MQTT_RETAIN 
 #define DEFAULT_MQTT_RETAIN                     true   // (true|false) Retain MQTT messages?
 
-// Strommessung an ADC ermöglichen
-//#undef FEATURE_ADC_VCC
-//#define FEATURE_ADC_VCC						true
+//Suport für TEMP/Feuchtesensor AM2320(b)
+#undef USES_P051
+#define USES_P051   // AM2320

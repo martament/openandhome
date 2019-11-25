@@ -18,4 +18,4 @@ git branch
 cd ..
 cp -v myfiles/.gitignore$my_pfad ./$my_pfad/.gitignore
 #cp -v myfiles/platformio.ini$my_pfad ./$my_pfad/platformio.ini
-cp -v myfiles/Custom.h$mypfad ./$my_pfad/src/Custom.h
+cp -v myfiles/Custom.h$my_pfad ./$my_pfad/src/Custom.h
