@@ -1,0 +1,26 @@
+<table id="sensordata" >
+ <tr>
+  <td>Sensor 1:</td>
+  <td><img src="temperature.png"></td>
+  <td>Temperatur:</td>
+  <td>[AM2320#Temperature]</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td><img src="humidity.png"></td>
+  <td>Luftfeuchtigkeit:</td>
+  <td>[AM2320#Humidity]</td>
+ </tr>
+ <tr>
+  <td>Sensor 2:</td>
+  <td><img src="temperature.png"></td>
+  <td>Temperatur:</td>
+  <td>[AM2320_1#Temperature]</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td><img src="humidity.png"></td>
+  <td>Luftfeuchtigkeit:</td>
+  <td>[AM2320_1#Humidity]</td>
+ </tr>
+</table>
