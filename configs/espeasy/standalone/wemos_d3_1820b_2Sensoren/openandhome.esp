@@ -1,33 +1,44 @@
 <!DOCTYPE html>
 <HTML lang="de">
+<link rel="icon" type="image/png" href="/openandhome_32.png" sizes="32x32">
 <meta name="viewport" content="width=width=device-width, initial-scale=1">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <STYLE>
     * {font-family:sans-serif; font-size:14pt;}
+	h1 img     {
+	    vertical-align: middle;
+	    margin-left: 15px;
+	}  
+    H1 { text-align: center;  margin-top: 15px; margin-bottom: 30px;}
     .button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}
+	#sensordata {
+	  border-collapse: collapse;
+	  width: 90%;
+	  margin-right: auto;
+	  margin-left: auto;
+	  margin-bottom: 60px;
+	}
+	#sensordata td {
+	  border: 1px solid #ddd;
+	  padding: 8px;
+	}
+	#sensordata tr:nth-child(odd){background-color: #f2f2f2;}
+	#sensordata tr:hover {background-color: #ddd;}
+
 </STYLE>
-<h1> Dashboard Openandhome-Temperatursensor</h1>
-<br><br>
-<table id="Sensordata" width="350" border="0" cellspacing="0" cellpadding="0">
- <tr bgcolor="e6e2e3">
-  <td><img src="temperature.png"></td>
-  <td>&nbsp;</td>
+<h1>Dashboard Openandhome-%sysname%<img src="openandhome_32.png" alt="Logo Openandhome"/></h1>
+<table id="sensordata" >
+ <tr>
   <td>Sensor 1:</td>
-  <td>&nbsp;</td>
+  <td><img src="temperature.png"></td>
   <td>[DS18b20#Temperature]</td>
  </tr>
  <tr>
-  <br>
- </tr>
- <tr bgcolor="f7f3f4">
-  <td><img src="temperature1.png"></td>
-  <td>&nbsp;</td>
   <td>Sensor 2:</td>
-  <td>&nbsp;</td>
+  <td><img src="temperature1.png"></td>
   <td>[DS18b20_1#Temperature]</td>
  </tr>
 </table>
-<br><br><br><br>
 <p>Supportanfrage via Mail stellen: <a href="mailto:info@openandhome.de?subject=Supportanfrage%20zu%20TemperaturSensor">info@openandhome.de</a> </p>
 <p>Webseite und Shop: <a href="https://www.openandhome.de">https://www.openandhome.de</a> </p>
 <p>Handbücher und Anleitungen: <a href="https://github.com/martament/openandhome/tree/master/docs">Anleitungen</a> </p>
