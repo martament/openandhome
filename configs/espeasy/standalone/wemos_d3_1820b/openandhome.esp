@@ -26,7 +26,7 @@
 	#sensordata tr:hover {background-color: #ddd;}
 
 </STYLE>
-<h1>Dashboard Openandhome-Temperatursensor <img src="openandhome_32.png" alt="Logo Openandhome"/></h1>
+<h1>Dashboard Openandhome-%sysname%<img src="openandhome_32.png" alt="Logo Openandhome"/></h1>
 <table id="sensordata" >
  <tr>
     <td><img src="temperature.png"></td>

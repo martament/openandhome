@@ -6,11 +6,11 @@ cd Sonoff-Tasmota
 #Upgrading und updating
 platformio upgrade
 platformio update
-platformio run --target clean --environment sonoff-DE
+platformio run --target clean --environment tasmota-DE
 echo "*********************************************"
 echo "Normal/Standard-Build of Sonoff"
 echo "*********************************************"
-platformio run --environment sonoff-DE
+platformio run --environment tasmota-DE
 
 echo "*********************************************"
 echo "Normal/Standard-Build "

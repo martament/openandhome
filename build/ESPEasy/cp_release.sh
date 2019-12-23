@@ -26,7 +26,7 @@ then
 	mv .pio/build/dev_ESP8266_4M1M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_dev_ESP8266_4096.bin
 else
 	echo "No Devel-Firmware"	
-	echo ".pio/build/dev_ESP8266_4M/firmware.bin not found"
+	echo ".pio/build/dev_ESP8266_4M1/firmware.bin not found"
 	echo "No Devel-Firmware"
 fi
 
@@ -43,5 +43,5 @@ fi
 cd ../releases
 ls -lrtah ./
 echo
-echo "The current Normal-Release can be flashed via flashesp"
+echo "The current Normal-Release can be flashed via flash_espstable"
 echo
