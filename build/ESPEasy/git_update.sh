@@ -1,5 +1,5 @@
 #! /bin/bash
- my_pfad="ESPEasy"
+my_pfad="ESPEasy"
 
 echo Mache das Git-Update
 echo
