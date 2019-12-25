@@ -4,4 +4,4 @@ Flashing is at your own risk.
 Make a backup of your settings !!!!!!
 
 openandhome_stable.bin => This is the tested Software. This Version is delivered with our Sensors
-openandhome_devel.bin => This is the bleeding Edge of our Development. Flash this ones at your own risk.
+openandhome_devel.bin => This is the bleeding edge of our development
