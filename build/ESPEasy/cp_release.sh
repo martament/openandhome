@@ -32,7 +32,7 @@ fi
 
 if [ -f ".pio/build/normal_ESP8266_4M1M/firmware.bin" ]
 then
-  cp .pio/build/normal_ESP8266_4M1M/firmware.bin ../releases/ESP8266_4096_openandhome.bin
+  cp .pio/build/normal_ESP8266_4M1M/firmware.bin ../releases/openandhome_devel.bin
   mv .pio/build/normal_ESP8266_4M1M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_normal_ESP8266_4096.bin
 else
 	echo "No Normal-Firmware"	
