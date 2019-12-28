@@ -59,10 +59,17 @@ Your Own Default Settings
 //#define DEFAULT_SUB         "schaltsteckdosen/%sysname%/#" // Enter your sub
 
 #undef DEFAULT_SERVER
-#define DEFAULT_SERVER      "openhabianpi"       // Enter your Server IP address
+#define DEFAULT_SERVER      "openandhome-server"       // Enter your Server IP address
 
 #undef DEFAULT_PROTOCOL
 #define DEFAULT_PROTOCOL    5                   // Protocol used for controller communications
+
+//Loglevel
+#define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
+#define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
+
 
 // Advanced Settings
 #undef DEFAULT_USE_RULES
@@ -79,14 +86,14 @@ Your Own Default Settings
 #define DEFAULT_USE_DST				true	// (true|false) Use Daily Time Saving
 
 #undef BUILD_NOTES
-#define BUILD_NOTES                 " - stable"
+#define BUILD_NOTES                 " - devel"
 
 
 #ifdef BUILD_GIT
 #undef BUILD_GIT
 #endif
 
-#define BUILD_GIT "openandhome 0.3"
+#define BUILD_GIT "openandhome 0.4"
 
 //MQTT-Retain um nach einem Neustart die Werte zu behalten
 #undef DEFAULT_MQTT_RETAIN 
