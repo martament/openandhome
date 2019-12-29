@@ -10,6 +10,7 @@ cp -v $my_pfad/.gitignore myfiles/.gitignore$my_pfad
 cp -v $my_pfad/platformio.ini myfiles/platformio.ini$my_pfad
 cp -v $my_pfad/src/Custom.h myfiles/Custom.h$my_pfad
 cd $my_pfad
+git diff src > ../myfiles/git_diff.patch
 git reset --hard
 git pull
 echo "Wir verwenden den folgenden Branch"
