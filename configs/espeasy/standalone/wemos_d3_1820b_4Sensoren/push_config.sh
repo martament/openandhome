@@ -10,6 +10,6 @@ curl -v -F Upload=@../resources/temperature.png http://$1/upload
 curl -v -F Upload=@../resources/temperature1.png http://$1/upload
 curl -v -F Upload=@../resources/openandhome_32.png http://$1/upload
 echo "Sende Config"
-curl -v -F Upload=@config.dat http://$1/upload
+curl -v -F Upload=@../resources/config.dat http://$1/upload
 echo 
 echo "Bitte daran denken noch die Adresse des Sensors unter device auszuwählen"
