@@ -11,4 +11,10 @@
   <td>Luftfeuchtigkeit:</td>
   <td>[SI7021#Humidity]</td>
  </tr>
+ <tr>
+  <td>Sensor 2:</td>
+  <td><img src="temperature.png"></td>
+  <td>Temperatur:</td>
+  <td>[DS18b20#Temperature]</td>
+ </tr>
 </table>
