@@ -11,7 +11,9 @@ cp -v $my_pfad/platformio.ini myfiles/platformio.ini$my_pfad
 cp -v $my_pfad/src/Custom.h myfiles/Custom.h$my_pfad
 cd $my_pfad
 git diff src > ../myfiles/git_diff.patch
-git reset --hard
+#git reset --hard
+#reset hard nicht nötig. Habe mit git checkout -b f-standalone-webserver und git branch -u origin/mega 
+#den Branch so erstellt, dass er meine Änderungen hat und dem Remote-Mega folgt.
 git pull
 echo "Wir verwenden den folgenden Branch"
 git config --get remote.origin.url
