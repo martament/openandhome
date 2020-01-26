@@ -28,14 +28,6 @@ Your Own Default Settings
 #undef	DEFAULT_NAME
 #define DEFAULT_NAME		"NAME_AENDERN"			// Enter your device friendly name
 
-#undef	DEFAULT_SSID
-#define DEFAULT_SSID		"installnetwork"			   // Enter your network SSID
-
-#undef	DEFAULT_KEY
-#define DEFAULT_KEY			"Install@Network"		// Enter your network WPA key
-
-#undef	DEFAULT_AP_KEY
-#define DEFAULT_AP_KEY		"configesp"		// Enter network WPA key for AP (config) mode
 
 #undef DEFAULT_IPRANGE_LOW
 #define DEFAULT_IPRANGE_LOW  "192.168.0.0"          // Allowed IP range to access webserver
@@ -58,14 +50,27 @@ Your Own Default Settings
 #define DEFAULT_SUB         "sensoren/%sysname%/#" // Enter your sub
 //#define DEFAULT_SUB         "schaltsteckdosen/%sysname%/#" // Enter your sub
 
-#undef DEFAULT_SERVER
-#define DEFAULT_SERVER      "openandhome-server"       // Enter your Server IP address
+//#undef DEFAULT_SERVER
+//#define DEFAULT_SERVER      ""       // Enter your Server IP address
 
-#undef DEFAULT_PROTOCOL
-#define DEFAULT_PROTOCOL    5                   // Protocol used for controller communications
+#define DEFAULT_SERVER_HOST "openandhome-server"                         // Server hostname
+#define DEFAULT_SERVER_USEDNS true                                       // true: Use hostname.  false: use IP
 
+#define DEFAULT_PORT        1883                                            // Enter your Server port value
+
+#define DEFAULT_PROTOCOL    5                                               // Protocol used for controller communications
+                                                                            //   0 = Stand-alone (no controller set)
+                                                                            //   1 = Domoticz HTTP
+                                                                            //   2 = Domoticz MQTT
+                                                                            //   3 = Nodo Telnet
+                                                                            //   4 = ThingSpeak
+                                                                            //   5 = Home Assistant (openHAB) MQTT
+                                                                            //   6 = PiDome MQTT
+                                                                            //   7 = EmonCMS
+                                                                            //   8 = Generic HTTP
+                                                                            //   9 = FHEM HTTP
 //Loglevel
-#define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
+#define DEFAULT_SYSLOG_IP                       ""   // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
