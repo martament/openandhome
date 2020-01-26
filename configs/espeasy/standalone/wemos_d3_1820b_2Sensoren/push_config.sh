@@ -13,3 +13,4 @@ echo "Sende Config"
 curl -v -F Upload=@../resources/config.dat http://$1/upload
 echo 
 echo "Bitte daran denken noch die Adresse des Sensors unter device auszuwählen"
+echo "reboot" >  /dev/ttyUSB0
