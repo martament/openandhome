@@ -91,14 +91,14 @@ Examples :
 
 // -- Ota -----------------------------------------
 #undef OTA_URL
-#define OTA_URL                "https://github.com/martament/openandhome/blob/master/build/Tasmota/releases/sonoff-openandhome.bin"  // [OtaUrl]
+#define OTA_URL                "https://github.com/martament/openandhome/blob/master/build/Tasmota/releases/tasmota-openandhome.bin"  // [OtaUrl]
 
 // -- Setup your own MQTT settings  ---------------
 // Disable MQTT per default
 #undef  MQTT_USE                            // +++ mit '0' ist MQTT beim Start deaktiviert
 #define MQTT_USE          0                 // [SetOption3] Select default MQTT use (0 = Off, 1 = On)
 #undef  MQTT_HOST
-#define MQTT_HOST         "openhabianpi" // [MqttHost]
+#define MQTT_HOST         "openandhome-server" // [MqttHost]
 
 #undef  MQTT_PORT
 #define MQTT_PORT         1883                   // [MqttPort] MQTT port (10123 on CloudMQTT)
@@ -142,7 +142,7 @@ Examples :
 
 // -- Syslog --------------------------------------
 #undef SYS_LOG_HOST
-#define SYS_LOG_HOST           "openhabianpi"          // [LogHost] (Linux) syslog host
+#define SYS_LOG_HOST           "openandhome-server"          // [LogHost] (Linux) syslog host
 #undef SYS_LOG_PORT
 #define SYS_LOG_PORT           514               // [LogPort] default syslog UDP port
 #undef SYS_LOG_LEVEL
@@ -231,15 +231,15 @@ Examples :
 
 
 
-//#undef USE_ARDUINO_OTA                        // Disable support for Arduino OTA
-//#undef USE_WPS                                // Disable support for WPS as initial wifi configuration tool
+#undef USE_ARDUINO_OTA                        // Disable support for Arduino OTA
+#undef USE_WPS                                // Disable support for WPS as initial wifi configuration tool
 //#undef USE_SMARTCONFIG                        // Disable support for Wifi SmartConfig as initial wifi configuration tool
-//#undef USE_DOMOTICZ                           // Disable Domoticz
-//#undef USE_HOME_ASSISTANT                     // Disable Home Assistant
-//#undef USE_MQTT_TLS                           // Disable TLS support won't work as the MQTTHost is not set
-//#undef USE_KNX                                // Disable KNX IP Protocol Support
+#undef USE_DOMOTICZ                           // Disable Domoticz
+#undef USE_HOME_ASSISTANT                     // Disable Home Assistant
+#undef USE_MQTT_TLS                           // Disable TLS support won't work as the MQTTHost is not set
+#undef USE_KNX                                // Disable KNX IP Protocol Support
 //#undef USE_WEBSERVER                          // Disable Webserver
-//#undef USE_EMULATION                          // Disable Wemo or Hue emulation
+#undef USE_EMULATION                          // Disable Wemo or Hue emulation
 //#undef USE_CUSTOM                             // Disable Custom features
 //#undef USE_DISCOVERY                          // Disable Discovery services for both MQTT and web server
 //#undef USE_TIMERS                             // Disable support for up to 16 timers
@@ -261,7 +261,7 @@ Examples :
 #undef USE_SDM120                             // Disable support for Eastron SDM120-Modbus energy meter
 #undef USE_SDM630                             // Disable support for Eastron SDM630-Modbus energy meter
 #undef USE_MP3_PLAYER                         // Disable DFPlayer Mini MP3 Player RB-DFR-562 commands: play, volume and stop
-//#undef USE_TUYA_DIMMER                        // Disable support for Tuya Serial Dimmer
+#undef USE_TUYA_DIMMER                        // Disable support for Tuya Serial Dimmer
 #undef USE_ARMTRONIX_DIMMERS                  // Disable support for Armtronix Dimmers (+1k4 code)
 #undef USE_PS_16_DZ                           // Disable support for PS-16-DZ Dimmer and Sonoff L1 (+2k code)
 #undef USE_AZ7798                             // Disable support for AZ-Instrument 7798 CO2 datalogger
@@ -269,7 +269,7 @@ Examples :
 #undef USE_PZEM004T                           // Disable PZEM004T energy sensor
 #undef USE_PZEM_AC                            // Disable PZEM014,016 Energy monitor
 #undef USE_PZEM_DC                            // Disable PZEM003,017 Energy monitor
-//#undef USE_MCP39F501                          // Disable MCP39F501 Energy monitor as used in Shelly 2
+#undef USE_MCP39F501                          // Disable MCP39F501 Energy monitor as used in Shelly 2
 //#undef USE_DHT                                // Disable support for DHT11, AM2301 (DHT21, DHT22, AM2302, AM2321) and SI7021 Temperature and Humidity sensor
 #undef USE_MAX31855                           // Disable MAX31855 K-Type thermocouple sensor using softSPI
 #undef USE_IR_REMOTE                          // Disable IR driver
@@ -284,8 +284,8 @@ Examples :
 #undef USE_RF_SENSOR                          // Disable support for RF sensor receiver (434MHz or 868MHz) (+0k8 code)
 #undef USE_SM16716                            // Disable support for SM16716 RGB LED controller (+0k7 code)
 #undef USE_HRE                                // Disable support for Badger HR-E Water Meter (+1k4 code)
-//#undef DEBUG_THEO                             // Disable debug code
-//#undef USE_DEBUG_DRIVER                       // Disable debug code
+#undef DEBUG_THEO                             // Disable debug code
+#undef USE_DEBUG_DRIVER                       // Disable debug code
 
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

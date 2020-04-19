@@ -1,0 +1,19 @@
+diff --git a/wled00/NpbWrapper.h b/wled00/NpbWrapper.h
+index 71367d9..ca71044 100644
+--- a/wled00/NpbWrapper.h
++++ b/wled00/NpbWrapper.h
+@@ -56,10 +56,10 @@
+     #define IR_PIN  0 //infrared pin (-1 to disable)  MagicHome: 4, H801 Wifi: 0
+   #else
+   //PWM pins - PINs 5,12,13,15 are used with Magic Home LED Controller
+-    #define RPIN 5   //R pin for analog LED strip   
+-    #define GPIN 12   //G pin for analog LED strip
+-    #define BPIN 15   //B pin for analog LED strip
+-    #define WPIN 13   //W pin for analog LED strip 
++    #define RPIN 12  //R pin for analog LED strip   
++    #define GPIN 4   //G pin for analog LED strip
++    #define BPIN 14   //B pin for analog LED strip
++    #define WPIN 5   //W pin for analog LED strip 
+   #endif
+   #undef RLYPIN
+   #define RLYPIN -1 //disable as pin 12 is used by analog LEDs
