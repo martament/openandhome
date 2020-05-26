@@ -8,7 +8,7 @@ cd Sonoff-Tasmota
 #platformio update
 git pull
 export PLATFORMIO_BUILD_FLAGS='-DUSE_CONFIG_OVERRIDE'
-platformio run --target clean --environment tasmota-DE
+platformio run --target clean 
 echo "*********************************************"
 echo "Normal/Standard-Build of Sonoff"
 echo "*********************************************"
