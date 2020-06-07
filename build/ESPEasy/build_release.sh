@@ -5,13 +5,16 @@ echo "Setting environment"
 cd ESPEasy
 platformio run --target clean
 echo "*********************************************"
-echo "Normal/Standard-Build and Devel-Build"
+echo "Normal-Build"
 echo "*********************************************"
 platformio run --environment normal_ESP8266_4M1M
+#echo "*********************************************"
+#echo "Devel-Build"
+#echo "*********************************************"
 #platformio run --environment normal_ESP8266_4M1M --environment dev_ESP8266_4M1M
 
 echo "*********************************************"
-echo "Normal/Standard-Build and Devel-Build"
+echo "ready with Build"
 echo "*********************************************"
 
 

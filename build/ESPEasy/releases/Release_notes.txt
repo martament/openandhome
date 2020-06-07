@@ -2,6 +2,56 @@
 Neues Release wurde erzeugt
 -------------------------------------------------
 
+Release date: So 7. Jun 11:04:18 CEST 2020
+
+'./.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20200607_normal_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+umbenannt './.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20200607_normal_ESP8266_4M1M.bin' -> '../releases/20200607110418_normal_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: So 7. Jun 11:02:58 CEST 2020
+
+'./build_output/bin/ESP_Easy_mega_20200606_normal_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+umbenannt './build_output/bin/ESP_Easy_mega_20200606_normal_ESP8266_4M1M.bin' -> '../releases/20200607110258_normal_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: So 7. Jun 11:02:00 CEST 2020
+
+'./build_output/bin/ESP_Easy_mega_20200607_normal_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+umbenannt './build_output/bin/ESP_Easy_mega_20200607_normal_ESP8266_4M1M.bin' -> '../releases/20200607110200_normal_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: So 7. Jun 10:59:22 CEST 2020
+
+'./.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20200607_normal_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+umbenannt './.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20200607_normal_ESP8266_4M1M.bin' -> '../releases/20200607105922_normal_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: So 7. Jun 10:57:39 CEST 2020
+
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 6. Jun 12:50:48 CEST 2020
+
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
 Release date: Fr 6. Mär 20:33:38 CET 2020
 
 
