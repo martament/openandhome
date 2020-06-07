@@ -4,40 +4,38 @@ set -e
 my_pfad="ESPEasy"
 
 
-echo "Creating release from $my_pfad"
 
-
-############## update Release_notes.txt
-NOTES="releases/Release_notes.txt"
-echo "-------------------------------------------------" > "$NOTES.new"
-echo "Neues Release wurde erzeugt" >> "$NOTES.new"
-echo "Release ist für $my_pfad"
-echo "-------------------------------------------------" >> "$NOTES.new"
-echo -e "\nRelease date: `date`\n" >> "$NOTES.new"
-
-
-echo >> "$NOTES.new"
-cat "$NOTES" >> "$NOTES.new"
-mv "$NOTES.new" "$NOTES"
-cd $my_pfad
 pwd
-if [ -f ".pio/build/dev_ESP8266_4M1M/firmware.bin" ]
-then
-	mv .pio/build/dev_ESP8266_4M1M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_dev_ESP8266_4096.bin
-else
-	echo "No Devel-Firmware"	
-	echo ".pio/build/dev_ESP8266_4M1/firmware.bin not found"
-	echo "No Devel-Firmware"
-fi
+cd $my_pfad
 
-if [ -f ".pio/build/normal_ESP8266_4M1M/firmware.bin" ]
+#Search for firmware...
+buildfile=`find . -type f -name '*ESP8266*bin'| xargs ls | tail -n 1`
+
+if [ -f $buildfile ]
 then
-  cp .pio/build/normal_ESP8266_4M1M/firmware.bin ../releases/openandhome_devel.bin
-  mv .pio/build/normal_ESP8266_4M1M/firmware.bin ../releases/`date '+%Y%m%d%H%M%S'`_normal_ESP8266_4096.bin
+
+	############## update Release_notes.txt
+	echo "*********************************************************"
+	echo "Creating release from $my_pfad"
+	NOTES="../releases/Release_notes.txt"
+	echo "-------------------------------------------------" > "$NOTES.new"
+	echo "Neues Release wurde erzeugt" >> "$NOTES.new"
+	echo "Release ist für $my_pfad"
+	echo "-------------------------------------------------" >> "$NOTES.new"
+	echo -e "\nRelease date: `date`\n" >> "$NOTES.new"
+	############## update Release_notes.txt
+	#Move files
+  	echo "found $buildfile moving it...."
+  	cp -av $buildfile ../releases/openandhome_devel.bin | tee >> "$NOTES.new"
+ 	mv -v $buildfile ../releases/`date '+%Y%m%d%H%M%S'`_normal_ESP8266_4M1M.bin | tee >> "$NOTES.new"
+	echo >> "$NOTES.new"
+	cat "$NOTES" >> "$NOTES.new"
+	mv "$NOTES.new" "$NOTES"
+	echo "*********************************************************"
 else
-	echo "No Normal-Firmware"	
-	echo ".pio/build/normal_ESP8266_4M1M/firmware.bin not found"
-	echo "No Normal-Firmware"	
+	echo "*********************************************************"
+	echo "No firmware found"
+	echo "*********************************************************"
 fi
 
 cd ../releases
