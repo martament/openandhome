@@ -7,6 +7,8 @@
 @echo "Sie muessen den Sensor danach erneut in Ihr WLAN einbinden." 
 @echo "Achten Sie drauf, dass sich die Datei SerialSend.exe im gleichen Verzeichnis befindet." 
 @echo "" 
+@echo "Der Sensor muss mit dem Rechner über USB verbunden sein." 
+@echo "" 
 @echo "Druecken Sie eine beliebige Taste . . ." 
 pause
 SerialSend.exe /baudrate 115200 /closedelay 500 /hex "WifiSSID ssid\r\n" 
