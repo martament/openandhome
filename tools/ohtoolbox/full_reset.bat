@@ -4,6 +4,7 @@
 @echo "Sie muessen den Sensor danach erneut von Grund auf konfigurieren." 
 @echo "" 
 @echo "Achten Sie drauf, dass sich die Datei SerialSend.exe im gleichen Verzeichnis befindet." 
+@echo "Der Sensor muss mit dem Rechner über USB verbunden sein." 
 @echo "" 
 @echo "..." 
 @echo "Sie sollten genau wissen was Sie tun." 
