@@ -13,7 +13,7 @@ Sie benötigen diese Programme nur, wenn bei Ihnen in der Konfiguration des Sens
 
 # https://www.openandhome.de/index.php/ufaqs/ich-habe-ein-problem-mit-meinem-sensor-was-kann-ich-tun/ 
 
-1. openandhome-debugger.exe
+1. openandhome-debugger.exe (Standardprogramm)
 Dies ist ein grafisches Programm mit dem Sie im Fehlerfall mehrere Möglichkeiten haben. Sie sollten dieses Programm wann immer möglich nutzen.
 
 #  **Debugger** hier koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen.
@@ -21,9 +21,9 @@ Dies ist ein grafisches Programm mit dem Sie im Fehlerfall mehrere Möglichkeite
 # **ResetWifi** hier koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden.
 # **ResetAdmin** hier koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen.
 
-2. reset_openandhome.bat
+2. reset_openandhome.bat (obsolet)
 
-Dies ist der Vorgeher des grafischen Debuggers. 
+Dies ist der Vorgängerer des grafischen Debuggers. 
 
 Achten Sie bitte darauf, dass die Datei SerialSend.exe bei Windows im gleichen Verzeichnis ist.
 Ebenso muss der Sensor mit dem Rechner über USB verbunden sein.
@@ -31,7 +31,7 @@ Ebenso muss der Sensor mit dem Rechner über USB verbunden sein.
 Mit dem Programm reset_openandhome.bat können Sie die Einstellungen des Sensors auf den Auslieferungszustand zurück setzen. 
 Es werden die WIFI-Zugangsdaten und das Zugangspasswort auf den Auslieferungszustand gesetzt. 
 
-3. full_reset.bat
+3. full_reset.bat (Nur im Notfall)
 
 Dieses Tool bitte nur im Notfall benutzen.
 
