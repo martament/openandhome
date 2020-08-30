@@ -9,7 +9,9 @@ Lesen Sie dazu bitte auch die FAQs auf unserer Homepage
 # https://www.openandhome.de/index.php/ufaqs/ich-moechte-die-konfiguration-aendern-ist-dies-moeglich/ 
 
 
-Sie benötigen diese Programme nur, wenn bei Ihnen in der Konfiguration des Sensors etwas nicht funktioniert wie es sollte. Wir können nicht jede Änderung am Sensor mit unserem Support abdecken. Gleichwohl unterstützen wir mit unserem offenen Ansatz Sie bei Ihren Versuchen. D.h. Sie können uns jederzeit den Sensor zusenden und wir stellen den Ausliefgerungszustand wieder her.
+Sie benötigen diese Programme nur, wenn bei Ihnen in der Konfiguration des Sensors etwas nicht funktioniert wie es sollte. Wir können nicht jede Änderung am Sensor mit unserem Support abdecken. Gleichwohl unterstützen wir mit unserem offenen Ansatz Sie bei Ihren Versuchen.
+
+D.h. Sie können unseren Debugger versuchen und sollte der Ihre Problem nicht lösen, so können Sie uns jederzeit den Sensor zusenden und wir stellen den Ausliefgerungszustand wieder her.
 
 # https://www.openandhome.de/index.php/ufaqs/ich-habe-ein-problem-mit-meinem-sensor-was-kann-ich-tun/ 
 
