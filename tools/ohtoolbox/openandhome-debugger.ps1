@@ -8,7 +8,7 @@ $msg = "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Debugge
 
 
 function read-com {
-    [System.Windows.Forms.MessageBox]::Show("Es werden die Debugausgaben des Sensors in die Datei oh-debug.txt im aktuellen Verzeichnis geschrieben. Trennen Sie den Sensor vom Rechner um die Aufzeichnung zu beenden.","Titel",0)
+    [System.Windows.Forms.MessageBox]::Show("Es werden die Debugausgaben des Sensors in die Datei oh-debug.txt im aktuellen Verzeichnis geschrieben. Trennen Sie den Sensor vom Rechner um die Aufzeichnung zu beenden. Die dann erscheinende Fehlermeldung koennen Sie ignorieren. In der Datei sind auch die WIFI-Zugangsdaten. Loeschen Sie evtl. das Passwort vor dem Versand aus der Datei.","Debugging",0)
     $text = 'Wir schreiben die Ausgabe des Sensors in die Datei oh-debug.txt.'
     $text | Out-File -FilePath .\oh-debug.txt
     Get-Date | Out-File -FilePath .\oh-debug.txt -Append -NoNewline
