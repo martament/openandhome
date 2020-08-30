@@ -1,7 +1,7 @@
 $COM = [System.IO.Ports.SerialPort]::getportnames()
 
 $msg = "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Debuggers angeschlossen ist." + 
-"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **Debugger** koennen Sie die Ausgaben des Sensors anzeigen lassen." +
+"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **Debugger** koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen." +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetDHCP** koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. " +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetWifi** koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden." +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetAdmin** koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen." 
