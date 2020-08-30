@@ -10,7 +10,12 @@ Es werden die WIFI-Zugangsdaten und das Zugangspasswort auf den Auslieferungszus
 
 full_reset.bat:
 
+Dieses Tool bitte nur im Notfall benutzen.
+
 Mit diesem Programm können Sie den Sensor vollständig zurück setzen. Es werden alle Einstellungen des Sensor gelöscht.
+
+Dieser wird auf die bei der Kompilierung eingestellten Werte zurück gesetzt.
+
 Sie müssen den Sensor danach von Grund auf neu konfigurieren.
 Eine Anleitung dazu finden Sie in https://www.openandhome.de/index.php/ufaqs/waere-es-moeglich-mir-die-daten-fuer-die-grundfiguration-zukommen-zu-lassen/ 
 
