@@ -1,0 +1,3 @@
+#exclude debugfile
+*~
+oh-debug.txt
