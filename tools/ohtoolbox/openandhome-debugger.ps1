@@ -15,6 +15,8 @@ function read-com {
     $port= new-Object System.IO.Ports.SerialPort $COM,115000,None,8,one
     $port.Open()
     $port.WriteLine("reboot")
+    Sleep -Milliseconds 3000
+    $port.WriteLine("Settings")
     do {
         $line = $port.ReadLine()
         $line | Format-Table |Out-File -FilePath .\oh-debug.txt -Append -NoNewline
