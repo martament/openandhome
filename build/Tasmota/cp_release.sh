@@ -20,12 +20,12 @@ echo >> "$NOTES.new"
 cat "$NOTES" >> "$NOTES.new"
 mv "$NOTES.new" "$NOTES"
 
-if [ -f "Sonoff-Tasmota/.pioenvs/tasmota-lite/firmware.bin" ]
+if [ -f "Sonoff-Tasmota/.pio/build/tasmota-lite/firmware.bin" ]
 then
-	cp Sonoff-Tasmota/.pioenvs/tasmota-lite/firmware.bin releases/tasmota-openandhome.bin
-	mv Sonoff-Tasmota/.pioenvs/tasmota-lite/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-de.bin
+	cp Sonoff-Tasmota/.pio/build/tasmota-lite/firmware.bin releases/tasmota-openandhome.bin
+	mv Sonoff-Tasmota/.pio/build/tasmota-lite/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-de.bin
 else
-	echo "Sonoff-Tasmota/.pioenvs/tasmota-lite/firmware.bin nicht gefunden"
+	echo "Sonoff-Tasmota/.pio/build/tasmota-lite/firmware.bin nicht gefunden"
 fi
 
 ls -lrtah releases
