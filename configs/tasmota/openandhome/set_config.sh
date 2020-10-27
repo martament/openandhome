@@ -44,9 +44,9 @@ echo "Lade globale Einstellungen"
 echo
 echo
 
-echo "Schalte MQTT an"
-sleep 1
-wget -O/dev/null http://$1/cm?cmnd=SetOption3%201
+#echo "Schalte MQTT an"
+#sleep 1
+#wget -O/dev/null http://$1/cm?cmnd=SetOption3%201
 sleep 1
 wget -O/dev/null http://$1/cm?cmnd=restart%201
 echo "Bin Fertig"
