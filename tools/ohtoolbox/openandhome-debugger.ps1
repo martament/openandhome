@@ -1,4 +1,9 @@
-$COM = [System.IO.Ports.SerialPort]::getportnames()
+$COMS = [System.IO.Ports.SerialPort]::getportnames()
+
+
+foreach ($comport in $COMS) {
+    $COM = $comport
+}
 
 $msg = "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Debuggers angeschlossen ist." + 
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **Debugger** koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen." +
