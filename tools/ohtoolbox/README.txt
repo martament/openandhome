@@ -23,7 +23,7 @@ Dies ist ein grafisches Programm mit dem Sie im Fehlerfall mehrere Möglichkeite
 # **ResetWifi** hier koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden.
 # **ResetAdmin** hier koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen.
 
-Das Programm ist eine kompilierte Powershelldatei. Daher wird diese von manchen Virenscannern fälschlicherweise als Bedrohung definiert. Sollten Sie damit ein Problem haben, so finden Sie die zugehörige openandhome-debugger.ps1 ebenfalls zum Download. Diese ist funktionsgleich der Exe, allerdings müssen Sie diese aus einer Powershell heraus aufrufen und die Standardeinstellungen der Powershell verweigern z.B. das Schreiben der Logdatei.
+Das Programm ist eine kompilierte Powershelldatei. Daher wird diese von manchen Virenscannern fälschlicherweise als Bedrohung definiert. Sollten Sie damit ein Problem haben, so finden Sie die zugehörige openandhome-debugger.ps1 ebenfalls zum Download. Diese ist funktionsgleich der Exe, allerdings müssen Sie diese aus einer  Powershell Administratorenrechten heraus aufrufen. 
 
 2. reset_openandhome.bat (obsolet)
 
