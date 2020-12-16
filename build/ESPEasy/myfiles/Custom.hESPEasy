@@ -98,7 +98,7 @@ Your Own Default Settings
 #undef BUILD_GIT
 #endif
 
-#define BUILD_GIT "openandhome 0.5"
+#define BUILD_GIT "openandhome 0.6"
 
 //MQTT-Retain um nach einem Neustart die Werte zu behalten
 #undef DEFAULT_MQTT_RETAIN 
