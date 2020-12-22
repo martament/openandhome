@@ -1,0 +1,1 @@
+https://codefaq.org/windows/how-to-get-portable-python-3-9-on-windows-10/
