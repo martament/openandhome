@@ -6,10 +6,11 @@ foreach ($comport in $COMS) {
 }
 
 $msg = "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Debuggers angeschlossen ist." + 
-"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **Debugger** koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen." +
+"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **Debugger** koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen. Achtung es werden auch WIFI-Zugangsdaten geschrieben. Diese evtl. löschen." +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetDHCP** koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. " +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetWifi** koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden." +
-"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetAdmin** koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen." 
+"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetAdmin** koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen." +
+"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **StartAPMode** koennen Sie den WLAN-Zugangspunkt des Sensors starten und sich wie in der Anleitung beschrieben mit dem Sensor verbinden."  
 
 
 function read-com {
@@ -19,7 +20,10 @@ function read-com {
     Get-Date | Out-File -FilePath .\oh-debug.txt -Append -NoNewline
     $port= new-Object System.IO.Ports.SerialPort $COM,115000,None,8,one
     $port.Open()
+    Sleep -Milliseconds 1000
     $port.WriteLine("reboot")
+    Sleep -Milliseconds 3000
+    $port.WriteLine("ResetFlashWriteCounter")
     Sleep -Milliseconds 3000
     $port.WriteLine("Settings")
     do {
@@ -34,18 +38,21 @@ function read-com {
 function write-dhcp {
     $port= new-Object System.IO.Ports.SerialPort $COM,115000,None,8,one
     $port.Open()
-    do {
+    Sleep -Milliseconds 300
+    $port.WriteLine("ResetFlashWriteCounter")
+    Sleep -Milliseconds 300
     $port.WriteLine("IP 0.0.0.0")
     $port.WriteLine("Save")
     Sleep -Milliseconds 300
-    }
-    while ($port.IsOpen)
+    $port.Close()
 }
 
 function reset-wifi {
     $port= new-Object System.IO.Ports.SerialPort $COM,115000,None,8,one
     $port.Open()
-
+    Sleep -Milliseconds 300
+    $port.WriteLine("ResetFlashWriteCounter")
+    Sleep -Milliseconds 300
     $port.WriteLine("WifiSSID ssid")
     Sleep -Milliseconds 300
     $port.WriteLine("WifiKey wpakey")
@@ -61,18 +68,34 @@ function reset-wifi {
 function reset-password {
     $port= new-Object System.IO.Ports.SerialPort $COM,115000,None,8,one
     $port.Open()
-
+    Sleep -Milliseconds 300
+    $port.WriteLine("ResetFlashWriteCounter")
+    Sleep -Milliseconds 300
     $port.WriteLine("password")
     Sleep -Milliseconds 300
     $port.WriteLine("Save")
     Sleep -Milliseconds 300
+    $port.Close()
+}
+
+function start-apmode {
+    $port= new-Object System.IO.Ports.SerialPort $COM,115000,None,8,one
+    $port.Open()
+    Sleep -Milliseconds 300
+    $port.WriteLine("ResetFlashWriteCounter")
+    Sleep -Milliseconds 300
+    $port.WriteLine("WifiAPMode")
+    Sleep -Milliseconds 300
+    $port.WriteLine("Save")
+    Sleep -Milliseconds 300
+    $port.Close()
 }
 
 $Title = "Openandhome-Debugger"
 
   
-$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Debugger", "&ResetDHCP", "&ResetWifi", "&ResetAdmin", "&Abbrechen")
-[int]$defaultchoice = 4
+$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Debugger", "&ResetDHCP", "&ResetWifi", "&ResetAdmin", "&StartAPMode","&Abbrechen")
+[int]$defaultchoice = 5
 $opt = $host.UI.PromptForChoice($Title , $msg , $Options,$defaultchoice)
 switch($opt)
 {
@@ -80,5 +103,6 @@ switch($opt)
 1 { write-dhcp }
 2 { reset-wifi }
 3 { reset-password }
-4 { Write-Host "Good Bye!!!" -ForegroundColor Green}
+4 { start-apmode }
+5 { Write-Host "Good Bye!!!" -ForegroundColor Green}
 }
