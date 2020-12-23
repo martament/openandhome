@@ -12,9 +12,12 @@ Ablauf:
 - wechseln Sie in das Verzeichnis oh-flasher und starten die die start_flasher.bat mit einem Doppelklick.
 
 - Aktion auswählen
+- Dies wird im Normalfall [L] für die vollständige Löschung und Wiederherstellung des Sensors sein
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher1.PNG">
 
-- Anzahl der Sensoren auswählen
+- Es kann bis zu mehreren Minuten dauern bis der Sensor wiederhergestellt ist.
+
+- Dann die Anzahl der an Ihrem Temperaturfühler verbauten Sensoren auswählen.
 
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher2.PNG">
 
