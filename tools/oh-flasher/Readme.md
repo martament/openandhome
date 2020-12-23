@@ -4,3 +4,8 @@ Mit diesem können Sie die Firmware und die Einstellungen unseres Temperatursens
 
 Den Flasher bitte nur auf Anweisung unsere Supports verwenden.
 
+Sie können den OH-Flasher unter https://github.com/martament/openandhome/releases => oh-flasher.zip herunterladen.
+
+Beschreibung:
+
+
