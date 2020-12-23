@@ -33,5 +33,5 @@ Das Programm ist eine kompilierte Powershelldatei. Daher wird diese von manchen 
 Sollten Sie mit dem Debugger Ihr Problem nicht lösen können, so steht ihnen noch der oh-flasher zur Verfügung. Diesen bitte nur auf Anweisung unseres Supports verwenden.
 Mit dem Flasher können Sie Ihren Sensor vollständig zurücksetzen und unsere Konfiguration automatisiert wieder einspielen.
 
-Sie können den Debugger unter https://github.com/martament/openandhome/releases => oh-flasher.zip herunterladen.
+Sie können den OH-Flasher unter https://github.com/martament/openandhome/releases => oh-flasher.zip herunterladen.
 
