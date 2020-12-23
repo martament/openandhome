@@ -2,7 +2,7 @@ Sie finden hier mehrere Programme für den Sensor von Openandhome.
 
 
 
-Für den bestimmungsgem. Betrieb unseres Sensors benötigen Sie diese Programme nicht.
+Für den bestimmungsgem. Betrieb unseres Sensors benötigen Sie dieses Programme nicht.
 
 Lesen Sie dazu bitte auch die FAQs auf unserer Homepage
 # https://www.openandhome.de/index.php/2019/01/11/faq/
@@ -23,27 +23,11 @@ Dies ist ein grafisches Programm mit dem Sie im Fehlerfall mehrere Möglichkeite
 # **ResetWifi** hier koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden.
 # **ResetAdmin** hier koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen.
 
-Das Programm ist eine kompilierte Powershelldatei. Daher wird diese von manchen Virenscannern fälschlicherweise als Bedrohung definiert. Sollten Sie damit ein Problem haben, so finden Sie die zugehörige openandhome-debugger.ps1 ebenfalls zum Download. Diese ist funktionsgleich der Exe, allerdings müssen Sie diese aus einer  Powershell Administratorenrechten heraus aufrufen. 
+Das Programm ist eine kompilierte Powershelldatei. Daher wird diese von manchen Virenscannern fälschlicherweise als Bedrohung definiert. Sollten Sie damit ein Problem haben, so finden Sie die zugehörige openandhome-debugger.ps1 im Ordern bin ebenfalls zum Download. Diese ist funktionsgleich der Exe, allerdings müssen Sie diese aus einer  Powershell Administratorenrechten heraus aufrufen. 
 
-2. reset_openandhome.bat (obsolet)
 
-Dies ist der Vorgängerer des grafischen Debuggers. 
+2. Debugger kann das Problem nicht lösen
 
-Achten Sie bitte darauf, dass die Datei SerialSend.exe bei Windows im gleichen Verzeichnis ist.
-Ebenso muss der Sensor mit dem Rechner über USB verbunden sein.
-
-Mit dem Programm reset_openandhome.bat können Sie die Einstellungen des Sensors auf den Auslieferungszustand zurück setzen. 
-Es werden die WIFI-Zugangsdaten und das Zugangspasswort auf den Auslieferungszustand gesetzt. 
-
-3. full_reset.bat (Nur im Notfall)
-
-Dieses Tool bitte nur im Notfall benutzen.
-
-Mit diesem Programm können Sie den Sensor vollständig zurück setzen. Es werden alle Einstellungen des Sensor gelöscht. Der Sensor ist dann auch nicht mehr im Auslieferungszustand, sondern auch diese Einstellungen werden gelöscht.
-
-Der Sensor wird auf die bei der Kompilierung eingestellten Werte zurück gesetzt.
-
-Sie müssen den Sensor danach von Grund auf neu konfigurieren.
-Eine Anleitung dazu finden Sie in https://www.openandhome.de/index.php/ufaqs/waere-es-moeglich-mir-die-daten-fuer-die-grundfiguration-zukommen-zu-lassen/ 
-
+Sollten Sie mit dem Debugger Ihr Problem nicht lösen können, so steht ihnen noch der oh-flasher zur Verfügung. Diesen bitte nur auf Anweisung unseres Supports verwenden.
+Mit dem Flasher können Sie Ihren Sensor vollständig zurücksetzen und unsere Konfiguration automatisiert wieder einspielen.
 
