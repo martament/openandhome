@@ -13,8 +13,17 @@ Ablauf:
 
 - Aktion auswählen
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher1.PNG">
+
+- Anzahl der Sensoren auswählen
+
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher2.PNG">
+
+- Fenster schließen mit [RETURN]
+
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher3.PNG">
+
+- Sensor gem. Anleitung in das WLAN einbinden oder mit dem WLAN des Sensors gem. Anleitung verbinden
+
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher4.PNG">
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher5.PNG">
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher6.PNG">
