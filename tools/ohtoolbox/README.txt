@@ -1,4 +1,4 @@
-Sie finden hier mehrere Programme für den Sensor von Openandhome.
+Sie finden hier den Debugger für den Sensor von Openandhome.
 
 
 
@@ -18,10 +18,12 @@ D.h. Sie können unseren Debugger versuchen und sollte der Ihre Problem nicht l�
 1. openandhome-debugger.exe (Standardprogramm)
 Dies ist ein grafisches Programm mit dem Sie im Fehlerfall mehrere Möglichkeiten haben. Sie sollten dieses Programm wann immer möglich nutzen.
 
-#  **Debugger** hier koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen.
-#  **ResetDHCP** hier  koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. 
+# **Debugger** hier koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen.
+# **ResetDHCP** hier  koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. 
 # **ResetWifi** hier koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden.
 # **ResetAdmin** hier koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen.
+
+Sie können den Debugger unter https://github.com/martament/openandhome/releases => ohtoolbox.zip herunterladen.
 
 Das Programm ist eine kompilierte Powershelldatei. Daher wird diese von manchen Virenscannern fälschlicherweise als Bedrohung definiert. Sollten Sie damit ein Problem haben, so finden Sie die zugehörige openandhome-debugger.ps1 im Ordern bin ebenfalls zum Download. Diese ist funktionsgleich der Exe, allerdings müssen Sie diese aus einer  Powershell Administratorenrechten heraus aufrufen. 
 
@@ -30,4 +32,6 @@ Das Programm ist eine kompilierte Powershelldatei. Daher wird diese von manchen 
 
 Sollten Sie mit dem Debugger Ihr Problem nicht lösen können, so steht ihnen noch der oh-flasher zur Verfügung. Diesen bitte nur auf Anweisung unseres Supports verwenden.
 Mit dem Flasher können Sie Ihren Sensor vollständig zurücksetzen und unsere Konfiguration automatisiert wieder einspielen.
+
+Sie können den Debugger unter https://github.com/martament/openandhome/releases => oh-flasher.zip herunterladen.
 
