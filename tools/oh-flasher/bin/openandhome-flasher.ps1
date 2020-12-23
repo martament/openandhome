@@ -6,13 +6,13 @@ foreach ($comport in $COMS) {
 }
 
 #Aktuelle Version ist nur in Python verfügbar. Daher mit Python Portable
-$flash_cmd=".\bin\pythonportable\python.exe .\bin\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 write_flash --flash_mode dout --flash_size 4MB --flash_freq 40m 0x00000 "
-$flash_cfg=".\bin\pythonportable\python.exe .\bin\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 write_flash 0x300000 "
-$flash_erase=".\bin\pythonportable\python.exe .\bin\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 erase_flash  "
+$flash_cmd=".\pythonportable\python.exe .\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 write_flash --flash_mode dout --flash_size 4MB --flash_freq 40m 0x00000 "
+$flash_cfg=".\pythonportable\python.exe .\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 write_flash 0x300000 "
+$flash_erase=".\pythonportable\python.exe .\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 erase_flash  "
 
 #Firmwares
-$firmware_stable=".\firmware\openandhome_stable.bin"
-$firmware_blank=".\firmware\blank_4MB.bin"
+$firmware_stable="..\firmware\openandhome_stable.bin"
+$firmware_blank="..\firmware\blank_4MB.bin"
 
 function update {
 	 Write-Host "$([System.Environment]::NewLine)Sensor wird geupdated. Einstellungen bleiben erhalten.$([System.Environment]::NewLine)" -ForegroundColor Green
@@ -51,7 +51,7 @@ function write_config {
 		3 { $sensors=4}
 	}
 
-         $str = $flash_cfg + ".\firmware\" + $sensors + "_spiffs1M.bin"
+         $str = $flash_cfg + "..\firmware\" + $sensors + "_spiffs1M.bin"
   	 Invoke-Expression $str
 	 Sleep -Milliseconds 1000	
 
