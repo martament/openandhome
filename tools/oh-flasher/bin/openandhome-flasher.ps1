@@ -90,13 +90,15 @@ function debug {
     while ($port.IsOpen)
 }
 
-$Title = "Openandhome-Flasher"
-$msg = "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Flashers angeschlossen ist." + 
-"$([System.Environment]::NewLine)Mit **Update** koennen Sie die Firmware updaten ohne die Konfiguration zu löschen." +
-"$([System.Environment]::NewLine)Mit **Loeschen und Upgrade** koennen Sie den Sensor vollstaendig zurueck setzen. Es wird der Speicher geloescht, die Firmware geupdated und die Konfiguration eingespielt." + 
-"$([System.Environment]::NewLine)Mit **Debug** koennen Sie die Ausgaben des Sensors lesen. Zum Beenden trennen Sie den Sensor vom Rechner." +
-"$([System.Environment]::NewLine)$([System.Environment]::NewLine)"
-
+Write-Host "*********************************************************************************************"
+Write-Host "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Flashers angeschlossen ist." 
+Write-Host "*********************************************************************************************"
+Write-Host "**Update**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Firmware einspielen ohne die Konfiguration zu löschen." 
+Write-Host "**Loeschen_und_Upgrade**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier  koennen Sie den Sensor vollstaendig zurueck setzen. "
+Write-Host "Es wird der Speicher geloescht, die Firmware und die Konfiguration eingespielt." 
+Write-Host "**Debug**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Ausgaben des Sensors lesen. Zum Beenden trennen Sie den Sensor vom Rechner."
+Write-Host "*********************************************************************************************"
+$Title = "Geben Sie den Buchstaben fuer Ihre Auswahl ein:"
 $options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Update", "&Loeschen_und_Upgrade", "&Debug", "&Abbrechen")
 [int]$defaultchoice = 3
 $opt = $host.UI.PromptForChoice($Title , $msg , $Options,$defaultchoice)
