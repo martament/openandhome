@@ -31,8 +31,8 @@ Ablauf:
 
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher4.PNG">
 
-- Wählen Sie bei Deviceadress die Adresse Ihres Sensors aus. 
+- Wählen Sie bei Deviceaddress die Adresse Ihres Sensors aus. 
 
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher5.PNG">
 
-- Wiederholen Sie den Vorgang für jeden Ihrer Sensoren. Achten Sie dabei darauf, dass bei jedem Sensor eine andere Deviceadress gemeldet ist.
+- Wiederholen Sie den Vorgang für jeden Ihrer Sensoren. Achten Sie dabei darauf, dass bei jedem Sensor eine andere Deviceaddress gemeldet ist.
