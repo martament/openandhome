@@ -7,7 +7,7 @@ echo "Sichere unsere Dateien nach myfiles"
 echo 
  
 cp -v $my_pfad/.gitignore myfiles/.gitignore$my_pfad
-cp -v $my_pfad/platformio.ini myfiles/platformio.ini$my_pfad
+#cp -v $my_pfad/platformio.ini myfiles/platformio.ini$my_pfad
 cp -v $my_pfad/src/Custom.h myfiles/Custom.h$my_pfad
 cd $my_pfad
 git format-patch origin/mega -o ../myfiles
