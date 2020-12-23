@@ -23,7 +23,13 @@ Ablauf:
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher3.PNG">
 
 - Sensor gem. Anleitung in das WLAN einbinden oder mit dem WLAN des Sensors gem. Anleitung verbinden
+- Rufen Sie die Oberfläche des Sensors mit http://Temperatursensor-0 oder http://Temperatursensor oder http://192.168.4.1 auf
+- Gehen Sie auf den Reiter Devices und wählen Sie den Button Edit beim ersten Sensor
 
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher4.PNG">
+
+- Wählen Sie bei Deviceadress die Adresse Ihres Sensors aus. 
+
 <img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher5.PNG">
-<img src="https://raw.githubusercontent.com/martament/openandhome/master/images/oh-flasher/flasher6.PNG">
+
+- Wiederholen Sie den Vorgang für jeden Ihrer Sensoren. Achten Sie dabei darauf, dass bei jedem Sensor eine andere Deviceadress gemeldet ist.
