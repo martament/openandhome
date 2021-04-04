@@ -1,7 +1,7 @@
-From 9d8bc883216077451539da2c18369c929b2458be Mon Sep 17 00:00:00 2001
+From b38cb5f0acf0a8b7b24fcd9ee8c49de26f876c4d Mon Sep 17 00:00:00 2001
 From: Ament Martin <martin.ament@gmx.de>
 Date: Tue, 22 Dec 2020 19:02:27 +0100
-Subject: [PATCH] Patch to use the AP-Mode as daily driver
+Subject: [PATCH 7/7] Patch to use the AP-Mode as daily driver
 
 ---
  src/src/WebServer/404.cpp      | 10 +++++-----

@@ -1,0 +1,67 @@
+From ed0ca333ee09587408b66424b966f3e3fa487a14 Mon Sep 17 00:00:00 2001
+From: Ament Martin <martin.ament@gmx.de>
+Date: Tue, 23 Feb 2021 21:50:34 +0100
+Subject: [PATCH 6/7] Missed a setting
+
+---
+ src/Custom-sample.h                    | 2 +-
+ src/src/CustomBuild/ESPEasyDefaults.h  | 4 ++--
+ src/src/DataStructs/SettingsStruct.cpp | 7 ++++++-
+ 3 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/src/Custom-sample.h b/src/Custom-sample.h
+index 4b802756..2dac2c5f 100644
+--- a/src/Custom-sample.h
++++ b/src/Custom-sample.h
+@@ -62,7 +62,7 @@
+                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
+ #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
+ 
+-#define DEFAULT_ApDontForceSetup            false  // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
++#define DEFAULT_AP_DONT_FORCE_SETUP            false  // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+ 
+ // --- Default Controller ------------------------------------------------------------------------------
+ #define DEFAULT_CONTROLLER   false                                          // true or false enabled or disabled, set 1st controller
+diff --git a/src/src/CustomBuild/ESPEasyDefaults.h b/src/src/CustomBuild/ESPEasyDefaults.h
+index 6d6522c1..c171bd6e 100644
+--- a/src/src/CustomBuild/ESPEasyDefaults.h
++++ b/src/src/CustomBuild/ESPEasyDefaults.h
+@@ -99,8 +99,8 @@
+ #define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
+ #endif
+ 
+-#ifndef DEFAULT_ApDontForceSetup                       
+-#define DEFAULT_ApDontForceSetup            false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
++#ifndef DEFAULT_AP_DONT_FORCE_SETUP                       
++#define DEFAULT_AP_DONT_FORCE_SETUP            false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+ #endif
+ 
+ // --- Default Controller ------------------------------------------------------------------------------
+diff --git a/src/src/DataStructs/SettingsStruct.cpp b/src/src/DataStructs/SettingsStruct.cpp
+index 46d69333..eda8c3f6 100644
+--- a/src/src/DataStructs/SettingsStruct.cpp
++++ b/src/src/DataStructs/SettingsStruct.cpp
+@@ -148,6 +148,11 @@ void SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending(bool value) {
+   bitWrite(VariousBits1, 13, value);
+ }
+ 
++template<unsigned int N_TASKS>
++bool SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup() const {
++  return bitRead(VariousBits1, 14);
++}
++
+ template<unsigned int N_TASKS>
+ void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
+   bitWrite(VariousBits1, 14, value);
+@@ -330,7 +335,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
+   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
+   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
+   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
+-  ApDontForceSetup(DEFAULT_ApDontForceSetup);
++  ApDontForceSetup(DEFAULT_AP_DONT_FORCE_SETUP);
+ }
+ 
+ template<unsigned int N_TASKS>
+-- 
+2.25.1
+

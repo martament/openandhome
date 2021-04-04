@@ -1,0 +1,88 @@
+From 708a608aca1808f2787fbaff65b7c1dc368160c5 Mon Sep 17 00:00:00 2001
+From: Ament Martin <martin.ament@gmx.de>
+Date: Wed, 27 Jan 2021 21:26:17 +0100
+Subject: [PATCH 2/7] Allow optional usage of Sensor without WIFI avaiable.
+ When set you can use the Sensor in AP-Mode without beeing forced to /setup.
+
+---
+ src/Custom-sample.h                   |  3 +++
+ src/src/CustomBuild/ESPEasyDefaults.h |  5 +++++
+ src/src/WebServer/404.cpp             | 10 +++++-----
+ src/src/WebServer/RootPage.cpp        | 10 +++++-----
+ 4 files changed, 18 insertions(+), 10 deletions(-)
+
+diff --git a/src/Custom-sample.h b/src/Custom-sample.h
+index b6ccf1ab..1b721a02 100644
+--- a/src/Custom-sample.h
++++ b/src/Custom-sample.h
+@@ -62,6 +62,9 @@
+                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
+ #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
+ 
++//#define AP_DONT_FORCE_SETUP            false     // Allow optional usage of Sensor without WIFI avaiable 
++                                                   // When set you can use the Sensor in AP-Mode without beeing forced to /setup
++
+ // --- Default Controller ------------------------------------------------------------------------------
+ #define DEFAULT_CONTROLLER   false                                          // true or false enabled or disabled, set 1st controller
+                                                                             // defaults
+diff --git a/src/src/CustomBuild/ESPEasyDefaults.h b/src/src/CustomBuild/ESPEasyDefaults.h
+index 3c08e6ed..98cee1a6 100644
+--- a/src/src/CustomBuild/ESPEasyDefaults.h
++++ b/src/src/CustomBuild/ESPEasyDefaults.h
+@@ -99,6 +99,11 @@
+ #define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
+ #endif
+ 
++#ifndef AP_DONT_FORCE_SETUP                       
++#define AP_DONT_FORCE_SETUP            false      // Allow optional usage of Sensor without WIFI avaiable 
++                                                  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
++#endif
++
+ // --- Default Controller ------------------------------------------------------------------------------
+ #ifndef DEFAULT_CONTROLLER
+ #define DEFAULT_CONTROLLER   true              // true or false enabled or disabled, set 1st controller defaults
+diff --git a/src/src/WebServer/404.cpp b/src/src/WebServer/404.cpp
+index 7661e476..02e39b95 100644
+--- a/src/src/WebServer/404.cpp
++++ b/src/src/WebServer/404.cpp
+@@ -16,11 +16,11 @@ void handleNotFound() {
+   checkRAM(F("handleNotFound"));
+   #endif
+ 
+-//  if (WiFiEventData.wifiSetup)
+-//  {
+-//    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+-//    return;
+-//  }
++  if (WiFiEventData.wifiSetup)
++  {
++    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
++    return;
++  }
+ 
+   if (!isLoggedIn()) { return; }
+ 
+diff --git a/src/src/WebServer/RootPage.cpp b/src/src/WebServer/RootPage.cpp
+index 470b18ae..bd682766 100644
+--- a/src/src/WebServer/RootPage.cpp
++++ b/src/src/WebServer/RootPage.cpp
+@@ -34,11 +34,11 @@ void handle_root() {
+   #endif
+ 
+   // if Wifi setup, launch setup wizard
+-//  if (WiFiEventData.wifiSetup)
+-//  {
+-//    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+-//    return;
+-//  }
++ if (WiFiEventData.wifiSetup && !AP_DONT_FORCE_SETUP)
++  {
++    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
++   return;
++  }
+ 
+   if (!isLoggedIn()) { return; }
+   navMenuIndex = 0;
+-- 
+2.25.1
+

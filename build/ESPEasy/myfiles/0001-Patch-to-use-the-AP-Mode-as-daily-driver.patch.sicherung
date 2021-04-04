@@ -1,4 +1,4 @@
-From 9d8bc883216077451539da2c18369c929b2458be Mon Sep 17 00:00:00 2001
+From 1862964b27db6a9d4fc92be5b2043cee617e8592 Mon Sep 17 00:00:00 2001
 From: Ament Martin <martin.ament@gmx.de>
 Date: Tue, 22 Dec 2020 19:02:27 +0100
 Subject: [PATCH] Patch to use the AP-Mode as daily driver
@@ -30,7 +30,7 @@ index 02e39b95..7661e476 100644
    if (!isLoggedIn()) { return; }
  
 diff --git a/src/src/WebServer/RootPage.cpp b/src/src/WebServer/RootPage.cpp
-index a0c6c4fc..d489bdf3 100644
+index 469e4249..29b1cb20 100644
 --- a/src/src/WebServer/RootPage.cpp
 +++ b/src/src/WebServer/RootPage.cpp
 @@ -34,11 +34,11 @@ void handle_root() {

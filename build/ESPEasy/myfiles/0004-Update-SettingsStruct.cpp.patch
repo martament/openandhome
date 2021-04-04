@@ -1,0 +1,24 @@
+From cdc83d32de2b095c1822edee1562dfa8af27b49e Mon Sep 17 00:00:00 2001
+From: martament <38855494+martament@users.noreply.github.com>
+Date: Mon, 22 Feb 2021 21:25:05 +0100
+Subject: [PATCH 4/7] Update SettingsStruct.cpp
+
+---
+ src/src/DataStructs/SettingsStruct.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/src/DataStructs/SettingsStruct.cpp b/src/src/DataStructs/SettingsStruct.cpp
+index 57cbccd5..0ff05a77 100644
+--- a/src/src/DataStructs/SettingsStruct.cpp
++++ b/src/src/DataStructs/SettingsStruct.cpp
+@@ -118,6 +118,7 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
+   bitWrite(VariousBits1, 10, value);
+ }
+ 
++template<unsigned int N_TASKS>
+ bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
+   return bitRead(VariousBits1, 11);
+ }
+-- 
+2.25.1
+

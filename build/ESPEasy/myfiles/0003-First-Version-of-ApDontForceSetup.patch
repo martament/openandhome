@@ -1,0 +1,151 @@
+From 4f1bb395a73c83050029d7c2eb7a685257285ae0 Mon Sep 17 00:00:00 2001
+From: Ament Martin <martin.ament@gmx.de>
+Date: Fri, 29 Jan 2021 19:29:07 +0100
+Subject: [PATCH 3/7] First Version of ApDontForceSetup. Grouping
+ Webserversettings in Advanced
+
+---
+ src/Custom-sample.h                      |  3 +--
+ src/src/CustomBuild/ESPEasyDefaults.h    |  5 ++---
+ src/src/DataStructs/SettingsStruct.cpp   | 11 +++++++++++
+ src/src/DataStructs/SettingsStruct.h     |  4 ++++
+ src/src/WebServer/AdvancedConfigPage.cpp | 17 ++++++++++++-----
+ src/src/WebServer/RootPage.cpp           |  2 +-
+ 6 files changed, 31 insertions(+), 11 deletions(-)
+
+diff --git a/src/Custom-sample.h b/src/Custom-sample.h
+index 1b721a02..4b802756 100644
+--- a/src/Custom-sample.h
++++ b/src/Custom-sample.h
+@@ -62,8 +62,7 @@
+                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
+ #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
+ 
+-//#define AP_DONT_FORCE_SETUP            false     // Allow optional usage of Sensor without WIFI avaiable 
+-                                                   // When set you can use the Sensor in AP-Mode without beeing forced to /setup
++#define DEFAULT_ApDontForceSetup            false  // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+ 
+ // --- Default Controller ------------------------------------------------------------------------------
+ #define DEFAULT_CONTROLLER   false                                          // true or false enabled or disabled, set 1st controller
+diff --git a/src/src/CustomBuild/ESPEasyDefaults.h b/src/src/CustomBuild/ESPEasyDefaults.h
+index 98cee1a6..6d6522c1 100644
+--- a/src/src/CustomBuild/ESPEasyDefaults.h
++++ b/src/src/CustomBuild/ESPEasyDefaults.h
+@@ -99,9 +99,8 @@
+ #define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
+ #endif
+ 
+-#ifndef AP_DONT_FORCE_SETUP                       
+-#define AP_DONT_FORCE_SETUP            false      // Allow optional usage of Sensor without WIFI avaiable 
+-                                                  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
++#ifndef DEFAULT_ApDontForceSetup                       
++#define DEFAULT_ApDontForceSetup            false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+ #endif
+ 
+ // --- Default Controller ------------------------------------------------------------------------------
+diff --git a/src/src/DataStructs/SettingsStruct.cpp b/src/src/DataStructs/SettingsStruct.cpp
+index b8e2f6f8..5553239d 100644
+--- a/src/src/DataStructs/SettingsStruct.cpp
++++ b/src/src/DataStructs/SettingsStruct.cpp
+@@ -118,6 +118,16 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
+   bitWrite(VariousBits1, 10, value);
+ }
+ 
++template<unsigned int N_TASKS>
++bool SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup() const {
++  return bitRead(VariousBits1, 14);
++}
++
++template<unsigned int N_TASKS>
++void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
++  bitWrite(VariousBits1, 14, value);
++}
++
+ template<unsigned int N_TASKS>
+ bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
+   if (validTaskIndex(taskIndex))
+@@ -295,6 +305,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
+   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
+   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
+   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
++  ApDontForceSetup(DEFAULT_ApDontForceSetup);
+ }
+ 
+ template<unsigned int N_TASKS>
+diff --git a/src/src/DataStructs/SettingsStruct.h b/src/src/DataStructs/SettingsStruct.h
+index 32d5ddee..80f25e9c 100644
+--- a/src/src/DataStructs/SettingsStruct.h
++++ b/src/src/DataStructs/SettingsStruct.h
+@@ -86,6 +86,10 @@ class SettingsStruct_tmpl
+   bool SendToHttp_ack() const;
+   void SendToHttp_ack(bool value);
+ 
++  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
++  bool ApDontForceSetup() const;
++  void ApDontForceSetup(bool value);
++
+   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
+   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
+   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
+diff --git a/src/src/WebServer/AdvancedConfigPage.cpp b/src/src/WebServer/AdvancedConfigPage.cpp
+index fcf44d56..864bab19 100644
+--- a/src/src/WebServer/AdvancedConfigPage.cpp
++++ b/src/src/WebServer/AdvancedConfigPage.cpp
+@@ -80,6 +80,7 @@ void handle_advanced() {
+     #endif // WEBSERVER_NEW_RULES
+     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
+     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
++    Settings.ApDontForceSetup(isFormItemChecked(F("ApDontForceSetup")));
+     Settings.ForceWiFi_bg_mode(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_BG)));
+     Settings.WiFiRestart_connection_lost(isFormItemChecked(getInternalLabel(LabelType::RESTART_WIFI_LOST_CONN)));
+     Settings.EcoPowerMode(isFormItemChecked(getInternalLabel(LabelType::CPU_ECO_MODE)));
+@@ -106,9 +107,6 @@ void handle_advanced() {
+   #ifdef WEBSERVER_NEW_RULES
+   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
+   #endif // WEBSERVER_NEW_RULES
+-  addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
+-  addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
+-  addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
+ 
+   /*
+   // MQTT settings now moved to the controller settings.
+@@ -168,12 +166,21 @@ void handle_advanced() {
+ 
+   addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
+ 
+-  // TODO sort settings in groups or move to other pages/groups
+-  addFormSubHeader(F("Special and Experimental Settings"));
++  
++
++  addFormSubHeader(F("Webserver Settings"));
+ 
+   addFormNumericBox(F("Webserver port"), F("webport"), Settings.WebserverPort, 0, 65535);
+   addFormNote(F("Requires reboot to activate"));
++  addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
++  addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
++  addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
++  addFormCheckBox(F("Don't force /setup in AP-Mode"), F("ApDontForceSetup"), Settings.ApDontForceSetup());
++  addFormNote(F("When set you can use the Sensor in AP-Mode without beeing forced to /setup. /setup can still be called."));
++ 
+ 
++// TODO sort settings in groups or move to other pages/groups
++  addFormSubHeader(F("Special and Experimental Settings"));
+   addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet,     0, 255);
+ 
+   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
+diff --git a/src/src/WebServer/RootPage.cpp b/src/src/WebServer/RootPage.cpp
+index bd682766..b4d71456 100644
+--- a/src/src/WebServer/RootPage.cpp
++++ b/src/src/WebServer/RootPage.cpp
+@@ -34,7 +34,7 @@ void handle_root() {
+   #endif
+ 
+   // if Wifi setup, launch setup wizard
+- if (WiFiEventData.wifiSetup && !AP_DONT_FORCE_SETUP)
++ if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
+   {
+     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+    return;
+-- 
+2.25.1
+
