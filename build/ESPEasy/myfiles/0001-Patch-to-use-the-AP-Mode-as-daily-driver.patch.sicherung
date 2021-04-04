@@ -1,0 +1,55 @@
+From 1862964b27db6a9d4fc92be5b2043cee617e8592 Mon Sep 17 00:00:00 2001
+From: Ament Martin <martin.ament@gmx.de>
+Date: Tue, 22 Dec 2020 19:02:27 +0100
+Subject: [PATCH] Patch to use the AP-Mode as daily driver
+
+---
+ src/src/WebServer/404.cpp      | 10 +++++-----
+ src/src/WebServer/RootPage.cpp | 10 +++++-----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/src/WebServer/404.cpp b/src/src/WebServer/404.cpp
+index 02e39b95..7661e476 100644
+--- a/src/src/WebServer/404.cpp
++++ b/src/src/WebServer/404.cpp
+@@ -16,11 +16,11 @@ void handleNotFound() {
+   checkRAM(F("handleNotFound"));
+   #endif
+ 
+-  if (WiFiEventData.wifiSetup)
+-  {
+-    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+-    return;
+-  }
++//  if (WiFiEventData.wifiSetup)
++//  {
++//    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
++//    return;
++//  }
+ 
+   if (!isLoggedIn()) { return; }
+ 
+diff --git a/src/src/WebServer/RootPage.cpp b/src/src/WebServer/RootPage.cpp
+index 469e4249..29b1cb20 100644
+--- a/src/src/WebServer/RootPage.cpp
++++ b/src/src/WebServer/RootPage.cpp
+@@ -34,11 +34,11 @@ void handle_root() {
+   #endif
+ 
+   // if Wifi setup, launch setup wizard
+-  if (WiFiEventData.wifiSetup)
+-  {
+-    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+-    return;
+-  }
++//  if (WiFiEventData.wifiSetup)
++//  {
++//    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
++//    return;
++//  }
+ 
+   if (!isLoggedIn()) { return; }
+   navMenuIndex = 0;
+-- 
+2.25.1
+

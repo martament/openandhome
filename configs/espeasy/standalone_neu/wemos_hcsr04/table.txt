@@ -1,0 +1,6 @@
+<table id="sensordata" >
+ <tr>
+  <td><img src="distance.png"></td>
+  <td>[HC-SR04#Distance]</td>
+</tr>
+</table>
