@@ -16,7 +16,7 @@ curl -v -F Upload=@humidity.png http://$1/upload
 curl -v -F Upload=@openandhome_32.png http://$1/upload
 curl -v -F Upload=@openandhome.css http://$1/upload
 echo "Sende Config"
-#curl -v -F Upload=@config.dat http://$1/upload
+curl -v -F Upload=@config.dat http://$1/upload
 cd "$old_pwd"
 echo 
 echo "Bitte daran denken noch die Adresse des Sensors unter device auszuwählen"
