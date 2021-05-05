@@ -1,4 +1,4 @@
-From 9d8bc883216077451539da2c18369c929b2458be Mon Sep 17 00:00:00 2001
+From c0ac648ae18ca8a30ba336441b623a992e1f04d6 Mon Sep 17 00:00:00 2001
 From: Ament Martin <martin.ament@gmx.de>
 Date: Tue, 22 Dec 2020 19:02:27 +0100
 Subject: [PATCH] Patch to use the AP-Mode as daily driver
