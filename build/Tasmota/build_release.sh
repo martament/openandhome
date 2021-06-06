@@ -13,7 +13,7 @@ echo "*********************************************"
 echo "Normal/Standard-Build of Sonoff"
 echo "*********************************************"
 platformio run --environment tasmota-lite
-platformio run --environment tasmota
+#platformio run --environment tasmota
 
 echo "*********************************************"
 echo "Normal/Standard-Build "
