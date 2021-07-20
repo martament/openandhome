@@ -35,6 +35,8 @@ wget -O/dev/null http://$1/cm?cmnd=MqttClient%20$2
 sleep 8
 wget -O/dev/null http://$1/cm?cmnd=MqttUser%20openhabian
 sleep 8
+wget -O/dev/null http://$1/cm?cmnd=MqttHost%20192.168.178.62
+sleep 8
 wget -O/dev/null http://$1/cm?cmnd=MqttPassword%20openandhome%40Raspi
 sleep 8
 echo "Setze Netzwerk-Parameter"
