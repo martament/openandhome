@@ -51,7 +51,7 @@ Examples :
 
 // Localisation
 #undef MY_LANGUAGE
-#define MY_LANGUAGE            de-DE           // German in Germany
+#define MY_LANGUAGE            de_DE           // German in Germany
 
 // +++ eingestelltes Tasmota-Modul - wenn keines gewaehlt wird, dann ist default SONOFF_BASIC voreingestellt
 // +++ SONOFF_S2X / SONOFF_POW / SONOFF_RF / SONOFF_TOUCH / SONOFF_T11 / SONOFF_DUAL_R2 / SONOFF_4CH / SONOFF_4CHPRO
@@ -142,7 +142,7 @@ Examples :
 
 // -- Syslog --------------------------------------
 #undef SYS_LOG_HOST
-#define SYS_LOG_HOST           "openandhome-server"          // [LogHost] (Linux) syslog host
+#define SYS_LOG_HOST           "openandhome-server1"          // [LogHost] (Linux) syslog host
 #undef SYS_LOG_PORT
 #define SYS_LOG_PORT           514               // [LogPort] default syslog UDP port
 #undef SYS_LOG_LEVEL
