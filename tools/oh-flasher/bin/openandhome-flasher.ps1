@@ -1,11 +1,11 @@
 $COMS = [System.IO.Ports.SerialPort]::getportnames()
 
-#Wir nehmen immer den höchsten, also zuletzt angeschlossenen COM-Port
+#Wir nehmen immer den hÃ¶chsten, also zuletzt angeschlossenen COM-Port
 foreach ($comport in $COMS) {
     $COM = $comport
 }
 
-#Aktuelle Version ist nur in Python verfügbar. Daher mit Python Portable
+#Aktuelle Version ist nur in Python verfÃ¼gbar. Daher mit Python Portable
 $flash_cmd=".\pythonportable\python.exe .\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 write_flash --flash_mode dout --flash_size 4MB --flash_freq 40m 0x00000 "
 $flash_cfg=".\pythonportable\python.exe .\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 write_flash 0x300000 "
 $flash_erase=".\pythonportable\python.exe .\pythonportable\Lib\site-packages\esptool.py --port " + $COM + " --baud 115200 erase_flash  "
@@ -38,9 +38,9 @@ function write_config {
 	  Write-Host "$([System.Environment]::NewLine)Konfiguriere den Sensor.$([System.Environment]::NewLine)" -ForegroundColor Green
 	$Title_conf = "Anzahl der Sensoren"
 	$msg_conf = "Waehlen Sie die Anzahl Ihrer Sensoren." + 
-	"Es wird dann die Konfiguration für Ihre Anzahl der Sensoren auf den Temperatursensor geschrieben.$([System.Environment]::NewLine)" 
+	"Es wird dann die Konfiguration fÃ¼r Ihre Anzahl der Sensoren auf den Temperatursensor geschrieben.$([System.Environment]::NewLine)" 
 
-	$options_conf = [System.Management.Automation.Host.ChoiceDescription[]] @("&1_Sensor", "&2_Sensoren", "&3_Sensoren", "&4_Sensoren")
+	$options_conf = [System.Management.Automation.Host.ChoiceDescription[]] @("&1_Sensor", "&2_Sensoren", "&3_Sensoren", "&4_Sensoren", "&5=Wassersensor")
 	[int]$defaultchoice = 0
 	$opt_conf = $host.UI.PromptForChoice($Title_conf , $msg_conf , $options_conf,$defaultchoice)
 	switch($opt_conf)
@@ -49,6 +49,7 @@ function write_config {
 		1 { $sensors=2 }
 		2 { $sensors=3 }
 		3 { $sensors=4}
+		4 { $sensors=5}
 	}
 
          $str = $flash_cfg + "..\firmware\" + $sensors + "_spiffs1M.bin"
@@ -69,7 +70,7 @@ function write_config {
 	 Write-Host ""
 	 Write-Host "Binden Sie nun den Sensor wie in der Anleitung beschrieben in Ihr WLAN ein."  -ForegroundColor Green
 	 Write-Host ""
-	 Write-Host "Sie müssen in der Oberfläche des Sensors noch unter Devices bei den einzelnen Sensoren die Device-Adresse auswählen."  -ForegroundColor Green
+	 Write-Host "Sie mÃ¼ssen in der OberflÃ¤che des Sensors noch unter Devices bei den einzelnen Sensoren die Device-Adresse auswÃ¤hlen."  -ForegroundColor Green
 	 Write-Host ""
 }
 
@@ -93,7 +94,7 @@ function debug {
 Write-Host "*********************************************************************************************"
 Write-Host "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Flashers angeschlossen ist." 
 Write-Host "*********************************************************************************************"
-Write-Host "**Update**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Firmware einspielen ohne die Konfiguration zu löschen." 
+Write-Host "**Update**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Firmware einspielen ohne die Konfiguration zu lÃ¶schen." 
 Write-Host "**Loeschen_und_Upgrade**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier  koennen Sie den Sensor vollstaendig zurueck setzen. "
 Write-Host "Es wird der Speicher geloescht, die Firmware und die Konfiguration eingespielt." 
 Write-Host "**Debug**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Ausgaben des Sensors lesen. Zum Beenden trennen Sie den Sensor vom Rechner."
