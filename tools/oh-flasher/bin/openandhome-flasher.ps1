@@ -49,7 +49,7 @@ function write_config {
 		1 { $sensors=2 }
 		2 { $sensors=3 }
 		3 { $sensors=4}
-		4 { $sensors=5}
+		4 { $sensors=6}
 	}
 
          $str = $flash_cfg + "..\firmware\" + $sensors + "_spiffs1M.bin"
