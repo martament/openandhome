@@ -1,7 +1,0 @@
-<table id="sensordata" >
- <tr>
-  <td>Sensor 1:</td>
-  <td><img src="temperature.png"></td>
-  <td>[Fuehler1#Temperatur]</td>
- </tr>
-</table>

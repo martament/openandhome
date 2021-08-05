@@ -1,0 +1,1 @@
+../resources/push_config.sh
