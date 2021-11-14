@@ -3,6 +3,8 @@ set -e
 echo "Setting environment"
 . ../../../configs/env_build.rc
 cd ESPEasy
+pio update
+pio upgrade
 platformio run --target clean
 echo "*********************************************"
 echo "Normal-Build"

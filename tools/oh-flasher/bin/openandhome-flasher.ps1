@@ -12,6 +12,7 @@ $flash_erase=".\pythonportable\python.exe .\pythonportable\Lib\site-packages\esp
 
 #Firmwares
 $firmware_stable="..\firmware\openandhome_stable.bin"
+$firmware_devel="..\firmware\openandhome_devel.bin"
 $firmware_blank="..\firmware\blank_4MB.bin"
 
 function update {
@@ -20,6 +21,14 @@ function update {
 	Invoke-Expression $str
 
 }
+
+function update_devel {
+	 Write-Host "$([System.Environment]::NewLine)Sensor wird geupdated. Einstellungen bleiben erhalten.$([System.Environment]::NewLine)" -ForegroundColor Green
+       $str = $flash_cmd + $firmware_devel
+	Invoke-Expression $str
+
+}
+
 function upgrade {
 	  Write-Host "$([System.Environment]::NewLine)Loesche den Sensor vollstaendig.$([System.Environment]::NewLine)" -ForegroundColor Green
          $str = $flash_cmd + $firmware_blank
@@ -29,6 +38,20 @@ function upgrade {
 	  Sleep -Milliseconds 2000
 	  Write-Host "$([System.Environment]::NewLine)Schreibe die Firmware auf den Sensor.$([System.Environment]::NewLine)" -ForegroundColor Green
          $str = $flash_cmd + $firmware_stable
+	  Invoke-Expression $str
+	  Sleep -Milliseconds 3000
+	 write_config
+}
+
+function upgrade_devel {
+	  Write-Host "$([System.Environment]::NewLine)Loesche den Sensor vollstaendig.$([System.Environment]::NewLine)" -ForegroundColor Green
+         $str = $flash_cmd + $firmware_blank
+	  Invoke-Expression $str
+	  Sleep -Milliseconds 2000
+	  Invoke-Expression $flash_erase
+	  Sleep -Milliseconds 2000
+	  Write-Host "$([System.Environment]::NewLine)Schreibe die Firmware auf den Sensor.$([System.Environment]::NewLine)" -ForegroundColor Green
+         $str = $flash_cmd + $firmware_devel
 	  Invoke-Expression $str
 	  Sleep -Milliseconds 3000
 	 write_config
@@ -70,7 +93,7 @@ function write_config {
 	 Write-Host ""
 	 Write-Host "Binden Sie nun den Sensor wie in der Anleitung beschrieben in Ihr WLAN ein."  -ForegroundColor Green
 	 Write-Host ""
-	 Write-Host "Sie mÃ¼ssen in der OberflÃ¤che des Sensors noch unter Devices bei den einzelnen Sensoren die Device-Adresse auswÃ¤hlen."  -ForegroundColor Green
+	 Write-Host "Sie müssen in der Oberfläche des Sensors noch unter Devices bei den einzelnen Sensoren die Device-Adresse auswählen."  -ForegroundColor Green
 	 Write-Host ""
 }
 
@@ -94,19 +117,22 @@ function debug {
 Write-Host "*********************************************************************************************"
 Write-Host "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Flashers angeschlossen ist." 
 Write-Host "*********************************************************************************************"
-Write-Host "**Update**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Firmware einspielen ohne die Konfiguration zu lÃ¶schen." 
+Write-Host "**Update**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Firmware einspielen ohne die Konfiguration zu löschen." 
 Write-Host "**Loeschen_und_Upgrade**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier  koennen Sie den Sensor vollstaendig zurueck setzen. "
 Write-Host "Es wird der Speicher geloescht, die Firmware und die Konfiguration eingespielt." 
 Write-Host "**Debug**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier koennen Sie die Ausgaben des Sensors lesen. Zum Beenden trennen Sie den Sensor vom Rechner."
+Write-Host "**stable oder devel**"   -BackgroundColor white -ForegroundColor Blue -NoNewline; Write-Host " => Hier  koennen Sie entscheiden ob Sie die Stabile oder die Entwicklerversion wollen. Achtung Entwicklerversion kann instabil sein. "
 Write-Host "*********************************************************************************************"
 $Title = "Geben Sie den Buchstaben fuer Ihre Auswahl ein:"
-$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Update", "&Loeschen_und_Upgrade", "&Debug", "&Abbrechen")
-[int]$defaultchoice = 3
+$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&1_Update_stable", "&2_Loeschen_und_Upgrade_stable", "&3_Debug", "&4_Update_devel", "&5_Loeschen_und_Upgrade_devel","&6_Abbrechen")
+[int]$defaultchoice = 5
 $opt = $host.UI.PromptForChoice($Title , $msg , $Options,$defaultchoice)
 switch($opt)
 {
 0 { update }
 1 { upgrade }
 2 { debug }
-3 { Write-Host "Good Bye!!!" -ForegroundColor Green}
+3 { update_devel }
+4 { upgrade_devel }
+5 { Write-Host "Good Bye!!!" -ForegroundColor Green}
 }
