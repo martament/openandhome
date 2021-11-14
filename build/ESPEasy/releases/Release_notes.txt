@@ -2,6 +2,24 @@
 Neues Release wurde erzeugt
 -------------------------------------------------
 
+Release date: So 14. Nov 14:39:50 CET 2021
+
+'./.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20211114_normal_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20211114_normal_ESP8266_4M1M.bin' -> '../releases/20211114143950_normal_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Mi 20. Okt 21:05:16 CEST 2021
+
+'./.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20211020_normal_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20211020_normal_ESP8266_4M1M.bin' -> '../releases/20211020210516_normal_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
 Release date: Di 3. Aug 21:16:37 CEST 2021
 
 './.pio/build/normal_ESP8266_4M1M/ESP_Easy_mega_20210803_normal_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'

@@ -129,7 +129,7 @@ Your Own Default Settings
    Your Own selection of plugins and controllers
  #######################################################################################################
  */
-//#define NOTIFIER_SET_NONE
+#define NOTIFIER_SET_NONE
 #define PLUGIN_SET_NONE
 #define USES_P001   // Switch
 #define USES_P004   // Dallas
