@@ -49,7 +49,12 @@ sleep 5
 #Client durchstarten um 20 nach 12
 wget -O/dev/null http://$1/cm?cmnd=rule1%20on%20Time%23Minute=345%20do%20restart%201%20endon
 sleep 5
-wget -O/dev/null http://$1/cm?cmnd=rule1%20on
+wget -O/dev/null http://$1/cm?cmnd=rule1%20off
+sleep 5
+#SetOption41 115 Gratious ARP jede 115 sekunden
+#Verhindert dauthenticate bei alten Routern
+#https://tasmota.github.io/docs/Commands/
+wget -O/dev/null http://$1/cm?cmnd=SetOption41%20115
 sleep 5
 wget -O/dev/null http://$1/cm?cmnd=FullTopic%20%25prefix%25%2F%25topic%25%2F$2%2F
 sleep 5
