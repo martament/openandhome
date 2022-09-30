@@ -23,7 +23,7 @@ echo "Wir verwenden den folgenden Branch"
 git config --get remote.origin.url
 git branch
 echo
-echo "Gehe zum letzen Tag zurück und wende meine Patch an"
+echo "Gehe zum letzen Tag zurück und setze meine Buildparameter"
 git reset --hard $latesttag
 cd ..
 cp -v myfiles/.gitignore$my_pfad ./$my_pfad/.gitignore
