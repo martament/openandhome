@@ -3,12 +3,12 @@
   <td>Sensor 1:</td>
   <td><img src="temperature.png"></td>
   <td>Temperatur:</td>
-  <td>[Fuehler1#Temperatur]</td>
+  <td>[Fuehler6#Temperatur]</td>
  </tr>
  <tr>
   <td>&nbsp;</td>
   <td><img src="humidity.png"></td>
   <td>Luftfeuchtigkeit:</td>
-  <td>[Fuehler1#Luftfeuchtigkeit]</td>
+  <td>[Fuehler6#Luftfeuchtigkeit]</td>
  </tr>
 </table>
