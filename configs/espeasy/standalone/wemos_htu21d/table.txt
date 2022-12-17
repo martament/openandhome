@@ -3,12 +3,12 @@
   <td>Sensor 1:</td>
   <td><img src="temperature.png"></td>
   <td>Temperatur:</td>
-  <td>[SI7021#Temperature]</td>
+  <td>[Fuehler6#Temperatur]</td>
  </tr>
  <tr>
   <td>&nbsp;</td>
   <td><img src="humidity.png"></td>
   <td>Luftfeuchtigkeit:</td>
-  <td>[SI7021#Humidity]</td>
+  <td>[Fuehler6#Luftfeuchtigkeit]</td>
  </tr>
 </table>
