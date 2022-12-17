@@ -2,16 +2,21 @@
  <tr>
   <td>Sensor 1:</td>
   <td><img src="temperature.png"></td>
-  <td>[DS18b20#Temperature]</td>
+  <td>[Fuehler1#Temperatur]</td>
  </tr>
  <tr>
   <td>Sensor 2:</td>
   <td><img src="temperature1.png"></td>
-  <td>[DS18b20_1#Temperature]</td>
+  <td>[Fuehler2#Temperatur]</td>
  </tr>
  <tr>
   <td>Sensor 3:</td>
   <td><img src="temperature.png"></td>
-  <td>[DS18b20_2#Temperature]</td>
+  <td>[Fuehler3#Temperatur]</td>
+ </tr>
+ <tr>
+  <td>Sensor 4:</td>
+  <td><img src="temperature1.png"></td>
+  <td>[Fuehler4#Temperatur]</td>
  </tr>
 </table>
