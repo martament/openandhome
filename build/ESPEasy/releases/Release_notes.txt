@@ -1,4 +1,85 @@
 -------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
+Release date: Mo 19. Dez 20:51:02 CET 2022
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221219_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221219_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/20221219205102custom_ESP32_4M316k_ETH.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Mo 19. Dez 20:51:02 CET 2022
+
+'./build_output/bin/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/20221219205102_custom_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 22. Okt 11:12:40 CEST 2022
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221022_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221022_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/20221022111240custom_ESP32_4M316k_ETH.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 22. Okt 11:12:40 CEST 2022
+
+'./.pio/build/custom_ESP8266_4M1M/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './.pio/build/custom_ESP8266_4M1M/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/20221022111240_custom_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 22. Okt 11:08:54 CEST 2022
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221022_custom_ESP32_4M316k_ETH.bin' -> '../releases/openandhome_devel32.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221022_custom_ESP32_4M316k_ETH.bin' -> '../releases/20221022110854custom_ESP32_4M316k_ETH.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 22. Okt 11:08:54 CEST 2022
+
+'uncrustify.cfg' -> '../releases/openandhome_devel.bin'
+Datei umbenannt 'uncrustify.cfg' -> '../releases/20221022110854_custom_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 22. Okt 11:08:07 CEST 2022
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221022_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221022_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/20221022110807custom_ESP32_4M316k_ETH.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 22. Okt 11:08:07 CEST 2022
+
+'./build_output/bin/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/20221022110807_custom_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Sa 22. Okt 11:04:26 CEST 2022
+
+'./.pio/build/custom_ESP8266_4M1M/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './.pio/build/custom_ESP8266_4M1M/ESP_Easy_mega_20221022_custom_ESP8266_4M1M.bin' -> '../releases/20221022110426_normal_ESP8266_4M1M.bin'
+
+-------------------------------------------------
 Neues Release wurde erzeugt
 -------------------------------------------------
 
