@@ -112,7 +112,7 @@ Your Own Default Settings
 #undef BUILD_GIT
 #endif
 
-#define BUILD_GIT "openandhome 0.8"
+#define BUILD_GIT "openandhome 0.9"
 
 //MQTT-Retain um nach einem Neustart die Werte zu behalten
 #undef DEFAULT_MQTT_RETAIN 
@@ -129,7 +129,7 @@ Your Own Default Settings
    Your Own selection of plugins and controllers
  #######################################################################################################
  */
-#define NOTIFIER_SET_NONE
+
 #define PLUGIN_SET_NONE
 #define USES_P001   // Switch
 #define USES_P004   // Dallas
@@ -146,5 +146,6 @@ Your Own Default Settings
 #define USES_P037   // MQTTImport
 #define USES_P051   // AM2320
 #define USES_P089   // Ping
+
 
 #endif // ESPEASY_CUSTOM_H
