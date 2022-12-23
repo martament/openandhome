@@ -1,0 +1,22 @@
+<table id="sensordata" >
+ <tr>
+  <td>Fühler 1:</td>
+  <td><img src="temperature.png"></td>
+  <td>[Fuehler1#Temperatur]</td>
+ </tr>
+ <tr>
+  <td>Fuehler 2:</td>
+  <td><img src="temperature1.png"></td>
+  <td>[Fuehler2#Temperatur]</td>
+ </tr>
+ <tr>
+  <td>Fuehler 3:</td>
+  <td><img src="temperature.png"></td>
+  <td>[Fuehler3#Temperatur]</td>
+ </tr>
+ <tr>
+  <td>Wassersensor:</td>
+  <td><img src="humidity.png"></td>
+  <td>[Wassersensor#State]</td>
+ </tr>
+</table>
