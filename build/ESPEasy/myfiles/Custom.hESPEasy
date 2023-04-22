@@ -18,17 +18,44 @@
 
 /*
 
-#######################################################################################################
-Your Own Default Settings
-#######################################################################################################
+/*
+ #######################################################################################################
+   Your Own Default Settings
+ #######################################################################################################
+    You can basically ovveride ALL macro defined in ESPEasy.ino.
+    Don't forget to first #undef each existing #define that you add below.
+    But since this Custom.h is included before other defines are made, you don't have to undef a lot of defines.
+    Here are some examples:
+ */
 
-	You can basically ovveride ALL macro defined in ESPEasy.ino.
-	Don't forget to first #undef each existing #define that you add below.
-	Here are some examples:
+// --- Feature Flagging ---------------------------------------------------------
+// Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
+
+#define FEATURE_RULES_EASY_COLOR_CODE    1   // Use code highlighting, autocompletion and command suggestions in Rules
+#define FEATURE_ESPEASY_P2P       0     // (1/0) enables the ESP Easy P2P protocol
+#define FEATURE_ARDUINO_OTA       0     //enables the Arduino OTA capabilities
+// #define FEATURE_SD                1     // Enable SD card support
+// #define FEATURE_DOWNLOAD          1     // Enable downloading a file from an url
+
+
+
+/*
+ #######################################################################################################
+   Build Params
+ #######################################################################################################
+
 */
-
+#undef BUILD_GIT 
+#define BUILD_GIT           "Openandhome Build: "  __DATE__ " "  __TIME__
 #undef BUILD_NOTES
 #define BUILD_NOTES " - Openandhome"
+//#define BUILD_NO_DEBUG
+
+#ifdef ESP32
+#define DEFAULT_PIN_I2C_SDA 13
+#define DEFAULT_PIN_I2C_SCL 16
+#endif
+
 
 #undef	DEFAULT_NAME
 #define DEFAULT_NAME		"Sensorbox1"			// Enter your device friendly name
@@ -52,6 +79,9 @@ Your Own Default Settings
 
 #undef DEFAULT_SUB
 #define DEFAULT_SUB         "openandhome/%sysname%/#" // Enter your sub
+//MQTT-Retain um nach einem Neustart die Werte zu behalten
+#undef DEFAULT_MQTT_RETAIN 
+#define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 
 //#undef DEFAULT_SERVER
 //#define DEFAULT_SERVER      ""       // Enter your Server IP address
@@ -74,7 +104,7 @@ Your Own Default Settings
                                                                             //   9 = FHEM HTTP
 //Loglevel
 #define DEFAULT_SYSLOG_IP                       ""   // Syslog IP Address
-#define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
+#define DEFAULT_SYSLOG_LEVEL                    LOG_LEVEL_INFO                 // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
 
@@ -93,9 +123,6 @@ Your Own Default Settings
 #undef DEFAULT_USE_DST
 #define DEFAULT_USE_DST				true	// (true|false) Use Daily Time Saving
 
-#undef BUILD_NOTES
-#define BUILD_NOTES                 " - devel"
-
 #undef DEFAULT_WIFI_INCLUDE_HIDDEN_SSID   
 #define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID     true                   // Allow to connect to hidden SSID APs
 #undef DEFAULT_WIFI_NONE_SLEEP
@@ -108,29 +135,32 @@ Your Own Default Settings
 
 
 
-#ifdef BUILD_GIT
-#undef BUILD_GIT
-#endif
+/*
+ #######################################################################################################
+  Data collection 
+ #######################################################################################################
+ */
+#define FEATURE_PLUGIN_STATS  1    // Support collecting historic data + computing stats on historic data
+#ifdef ESP8266
+#  define PLUGIN_STATS_NR_ELEMENTS 16
+#endif // ifdef ESP8266
+# ifdef ESP32
+#  define PLUGIN_STATS_NR_ELEMENTS 64
+#endif // ifdef ESP32
+#define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
-#define BUILD_GIT "openandhome 0.9"
 
-//MQTT-Retain um nach einem Neustart die Werte zu behalten
-#undef DEFAULT_MQTT_RETAIN 
-#define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 
-//Suport für TEMP/Feuchtesensor AM2320(b)
-#undef USES_P051
-#define USES_P051   // AM2320
 
-#undef BUILD_NO_DEBUG
-#define BUILD_NO_DEBUG
 /*
  #######################################################################################################
    Your Own selection of plugins and controllers
  #######################################################################################################
  */
-
+#define CONTROLLER_SET_NONE
+#define NOTIFIER_SET_NONE
 #define PLUGIN_SET_NONE
+
 #define USES_P001   // Switch
 #define USES_P004   // Dallas
 #define USES_P005   // DHT
@@ -146,6 +176,43 @@ Your Own Default Settings
 #define USES_P037   // MQTTImport
 #define USES_P051   // AM2320
 #define USES_P089   // Ping
+
+/*
+ #######################################################################################################
+ ###########     Controllers
+ #######################################################################################################
+ */
+
+
+ #define USES_C001   // Domoticz HTTP
+ #define USES_C002   // Domoticz MQTT
+ #define USES_C003   // Nodo telnet
+ #define USES_C004   // ThingSpeak
+ #define USES_C005   // Home Assistant (openHAB) MQTT
+ #define USES_C006   // PiDome MQTT
+// #define USES_C007   // Emoncms
+// #define USES_C008   // Generic HTTP
+ #define USES_C009   // FHEM HTTP
+// #define USES_C010   // Generic UDP
+ #define USES_C011   // Generic HTTP Advanced
+ #define USES_C012   // Blynk HTTP
+ #define USES_C013   // ESPEasy P2P network
+ #define USES_C014   // homie 3 & 4dev MQTT
+ #define USES_C015   // Blynk
+ #define USES_C016   // Cache controller
+ #define USES_C017   // Zabbix
+ #define USES_C018   // TTN/RN2483
+
+
+/*
+ #######################################################################################################
+ ###########     Notifiers
+ #######################################################################################################
+ */
+
+
+#define USES_N001   // Email
+// #define USES_N002   // Buzzer
 
 
 #endif // ESPEASY_CUSTOM_H

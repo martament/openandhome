@@ -18,6 +18,7 @@ echo "*********************************************"
 echo "Custom-Build - Professionalbox ESP32"
 echo "*********************************************"
 platformio run --environment custom_ESP32_4M316k_ETH
+#platformio run --environment normal_ESP32_4M316k_ETH
 #echo "*********************************************"
 #echo "Devel-Build"
 #echo "*********************************************"
