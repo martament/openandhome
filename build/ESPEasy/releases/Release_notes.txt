@@ -2,6 +2,24 @@
 Neues Release32 wurde erzeugt
 -------------------------------------------------
 
+Release date: Do 27. Apr 19:35:48 CEST 2023
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20230427_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20230427_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/20230427193548custom_ESP32_4M316k_ETH.bin'
+
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 27. Apr 19:35:48 CEST 2023
+
+'uncrustify.cfg' -> '../releases/openandhome_devel.bin'
+Datei umbenannt 'uncrustify.cfg' -> '../releases/20230427193548_custom_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
 Release date: Fr 23. Dez 22:20:09 CET 2022
 
 './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20221223_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32.bin'
