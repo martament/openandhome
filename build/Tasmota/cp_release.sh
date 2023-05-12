@@ -25,8 +25,17 @@ then
 	cp Tasmota/.pio/build/tasmota-lite/firmware.bin releases/tasmota-openandhome.bin
 	mv Tasmota/.pio/build/tasmota-lite/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-de.bin
 else
-	echo "Sonoff-Tasmota/.pio/build/tasmota-lite/firmware.bin nicht gefunden"
+	echo "Tasmota/.pio/build/tasmota-lite/firmware.bin nicht gefunden"
 fi
+if [ -f "Tasmota/.pio/build/tasmota-4M/firmware.bin" ]
+then
+	cp Tasmota/.pio/build/tasmota-4M/firmware.bin releases/tasmota-openandhome-4M.bin
+	mv Tasmota/.pio/build/tasmota-4M/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-de-4M.bin
+else
+	echo "Tasmota/.pio/build/tasmota-4M/firmware.bin nicht gefunden"
+fi
+
+ls -lrtah releases
 
 ls -lrtah releases
 cd releases
