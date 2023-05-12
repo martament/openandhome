@@ -47,7 +47,7 @@ Examples :
 */
 // -- Master parameter control --------------------
 #undef  CFG_HOLDER
-#define CFG_HOLDER        0x20180605             // [Reset 1] Change this value to load SECTION1 configuration parameters to flash
+#define CFG_HOLDER        0x20230505             // [Reset 1] Change this value to load SECTION1 configuration parameters to flash
 
 // Localisation
 #undef MY_LANGUAGE
