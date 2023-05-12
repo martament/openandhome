@@ -4,9 +4,9 @@ echo Das loescht alle lokalen und remote Aenderungen
 echo
 read
 echo "Sichere unsere Dateien nach myfiles"
-cp -v Sonoff-Tasmota/sonoff/user_config_override.h myfiles
-cp -v Sonoff-Tasmota/sonoff/platformio.ini myfiles
-cd Sonoff-Tasmota
+cp -v Tasmota/sonoff/user_config_override.h myfiles
+cp -v Tasmota/sonoff/platformio.ini myfiles
+cd Tasmota
 #git remote add upstream  https://github.com/arendst/Sonoff-Tasmota.git
 #git remote add origin https://github.com/martament/Sonoff-Tasmota.git
 git fetch upstream
@@ -17,5 +17,5 @@ echo "Wir verwenden den folgenden Branch"
 git config --get remote.origin.url
 git branch
 cd ..
-cp -v myfiles/user_config_override.h Sonoff-Tasmota/sonoff
+cp -v myfiles/user_config_override.h Tasmota/sonoff
 #cp -v myfiles/platformio.ini Sonoff-Tasmota/sonoff

@@ -2,7 +2,7 @@
 set -e
 echo "Setting environment"
 . ../../../configs/env_build.rc
-cd Sonoff-Tasmota
+cd Tasmota
 #Upgrading und updating
 #platformio upgrade
 #platformio update
