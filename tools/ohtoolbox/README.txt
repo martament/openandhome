@@ -22,6 +22,7 @@ Dies ist ein grafisches Programm mit dem Sie im Fehlerfall mehrere Möglichkeite
 # **ResetDHCP** hier  koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. 
 # **ResetWifi** hier koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden.
 # **ResetAdmin** hier koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen.
+# **StartAPMode** koennen Sie den WLAN-Zugangspunkt des Sensors starten und sich wie in der Anleitung beschrieben mit dem Sensor verbinden.
 
 Sie können den Debugger unter https://github.com/martament/openandhome/releases => ohtoolbox.zip herunterladen.
 
