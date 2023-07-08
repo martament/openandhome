@@ -17,6 +17,7 @@ D.h. Sie können unseren Debugger versuchen und sollte der Ihre Problem nicht l�
 
 1. openandhome-debugger.exe (Standardprogramm)
 Dies ist ein grafisches Programm mit dem Sie im Fehlerfall mehrere Möglichkeiten haben. Sie sollten dieses Programm wann immer möglich nutzen.
+Bei jedem der Befehler wird auch der FlashWriteCounter des Sensors zurück gesetzt. Dies kann auch eine Fehlerursache sein.
 
 # **Debugger** hier koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen.
 # **ResetDHCP** hier  koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. 
