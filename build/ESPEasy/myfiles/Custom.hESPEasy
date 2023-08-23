@@ -1,8 +1,6 @@
 #ifndef ESPEASY_CUSTOM_H
 #define ESPEASY_CUSTOM_H
 
-#include <Arduino.h>
-
 /*
 	To modify the stock configuration without changing the EspEasy.ino file :
 
@@ -44,11 +42,11 @@
  #######################################################################################################
 
 */
-#undef BUILD_GIT 
+#ifdef BUILD_GIT
+# undef BUILD_GIT
+#endif // ifdef BUILD_GIT
+
 #define BUILD_GIT           "Openandhome Build: "  __DATE__ " "  __TIME__
-#undef BUILD_NOTES
-#define BUILD_NOTES " - Openandhome"
-//#define BUILD_NO_DEBUG
 
 #ifdef ESP32
 #define DEFAULT_PIN_I2C_SDA 13
@@ -60,6 +58,7 @@
 #define DEFAULT_NAME		"Sensorbox1"			// Enter your device friendly name
 
 
+#define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID     true // Allow to connect to hidden SSID APs
 #undef DEFAULT_IPRANGE_LOW
 #define DEFAULT_IPRANGE_LOW  "192.168.0.0"          // Allowed IP range to access webserver
 #undef DEFAULT_IPRANGE_HIGH
@@ -148,6 +147,39 @@
 #endif // ifdef ESP32
 #define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
+/*
+ #######################################################################################################
+   Defining web interface
+ #######################################################################################################
+ */
+
+#define MENU_INDEX_MAIN_VISIBLE          true
+/*
+#define MENU_INDEX_CONFIG_VISIBLE        false
+#define MENU_INDEX_CONTROLLERS_VISIBLE   false
+#define MENU_INDEX_HARDWARE_VISIBLE      false
+#define MENU_INDEX_DEVICES_VISIBLE       false
+#define MENU_INDEX_RULES_VISIBLE         false
+#define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#define MENU_INDEX_TOOLS_VISIBLE         false
+*/
+
+#define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
+#define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON true
+#define MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN false
+
+#define MAIN_PAGE_SHOW_NODE_LIST_BUILD   true
+#define MAIN_PAGE_SHOW_NODE_LIST_TYPE    true
+
+#define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
+
+// #define FEATURE_AUTO_DARK_MODE           0                // 0 = Disable auto-dark mode
+// #define FEATURE_EXTENDED_TASK_VALUE_TYPES 0               // 0 = Disable extra task value types like 64 bit ints, double, etc. in Dummy tasks
+// #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0  // 0 = switch to float as floating point type for rules/formula processing.
+
+//#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+
+#define SHOW_SYSINFO_JSON 1  //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
 
 
 
@@ -190,9 +222,9 @@
  #define USES_C005   // Home Assistant (openHAB) MQTT
  #define USES_C006   // PiDome MQTT
 // #define USES_C007   // Emoncms
-// #define USES_C008   // Generic HTTP
+ #define USES_C008   // Generic HTTP
  #define USES_C009   // FHEM HTTP
-// #define USES_C010   // Generic UDP
+ #define USES_C010   // Generic UDP
  #define USES_C011   // Generic HTTP Advanced
  #define USES_C012   // Blynk HTTP
  #define USES_C013   // ESPEasy P2P network
