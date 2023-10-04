@@ -27,7 +27,7 @@ then
 	#Move files
   	echo "found $buildfile moving it...."
   	cp -av $buildfile ../releases/openandhome_devel.bin | tee >> "$NOTES.new"
- 	mv -v $buildfile ../releases/`date '+%Y%m%d%H%M%S'`_custom_ESP8266_4M1M.bin | tee >> "$NOTES.new"
+ 	mv -v $buildfile ../releases/ | tee >> "$NOTES.new"
 	echo >> "$NOTES.new"
 	cat "$NOTES" >> "$NOTES.new"
 	mv "$NOTES.new" "$NOTES"
@@ -39,7 +39,29 @@ else
 fi
 
 #Search for firmware esp32...
-buildfile=`find . -type f -name '*ESP32*bin'| xargs ls | tail -n 1`
+NOTES="../releases/Release_notes.txt"
+echo "Search for ESP32 OTA-File"
+buildfile=`find . -type f -name '*ESP32*ETH.bin'| xargs ls | tail -n 1`
+
+if [ -f $buildfile ]
+then
+
+  	echo "found $buildfile moving it...."
+ 	mv -v $buildfile ../releases/ | tee >> "$NOTES.new"
+	cat "$NOTES" >> "$NOTES.new"
+	mv "$NOTES.new" "$NOTES"
+	echo "*********************************************************"
+else
+	echo "*********************************************************"
+	echo "No firmware OTA for  ESP32 found"
+	echo "*********************************************************"
+fi
+
+
+
+
+echo "Search for Factory-Build"
+buildfile=`find . -type f -name '*ESP32*factory.bin'| xargs ls | tail -n 1`
 
 if [ -f $buildfile ]
 then
@@ -55,14 +77,14 @@ then
 	#Move files
   	echo "found $buildfile moving it...."
   	cp -av $buildfile ../releases/openandhome_devel32.bin | tee >> "$NOTES.new"
- 	mv -v $buildfile ../releases/`date '+%Y%m%d%H%M%S'`custom_ESP32_4M316k_ETH.bin | tee >> "$NOTES.new"
+ 	mv -v $buildfile ../releases/ | tee >> "$NOTES.new"
 	echo >> "$NOTES.new"
 	cat "$NOTES" >> "$NOTES.new"
 	mv "$NOTES.new" "$NOTES"
 	echo "*********************************************************"
 else
 	echo "*********************************************************"
-	echo "No firmware ESP32 found"
+	echo "No firmware for Factory  ESP32 found"
 	echo "*********************************************************"
 fi
 
