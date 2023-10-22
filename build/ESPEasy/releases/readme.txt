@@ -11,7 +11,17 @@ openandhome_stable.bin => This is the tested Software. This Version is delivered
 
 
 openandhome_devel.bin => This is the bleeding edge of our development for the normal Sensorbox (WLAN)
-openandhome_devl32.bin => This is the bleeding edge of our development for the professional Sensorbox (LAN/POE)
+openandhome_devel32.bin => This is the bleeding edge of our development for the professional Sensorbox (LAN/POE)
+
+Since ESP32 does have its flash partitioned in several blocks, we have 2 bin files of each ESP32 build:
+- XXX_ESP32_4M316k.bin
+- XXX_ESP32_4M316k.factory.bin
+
+The binary with ".factory" in the name must be flashed on a new node, via the serial interface of the board.
+This flash must be started at address 0.
+
+The binary without ".factory" can be used for OTA updates. (OTA for ESP32 is added in May 2020)
+
 
 You can upload the firmware at the Interface with TOOLS/UPDATE FIRMWARE or direct by calling your Sensor http://$IP/upload
 
