@@ -11,7 +11,10 @@ openandhome_stable.bin => This is the tested Software. This Version is delivered
 
 
 openandhome_devel.bin => This is the bleeding edge of our development for the normal Sensorbox (WLAN)
-openandhome_devel32.bin => This is the bleeding edge of our development for the professional Sensorbox (LAN/POE)
+
+
+openandhome_devel32_factory.bin => This is the bleeding edge of our development for the professional Sensorbox (LAN/POE) => flash via searial interface
+openandhome_devel32_ota.bin => This is the bleeding edge of our development for the professional Sensorbox (LAN/POE) => flash via web interface
 
 Since ESP32 does have its flash partitioned in several blocks, we have 2 bin files of each ESP32 build:
 - XXX_ESP32_4M316k.bin
