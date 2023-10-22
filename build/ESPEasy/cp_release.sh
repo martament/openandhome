@@ -47,6 +47,7 @@ if [ -f $buildfile ]
 then
 
   	echo "found $buildfile moving it...."
+        cp -av $buildfile ../releases/openandhome_devel32_ota.bin | tee >> "$NOTES.new"
  	mv -v $buildfile ../releases/ | tee >> "$NOTES.new"
 	cat "$NOTES" >> "$NOTES.new"
 	mv "$NOTES.new" "$NOTES"
@@ -76,7 +77,7 @@ then
 	############## update Release_notes.txt
 	#Move files
   	echo "found $buildfile moving it...."
-  	cp -av $buildfile ../releases/openandhome_devel32.bin | tee >> "$NOTES.new"
+  	cp -av $buildfile ../releases/openandhome_devel32_factory.bin | tee >> "$NOTES.new"
  	mv -v $buildfile ../releases/ | tee >> "$NOTES.new"
 	echo >> "$NOTES.new"
 	cat "$NOTES" >> "$NOTES.new"
