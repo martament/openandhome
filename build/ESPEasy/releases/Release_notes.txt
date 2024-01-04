@@ -2,6 +2,86 @@
 Neues Release32 wurde erzeugt
 -------------------------------------------------
 
+Release date: Do 4. Jan 12:15:30 CET 2024
+
+'./build_output/bin/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32_factory.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.factory.bin'
+
+'./build_output/bin/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.bin' -> '../releases/openandhome_devel32_ota.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.bin' -> '../releases/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.bin'
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 4. Jan 12:15:29 CET 2024
+
+'./build_output/bin/ESP_Easy_mega_20231022_custom_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20231022_custom_ESP8266_4M1M.bin' -> '../releases/ESP_Easy_mega_20231022_custom_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 4. Jan 12:15:09 CET 2024
+
+'./build_output/bin/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32_factory.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.factory.bin'
+
+'./build_output/bin/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.bin' -> '../releases/openandhome_devel32_ota.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.bin' -> '../releases/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.bin'
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 4. Jan 12:15:09 CET 2024
+
+'./build_output/bin/ESP_Easy_mega_20240103_custom_312_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20240103_custom_312_ESP8266_4M1M.bin' -> '../releases/ESP_Easy_mega_20240103_custom_312_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 4. Jan 12:14:46 CET 2024
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32_factory.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.factory.bin'
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.bin' -> '../releases/openandhome_devel32_ota.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.bin' -> '../releases/ESP_Easy_mega_20240103_custom_ESP32_4M316k_ETH.bin'
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 4. Jan 12:14:45 CET 2024
+
+'./build_output/bin/ESP_Easy_mega_20240104_custom_312_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './build_output/bin/ESP_Easy_mega_20240104_custom_312_ESP8266_4M1M.bin' -> '../releases/ESP_Easy_mega_20240104_custom_312_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 4. Jan 12:09:34 CET 2024
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32_factory.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.factory.bin'
+
+'./.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.bin' -> '../releases/openandhome_devel32_ota.bin'
+Datei umbenannt './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.bin' -> '../releases/ESP_Easy_mega_20240104_custom_ESP32_4M316k_ETH.bin'
+-------------------------------------------------
+Neues Release wurde erzeugt
+-------------------------------------------------
+
+Release date: Do 4. Jan 12:09:34 CET 2024
+
+'./.pio/build/custom_312_ESP8266_4M1M/ESP_Easy_mega_20240104_custom_312_ESP8266_4M1M.bin' -> '../releases/openandhome_devel.bin'
+Datei umbenannt './.pio/build/custom_312_ESP8266_4M1M/ESP_Easy_mega_20240104_custom_312_ESP8266_4M1M.bin' -> '../releases/ESP_Easy_mega_20240104_custom_312_ESP8266_4M1M.bin'
+
+-------------------------------------------------
+Neues Release32 wurde erzeugt
+-------------------------------------------------
+
 Release date: So 22. Okt 19:03:57 CEST 2023
 
 './.pio/build/custom_ESP32_4M316k_ETH/ESP_Easy_mega_20231022_custom_ESP32_4M316k_ETH.factory.bin' -> '../releases/openandhome_devel32_factory.bin'
