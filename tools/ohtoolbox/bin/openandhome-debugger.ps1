@@ -6,11 +6,12 @@ foreach ($comport in $COMS) {
 }
 
 $msg = "Stellen Sie sicher, dass der Sensor am Rechner vor dem Start des Debuggers angeschlossen ist." + 
-"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **Debugger** koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen. Achtung es werden auch WIFI-Zugangsdaten geschrieben. Diese evtl. löschen." +
+"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **Debugger** koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen. Achtung es werden auch WIFI-Zugangsdaten geschrieben. Diese evtl. loeschen." +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetDHCP** koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. " +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetWifi** koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden." +
 "$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetAdmin** koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen." +
-"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **StartAPMode** koennen Sie den WLAN-Zugangspunkt des Sensors starten und sich wie in der Anleitung beschrieben mit dem Sensor verbinden."  
+"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **StartAPMode** koennen Sie den WLAN-Zugangspunkt des Sensors starten und sich wie in der Anleitung beschrieben mit dem Sensor verbinden." +
+"$([System.Environment]::NewLine)$([System.Environment]::NewLine)Mit **ResetIpFiltering** koennen Sie die Client-IP-Filterung fuer die aktuelle Session deaktiveren."  
 
 
 function read-com {
@@ -91,11 +92,24 @@ function start-apmode {
     $port.Close()
 }
 
+function reset-ipfilter {
+    $port= new-Object System.IO.Ports.SerialPort $COM,115000,None,8,one
+    $port.Open()
+    Sleep -Milliseconds 300
+    $port.WriteLine("ResetFlashWriteCounter")
+    Sleep -Milliseconds 300
+    $port.WriteLine("ClearAccessBlock")
+    Sleep -Milliseconds 300
+    $port.WriteLine("Save")
+    Sleep -Milliseconds 300
+    $port.Close()
+}
+
 $Title = "Openandhome-Debugger"
 
   
-$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Debugger", "&ResetDHCP", "&ResetWifi", "&ResetAdmin", "&StartAPMode","&Abbrechen")
-[int]$defaultchoice = 5
+$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Debugger", "&ResetDHCP", "&ResetWifi", "&ResetAdmin","&StartAPMode", "&ResetIPFiltering","&Abbrechen")
+[int]$defaultchoice = 6
 $opt = $host.UI.PromptForChoice($Title , $msg , $Options,$defaultchoice)
 switch($opt)
 {
@@ -104,5 +118,6 @@ switch($opt)
 2 { reset-wifi }
 3 { reset-password }
 4 { start-apmode }
-5 { Write-Host "Good Bye!!!" -ForegroundColor Green}
+5 { reset-ipfilter }
+6 { Write-Host "Good Bye!!!" -ForegroundColor Green}
 }

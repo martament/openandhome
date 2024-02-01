@@ -89,6 +89,10 @@ else
 	echo "*********************************************************"
 fi
 
+echo
+echo "Cleanup old Builds"
+rm ./build_output/bin/*.bin
+
 
 cd ../releases
 ls -lrtah ./
