@@ -9,7 +9,8 @@ platformio run --target clean
 echo "*********************************************"
 echo "Normal-Build - Standardbox ESP8266"
 echo "*********************************************"
-platformio run --environment custom_ESP8266_4M1M
+#platformio run --environment custom_ESP8266_4M1M
+platformio run --environment custom_312_ESP8266_4M1M
 echo
 echo
 #https://docs.platformio.org/en/stable/boards/espressif32/esp32-poe.html
