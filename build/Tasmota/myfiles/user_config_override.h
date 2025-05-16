@@ -152,6 +152,10 @@ Examples :
 #undef WEB_LOG_LEVEL
 #define WEB_LOG_LEVEL          LOG_LEVEL_INFO    // [WebLog]
 
+// -- Support for Expressions and if-Statements
+#define USE_EXPRESSION         // Add support for expression evaluation in rules (+3k2 code, +64 bytes mem)  
+#define SUPPORT_IF_STATEMENT   // Add support for IF statement in rules (+4k2 code, 
+
 // -- Time - Up to three NTP servers in your region
 #undef NTP_SERVER1
 #define NTP_SERVER1            "fritz.box"       // [NtpServer1] Select first NTP server by name or IP address (129.250.35.250)
