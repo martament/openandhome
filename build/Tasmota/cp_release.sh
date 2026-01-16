@@ -20,20 +20,28 @@ echo >> "$NOTES.new"
 cat "$NOTES" >> "$NOTES.new"
 mv "$NOTES.new" "$NOTES"
 
-if [ -f "Tasmota/.pio/build/tasmota-lite/firmware.bin" ]
+if [ -f "Tasmota/.pio/build/tasmota-minimal/firmware.bin" ]
 then
-	cp Tasmota/.pio/build/tasmota-lite/firmware.bin releases/tasmota-openandhome.bin
-	mv Tasmota/.pio/build/tasmota-lite/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-de.bin
+	cp Tasmota/.pio/build/tasmota-minimal/firmware.bin releases/tasmota-openandhome_minimal.bin
+	mv Tasmota/.pio/build/tasmota-minimal/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-minimal.bin
 else
 	echo "Tasmota/.pio/build/tasmota-lite/firmware.bin nicht gefunden"
 fi
-if [ -f "Tasmota/.pio/build/tasmota-4M/firmware.bin" ]
+if [ -f "Tasmota/.pio/build/tasmota-lite/firmware.bin" ]
 then
-	cp Tasmota/.pio/build/tasmota-4M/firmware.bin releases/tasmota-openandhome-4M.bin
-	mv Tasmota/.pio/build/tasmota-4M/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-de-4M.bin
+	cp Tasmota/.pio/build/tasmota-lite/firmware.bin releases/tasmota-openandhome.bin
+	mv Tasmota/.pio/build/tasmota-lite/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-lite.bin
 else
-	echo "Tasmota/.pio/build/tasmota-4M/firmware.bin nicht gefunden"
+	echo "Tasmota/.pio/build/tasmota-lite/firmware.bin nicht gefunden"
 fi
+if [ -f "Tasmota/.pio/build/tasmota-DE/firmware.bin" ]
+then
+	cp Tasmota/.pio/build/tasmota-DE/firmware.bin releases/tasmota-openandhome-de-4M.bin
+	mv Tasmota/.pio/build/tasmota-DE/firmware.bin releases/`date '+%Y%m%d%H%M%S'`_tasmota-de-4M.bin
+else
+	echo "Tasmota/.pio/build/tasmota-DE/firmware.bin nicht gefunden"
+fi
+
 
 ls -lrtah releases
 
