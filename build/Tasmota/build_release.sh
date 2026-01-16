@@ -12,9 +12,10 @@ platformio run --target clean
 echo "*********************************************"
 echo "Normal/Standard-Build of Sonoff"
 echo "*********************************************"
-#platformio run --environment tasmota-lite
+platformio run --environment tasmota-lite
+platformio run --environment tasmota-minimal
 #platformio run --environment tasmota
-platformio run --environment tasmota-4M
+platformio run --environment tasmota-DE
 
 echo "*********************************************"
 echo "Normal/Standard-Build "

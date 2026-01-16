@@ -207,6 +207,8 @@
 #define USES_P037   // MQTTImport
 #define USES_P051   // AM2320
 #define USES_P089   // Ping
+#define USES_P145   // Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)
+
 
 /*
  #######################################################################################################
