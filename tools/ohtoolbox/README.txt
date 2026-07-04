@@ -15,26 +15,84 @@ D.h. Sie können unseren Debugger versuchen und sollte der Ihre Problem nicht l�
 
 # https://www.openandhome.de/index.php/ufaqs/ich-habe-ein-problem-mit-meinem-sensor-was-kann-ich-tun/ 
 
-1. openandhome-toolbox (Standardprogramm)
-Dies ist ein Programm für die Konsole mit dem Sie im Fehlerfall mehrere Möglichkeiten haben. Sie sollten dieses Programm wann immer möglich nutzen.
-Bei jedem der Befehler wird auch der FlashWriteCounter des Sensors zurück gesetzt. Dies kann auch eine Fehlerursache sein.
+# openandhome-toolbox (Standardprogramm)
 
-Verbinden Sie vor dem Aufruf des Programms die Sensorbox mit einem Micro-USB-Kabel mit Ihrem Rechner.
+Die openandhome-toolbox ist ein Konsolenprogramm, mit dem Sie im Fehlerfall
+mehrere Diagnose- und Reparaturmöglichkeiten haben und die WLAN-Zugangsdaten
+des Sensors direkt über das USB-Kabel setzen können. Nutzen Sie dieses
+Programm wann immer möglich.
 
-# **ResetWifi** hier koennen Sie die Wifizugangsdaten zuruecksetzen. Sie muessen den Sensor danach erneut in Ihr WLAN einbinden.
-# **Einstellungen** hier koennen Sie die aktuellen Einstellungen des Sensors anzeigen lassen.
-# **Debugger** hier koennen Sie die Ausgaben des Sensors in eine Datei schreiben und anzeigen lassen.
-# **ResetDHCP** hier  koennen Sie eine statische IP Ihres Sensors aufheben. Hier bitte kurz warten. 
-# **ResetAdmin** hier koennen Sie ein evtl. vergebenenes Adminpasswort zuruecksetzen.
-# **StartAPMode** hier koennen Sie den WLAN-Zugangspunkt des Sensors starten und sich wie in der Anleitung beschrieben mit dem Sensor verbinden.
-# **ResetIPFiltering** hier koennen Sie die Client-IP-Filterung des Sensors für die aktuelle Session zurücksetzen
+Verbinden Sie vor dem Aufruf des Programms die Sensorbox mit einem
+Micro-USB-Kabel mit Ihrem Rechner.
 
-Sie können die Toolbox unter https://github.com/martament/openandhome/releases => ohtoolbox.zip herunterladen.
+Hinweis: Bei fast allen Funktionen wird zusätzlich der FlashWriteCounter des
+Sensors zurückgesetzt. Ein voller FlashWriteCounter kann selbst eine
+Fehlerursache sein, daher geschieht dies automatisch im Hintergrund.
 
-Das Programm ist eine Powershelldatei oder ein Linuxskript. Diese müssen Sie aus einer  Powershell oder einem Terminal heraus aufrufen. 
+## Die Funktionen im Überblick
 
-Windows: Rechte Maustaste win_ohtoolbox.ps1 und öffnen mit Powershell.
-Linux: bash linux_ohtoolbox.sh
+1. **WLAN-Zugangsdaten setzen (SSID/Key)** – Hier können Sie den Sensor in
+   Ihr WLAN einbinden, ohne den Zugangspunkt-Modus zu verwenden. Sie werden
+   nach der SSID (dem Namen Ihres WLANs) und dem WPA-Schlüssel gefragt; die
+   Eingabe des Schlüssels ist dabei unsichtbar und wird zur Sicherheit
+   zweimal abgefragt. Optional können Sie ein zweites WLAN als Fallback
+   hinterlegen. Nach dem Senden der Daten empfiehlt sich der angebotene
+   Neustart, damit sich der Sensor direkt mit dem neuen WLAN verbindet.
+2. **Neustart (Reboot)** – Startet den Sensor neu. Nützlich z. B. nach dem
+   Ändern von Einstellungen oder wenn sich der Sensor nicht mehr verbindet.
+3. **Einstellungen anzeigen (Settings)** – Zeigt die aktuellen Einstellungen
+   des Sensors an.
+4. **Debugger** – Schreibt die Ausgaben des Sensors in die Datei
+   oh-debug.txt und zeigt sie gleichzeitig an. Beenden mit STRG+C.
+5. **Reset Wifi** – Setzt die WLAN-Zugangsdaten zurück. Sie müssen den
+   Sensor danach erneut in Ihr WLAN einbinden – am einfachsten direkt über
+   Menüpunkt 1 oder alternativ über den Zugangspunkt-Modus (Punkt 8).
+6. **Reset DHCP** – Hebt eine statische IP-Adresse des Sensors auf, die
+   IP wird danach wieder automatisch per DHCP bezogen. Hier bitte kurz
+   warten.
+7. **Reset Admin Password** – Setzt ein eventuell vergebenes
+   Admin-Passwort der Weboberfläche zurück.
+8. **Start AP-Mode** – Startet den WLAN-Zugangspunkt des Sensors. Verbinden
+   Sie sich anschließend wie in der Anleitung beschrieben mit dem Sensor.
+9. **Reset IP-Filtering** – Setzt die Client-IP-Filterung des Sensors für
+   die aktuelle Session (bis zum nächsten Neustart) zurück.
+
+## Download
+
+Sie können die Toolbox hier herunterladen:
+https://github.com/martament/openandhome/releases => ohtoolbox.zip
+
+Das Archiv enthält eine PowerShell-Datei für Windows und ein Bash-Skript
+für Linux. Beide müssen aus einer PowerShell bzw. einem Terminal heraus
+aufgerufen werden.
+
+## Start unter Windows
+
+Rechtsklick auf win_ohtoolbox.ps1 => "Mit PowerShell ausführen".
+
+Falls Windows die Ausführung mit einem Hinweis auf die Ausführungsrichtlinie
+(Execution Policy) blockiert, öffnen Sie eine PowerShell im Ordner der Datei
+und starten Sie das Programm mit:
+
+    powershell -ExecutionPolicy Bypass -File .\win_ohtoolbox.ps1
+
+## Start unter Linux
+
+Öffnen Sie ein Terminal im Ordner der Datei und starten Sie:
+
+    bash linux_ohtoolbox.sh
+
+Falls die Meldung "Kein Sensor gefunden" oder ein Berechtigungsfehler
+(Permission denied) erscheint, obwohl der Sensor angeschlossen ist, fehlen
+Ihrem Benutzer vermutlich die Rechte für die serielle Schnittstelle. Fügen
+Sie Ihren Benutzer der Gruppe "dialout" hinzu und melden Sie sich danach
+einmal ab und wieder an:
+
+    sudo usermod -aG dialout $USER
+
+Alternativ können Sie das Skript einmalig mit sudo starten:
+
+    sudo bash linux_ohtoolbox.sh
 
 
 2. Toolbox kann das Problem nicht lösen
