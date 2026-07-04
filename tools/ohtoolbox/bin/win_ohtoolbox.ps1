@@ -1,8 +1,8 @@
-# --- TITEL ---
+﻿# --- TITEL ---
 function Show-Header {
     Clear-Host
     Write-Host "====================================" -ForegroundColor Cyan
-    Write-Host "    Openandhome - Multi-Tool v2.4" -ForegroundColor Cyan
+    Write-Host "    Openandhome - Multi-Tool v2.6" -ForegroundColor Cyan
     Write-Host "====================================`n" -ForegroundColor Cyan
 }
 
@@ -34,7 +34,15 @@ Start-Sleep -Milliseconds 500
 function Open-Port {
     try {
         $p = New-Object System.IO.Ports.SerialPort $COM, $baudRate, "None", 8, "One"
+        # WICHTIG: DTR/RTS aktivieren. Linux (stty) und Terminalprogramme wie
+        # PuTTY setzen diese Steuerleitungen beim Öffnen automatisch - .NET
+        # SerialPort NICHT. Ohne DTR/RTS senden viele USB-Seriell-Adapter
+        # (CH340/CP2102) keine Daten an den PC => Debugausgabe bleibt leer.
+        $p.DtrEnable = $true
+        $p.RtsEnable = $true
+        $p.Encoding  = [System.Text.Encoding]::UTF8
         $p.Open()
+        $p.DiscardOutBuffer()
         return $p
     } catch {
         Write-Host "`nFEHLER: Port $COM ist belegt!" -ForegroundColor Red
@@ -49,10 +57,15 @@ function Show-Settings {
     Write-Host "Beenden mit STRG+C.`n" -ForegroundColor Gray
     $port = Open-Port
     try {
+        # Das Öffnen des Ports kann den Sensor über DTR/RTS kurz neu starten
+        Start-Sleep -Milliseconds 1500
+        $port.DiscardInBuffer()
         $port.WriteLine("ResetFlashWriteCounter")
         Start-Sleep -Milliseconds 100
         $port.WriteLine("Settings")
-        
+        while ($Host.UI.RawUI.KeyAvailable) {
+            $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+        }
         Write-Host "Lese Daten (Beliebige Taste für Menü)...`n" -ForegroundColor Gray
         while (-not $Host.UI.RawUI.KeyAvailable) {
             if ($port.BytesToRead -gt 0) {
@@ -68,26 +81,39 @@ function Show-Settings {
 
 function Invoke-Debugger {
     Write-Host "`n--- Debugging aktiv ---" -ForegroundColor Cyan
-    Write-Host "Schreibe in oh-debug.txt. Beenden mit STRG+C.`n" -ForegroundColor Gray
-    "--- Debug Log Start: $(Get-Date) ---" | Out-File -FilePath .\oh-debug.txt
-    
+    $logFile = Join-Path (Get-Location) "oh-debug.txt"
+    Write-Host "Schreibe in $logFile" -ForegroundColor Gray
+    Write-Host "Beenden mit beliebiger Taste.`n" -ForegroundColor Gray
+    "--- Debug Log Start: $(Get-Date) ---" | Out-File -FilePath $logFile -Encoding utf8
+
     $port = Open-Port
     try {
+        # Das Öffnen des Ports kann den Sensor über DTR/RTS kurz neu starten -
+        # daher etwas warten, damit die Befehle nicht im Boot verloren gehen
+        Start-Sleep -Milliseconds 1500
+        $port.DiscardInBuffer()
         $port.WriteLine("ResetFlashWriteCounter")
         $port.WriteLine("Settings")
-        while ($port.IsOpen) {
-            if ($port.BytesToRead -gt 0) {
-                $line = $port.ReadLine()
-                $line | Out-File -FilePath .\oh-debug.txt -Append
-                Write-Host $line
-            }
-            Start-Sleep -Milliseconds 10
+        # Evtl. noch anstehende Tasten (z.B. Enter vom Menü) verwerfen
+        while ($Host.UI.RawUI.KeyAvailable) {
+            $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
         }
-    } catch [System.Management.Automation.PipelineStoppedException] {
-        Write-Host "`nAufzeichnung beendet." -ForegroundColor Yellow
+        # Solange keine Taste gedrückt wurde: Port auslesen,
+        # in Datei schreiben und gleichzeitig anzeigen
+        while (-not $Host.UI.RawUI.KeyAvailable) {
+            if ($port.BytesToRead -gt 0) {
+                $data = $port.ReadExisting()
+                $data | Out-File -FilePath $logFile -Append -Encoding utf8 -NoNewline
+                Write-Host $data -NoNewline
+            }
+            Start-Sleep -Milliseconds 50
+        }
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     } finally {
         if ($port) { $port.Close() }
-        if (Test-Path .\oh-debug.txt) { Get-Content .\oh-debug.txt | Out-GridView -Title "Debug Resultate" }
+        Write-Host "`nAufzeichnung beendet. Log gespeichert unter:" -ForegroundColor Yellow
+        Write-Host $logFile -ForegroundColor Green
+        Read-Host "Zurück zum Menü mit Enter..."
     }
 }
 
@@ -95,6 +121,8 @@ function Send-Commands($label, $commands) {
     Write-Host "`nFühre aus: $label" -ForegroundColor Yellow
     $port = Open-Port
     try {
+        # Kurze Wartezeit, falls das Öffnen des Ports den Sensor neu startet
+        Start-Sleep -Milliseconds 1500
         $port.WriteLine("ResetFlashWriteCounter")
         Start-Sleep -Milliseconds 300
         foreach ($cmd in $commands) {
