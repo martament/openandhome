@@ -3,7 +3,7 @@ echo "Dieses Skript schiebt die aktuelle Configuration auf den ESP"
 echo "Bitte die IP übergeben"
 echo
 old_pwd=`pwd`
-cd ../resources
+cd ../../standalone/resources
 echo "Erstelle aktuelle Version des Dashboards"
 cat header.txt "$old_pwd/table.txt" footer.txt > "$old_pwd/openandhome.esp"
 echo "Sende Icon und Openandhome-Dashboard"

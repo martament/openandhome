@@ -1,4 +1,0 @@
-<p>Supportanfrage via Mail stellen: <a href="mailto:info@openandhome.de?subject=Supportanfrage%20zu%20TemperaturSensor">info@openandhome.de</a> </p>
-<p>Webseite und Shop: <a href="https://www.openandhome.de">https://www.openandhome.de</a> </p>
-<p>Handbücher und Anleitungen: <a href="https://github.com/martament/openandhome/tree/master/docs">Anleitungen</a> </p>
-</HTML>

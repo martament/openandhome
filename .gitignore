@@ -1,3 +1,5 @@
 *~
 tools/helper/
 __pycache__/
+build/Tasmota/Tasmota/
+build/ESPEasy/ESPEasy/

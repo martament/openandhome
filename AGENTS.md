@@ -68,16 +68,17 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 
 | Pfad | Inhalt |
 |---|---|
-| [`build/ESPEasy/`](build/ESPEasy/) | Alte Build-Pipeline (PlatformIO), Git-Update-Skripte, Patches, Custom.h |
 | [`build/ESPEasy/myfiles/Custom.hESPEasy`](build/ESPEasy/myfiles/Custom.hESPEasy) | **Maßgebliche** Compile-/Default-Optionen des alten Eigenbuilds |
 | [`build/ESPEasy/myfiles/*.patch`](build/ESPEasy/myfiles/) | 7 Patches (AP-Mode als Daily-Driver, ApDontForceSetup, SettingsStruct) |
-| [`build/Tasmota/`](build/Tasmota/) | Alte Tasmota-Builds und Releases (historisch) |
-| [`configs/espeasy/professional/`](configs/espeasy/professional/) | **Professional (ESP32)**: config.dat, Dashboard, fertiges collection_A-Image, Partition-CSV |
-| [`configs/espeasy/standalone/`](configs/espeasy/standalone/) | **Standalone (ESP8266 4M1M)**: pro Sensorvariante `config.dat`, `table.txt`, `spiffs1M.bin` |
-| [`configs/espeasy/resources/`](configs/espeasy/resources/) | Gemeinsame Dashboard-Bausteine: `header.txt`, `footer.txt`, Icons, `config.dat` |
-| [`configs/espeasy/set/`](configs/espeasy/set/) | Fertige Konfig-Sets (1/3/4 Fühler, Getreide) |
+| [`build/Tasmota/`](build/Tasmota/) | Alte Tasmota-Builds und Releases — Umstellung siehe [`plans/tasmota-fertig-images.md`](plans/tasmota-fertig-images.md) |
+| [`configs/espeasy/professional/`](configs/espeasy/professional/) | **Professional (ESP32)**: collection_A-Image + `readme_image.txt`, Partition-CSV, Varianten-Ordner (alt) |
+| [`configs/espeasy/standalone/`](configs/espeasy/standalone/) | **Standalone (ESP8266 4M1M)**: collection_A-Image + `readme_image.txt`, Varianten-Ordner (alt) |
+| [`configs/espeasy/standalone/basis/config.dat`](configs/espeasy/standalone/basis/config.dat) | **Basis-config.dat** mit allen Tasks (Autoerkennung schaltet passende ein) |
+| [`configs/espeasy/standalone/resources/`](configs/espeasy/standalone/resources/) | Dashboard-Bausteine für beide Klassen: `header.txt`, `footer.txt`, Icons, CSS |
 | [`tools/oh-flasher/`](tools/oh-flasher/Readme.md) | Windows-Flasher für Endkunden |
-| [`tools/ohtoolbox/`](tools/ohtoolbox/bin/linux_ohtoolbox.sh) | Linux-Multitool (WLAN, Settings, Debug) |
+| [`tools/ohtoolbox/`](tools/ohtoolbox/bin/linux_ohtoolbox.sh) | Toolbox für Endkunden (WLAN, Settings, Debug) |
+| [`tools/ohwerkstatt/`](tools/ohwerkstatt/README.md) | Werkstatt-Tool (intern, Linux): Aufsetzen, 24h-Test, Testende |
+| [`tools/bin/`](tools/bin/) | Python-Helfer: Download, Autoerkennung, Syslog, config.dat-Prüfung, Testablauf |
 | [`docs/`](docs/) | PDF-Bedienungsanleitungen |
 | [`plans/`](plans/) | Planungs-/Konzeptdokumente |
 
@@ -112,10 +113,10 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 
 ## 5. Dashboard / Web-UI
 
-Das Dashboard wird aus [`configs/espeasy/resources/header.txt`](configs/espeasy/resources/header.txt)
-+ `<variante>/table.txt` + [`configs/espeasy/resources/footer.txt`](configs/espeasy/resources/footer.txt)
-zu `openandhome.esp` zusammengebaut und per `push_config.sh` (curl-Upload) auf den
-Sensor gespielt. Danach `config.dat` hochladen und `reboot`.
+Das Dashboard `openandhome.esp` erzeugt [`tools/bin/espeasy_testbox.py`](tools/bin/espeasy_testbox.py)
+(Werkstatt-Menü 5) aus den **aktiven Tasks** der Box: [`header.txt`](configs/espeasy/standalone/resources/header.txt)
++ generierte Tabelle + [`footer.txt`](configs/espeasy/standalone/resources/footer.txt), Upload samt Icons/CSS
+per HTTP. Die alten `table.txt`/`push_config.sh` je Variante sind nur noch Referenz.
 
 ## 6. Testen der Sensorboxen (Devel)
 
