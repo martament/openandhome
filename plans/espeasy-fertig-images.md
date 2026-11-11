@@ -633,6 +633,30 @@ flowchart TD
 | FL-8 | **Aufräumen** | `tools/oh-flasher/firmware/` (Eigenbuilds, `N_spiffs1M.bin`) durch Manifest-Dateien ersetzen; Readme und Bilder anpassen; `oh-flasher.zip` als GitHub-Release neu bauen. |
 | FL-9 | **Tests** | Linux: `oh_flasher.py` komplett an der Testbox (mit/ohne WLAN). Windows: Start über `start_flasher.bat`, COM-Port-Erkennung, Download — durch dich. |
 
+### 12.3 Stand der Umsetzung (2026-11-11)
+
+**Umgesetzt und an der Testbox getestet:**
+- [`oh_flasher.py`](../tools/oh-flasher/bin/oh_flasher.py): Menü 1 Neu aufsetzen
+  **mit WLAN** (Firmware, WLAN per USB, Basis-`config.dat` per HTTP,
+  Autoerkennung, Dashboard, Zugriffsbereich) komplett durchgelaufen;
+  Menü 2 Nur Firmware aus dem **entpackten ZIP im Offline-Modus** geprüft.
+- [`openandhome-flasher.ps1`](../tools/oh-flasher/bin/openandhome-flasher.ps1) startet nur noch Python.
+- Manifest per Werkstatt-Menü `k` ([`espeasy_testbox.py kundenpaket`](../tools/bin/espeasy_testbox.py)),
+  ZIP per [`paket_bauen.py`](../tools/oh-flasher/paket_bauen.py) (`daten/` = Offline-Kopie).
+- **Windows-Test steht aus** (Start, COM-Port, Download von GitHub).
+
+**Befund – kein Dateisystem-Abzug von Boxen:** Ein Abzug (`read_flash
+0x300000 0xFB000`) einer Box, deren WLAN vorher gelöscht wurde, enthielt
+trotzdem den alten WLAN-Schlüssel. SPIFFS markiert überschriebene Seiten nur
+als gelöscht. Der Abzug wurde sofort gelöscht (nie committet).
+**Folge:** Der Weg **ohne WLAN** braucht ein frisch gebautes SPIFFS-Image
+(`mkspiffs` aus der ESP8266-Toolchain, Seite 256, Block 8192, Größe `0xFB000`)
+aus `config.dat` + Dashboard-Dateien, **ohne** `security.dat`. Das Herunterladen
+und Ausführen von `mkspiffs` wurde in dieser Sitzung vom Auto-Modus blockiert
+(fremdes Binary) — Freigabe durch Martin nötig. Bis dahin fragt der Flasher
+nach WLAN und bricht ohne WLAN mit einem Hinweis ab.
+- Alte Dateien in `tools/oh-flasher/firmware/` bleiben, bis der Offline-Weg steht.
+
 **Offen:** Verhalten von P004 „Auto Select" mit echtem Fühler (Testbox hat
 keinen DS18B20); Basis-`config.dat` braucht dafür „Auto Select" im ersten
 DS18B20-Task.

@@ -247,11 +247,11 @@ def lade_hoch(box, pfad, name=None):
             sys.exit(f"FEHLER: Upload {pfad} -> HTTP {antwort.status}")
 
 
-def aktive_messwerte(box):
-    """[(Taskname, Wertname, Wert, Plugin-Typ)] aller aktiven Sensor-Tasks."""
+def aktive_messwerte(box, alle=False):
+    """[(Taskname, Wertname, Wert, Plugin-Typ)] der aktiven (bzw. aller) Sensor-Tasks."""
     werte = []
     for t in json.loads(box.get("/json"))["Sensors"]:
-        if t["TaskEnabled"] != "true" or "System Info" in t["Type"] or "Display" in t["Type"]:
+        if (t["TaskEnabled"] != "true" and not alle) or "System Info" in t["Type"] or "Display" in t["Type"]:
             continue
         for v in t.get("TaskValues", []):
             werte.append((t["TaskName"], v["Name"], v["Value"], t["Type"]))
@@ -259,9 +259,10 @@ def aktive_messwerte(box):
 
 
 # --- Dashboard ---
-def erzeuge_dashboard(box):
+def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
+    """alle=True: Zeilen fuer alle Sensor-Tasks (Kundenpaket ohne Netzwerk)."""
     zeilen, fuehler_nr = [], 0
-    for task, wert, _, typ in aktive_messwerte(box):
+    for task, wert, _, typ in aktive_messwerte(box, alle):
         art = wert.lower()
         if "1-Wire" in typ:
             fuehler_nr += 1
@@ -273,22 +274,22 @@ def erzeuge_dashboard(box):
         zeilen.append(f" <tr>\n  <td>{html.escape(label)}:</td>\n  <td><img src=\"{icon}\"></td>\n"
                       f"  <td>[{task}#{wert}] {EINHEITEN.get(art, '')}</td>\n </tr>")
     tabelle = "<table id=\"sensordata\" >\n" + "\n".join(zeilen) + "\n</table>\n"
-    with open(os.path.join(RESSOURCEN, "header.txt"), encoding="utf-8") as f:
+    with open(os.path.join(ressourcen, "header.txt"), encoding="utf-8") as f:
         kopf = f.read()
-    with open(os.path.join(RESSOURCEN, "footer.txt"), encoding="utf-8") as f:
+    with open(os.path.join(ressourcen, "footer.txt"), encoding="utf-8") as f:
         fuss = f.read()
     return kopf + tabelle + fuss, len(zeilen)
 
 
-def dashboard_hochladen(box, ablage=None):
-    inhalt, anzahl = erzeuge_dashboard(box)
+def dashboard_hochladen(box, ablage=None, ressourcen=RESSOURCEN, alle=False):
+    inhalt, anzahl = erzeuge_dashboard(box, ressourcen, alle)
     ablage = ablage or os.path.join(os.path.expanduser("~"), ".cache", "openandhome")
     os.makedirs(ablage, exist_ok=True)
     pfad = os.path.join(ablage, "openandhome.esp")
     with open(pfad, "w", encoding="utf-8") as f:
         f.write(inhalt)
     for datei in DASHBOARD_DATEIEN:
-        lade_hoch(box, os.path.join(RESSOURCEN, datei))
+        lade_hoch(box, os.path.join(ressourcen, datei))
     lade_hoch(box, pfad)
     print(f"Dashboard mit {anzahl} Messwert(en) hochgeladen ({pfad}).")
 
@@ -484,9 +485,79 @@ def beenden(args):
     print(f"\nErgebnis: {ergebnis}")
 
 
+def kundenpaket(args):
+    """Erzeugt das Manifest fuer den Windows-Flasher (Plan 12, nur ESP8266).
+
+    Kein Dateisystem-Abzug von der Box: SPIFFS behaelt ueberschriebene Bloecke,
+    ein Abzug enthielte alte WLAN-Daten. Das Manifest verweist auf Firmware,
+    Basis-config.dat und Dashboard-Dateien im Repo; die Task-Liste fuer die
+    Erkennung wird aus der Basis-config.dat auf der Box gelesen."""
+    port = args.port
+    schritt("1/3 Box pruefen")
+    chip, mac = chip_info(port)
+    if chip != "ESP8266":
+        sys.exit("FEHLER: Kundenpaket nur fuer Standalone (ESP8266).")
+    # chip_id setzt den Chip zurueck - auf den Neustart warten
+    box = http_bereit(port, warte_ip(port, 60))
+
+    schritt("2/3 Basis-config.dat laden, Task-Liste lesen")
+    basis = os.path.join(ROOT, KLASSEN[chip]["basis"])
+    lade_hoch(box, basis, "config.dat")
+    sende(port, "Reboot")
+    time.sleep(10)
+    box = http_bereit(port, warte_ip(port))
+    from espeasy_autoconfig import I2C_PLUGINS, lies_task
+    tasks, gpio = [], None
+    for t in json.loads(box.get("/json"))["Sensors"]:
+        nr = t["TaskNumber"]
+        _, felder = lies_task(box, nr)
+        plugin = int(felder.get("TDNUM", "0") or 0)
+        eintrag = {"nr": nr, "name": t["TaskName"], "typ": t["Type"]}
+        if plugin == PLUGIN_SYSINFO:
+            continue
+        if plugin == PLUGIN_DS18B20:
+            eintrag["art"] = "ds18b20"
+            gpio = int(felder.get("taskdevicepin1", "0")) if gpio is None else gpio
+        elif plugin in I2C_PLUGINS:
+            eintrag.update(art="i2c", adressen=sorted(I2C_PLUGINS[plugin]))
+        else:
+            eintrag["art"] = "frage"
+        tasks.append(eintrag)
+        print(f"  Task {nr:2} {t['TaskName']:<14} {eintrag['art']}")
+
+    schritt("3/3 Manifest")
+    bild = sorted(glob.glob(os.path.join(ROOT, KLASSEN[chip]["image"])))[-1]
+    relativ = lambda p: os.path.relpath(p, ROOT).replace(os.sep, "/")
+    eintrag = lambda p: {"pfad": relativ(p), "sha256": sha256(p)}
+    manifest = {
+        "version": 1,
+        "erzeugt": f"{datetime.datetime.now():%Y-%m-%d %H:%M}",
+        "firmware": eintrag(bild),
+        "basis_config": eintrag(basis),
+        "ressourcen": [eintrag(os.path.join(RESSOURCEN, d)) for d in ["header.txt", "footer.txt", *DASHBOARD_DATEIEN]],
+        "onewire_gpio": gpio or 0,
+        "tasks": tasks,
+    }
+    pfad = os.path.join(ROOT, "tools/oh-flasher/manifest.json")
+    with open(pfad, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    print(f"  {relativ(pfad)}")
+    print("\nKundenpaket fertig. Pruefen und auf devel committen (manifest.json).")
+
+
+def sha256(pfad):
+    import hashlib
+    h = hashlib.sha256()
+    with open(pfad, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Testablauf fuer openandhome-Sensorboxen.")
-    parser.add_argument("aktion", choices=["aufsetzen", "pruefen", "dashboard", "beenden"])
+    parser.add_argument("aktion", choices=["aufsetzen", "pruefen", "dashboard", "beenden", "kundenpaket"])
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
     parser.add_argument("--ohne-flash", action="store_true", help="aufsetzen ohne Sicherung/Flashen")
@@ -501,6 +572,9 @@ def main():
         return
     if args.aktion == "beenden":
         beenden(args)
+        return
+    if args.aktion == "kundenpaket":
+        kundenpaket(args)
         return
     ip = args.host or usb_ip(args.port)
     if not ip:

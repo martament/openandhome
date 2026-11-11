@@ -168,6 +168,14 @@ syslog() {
     weiter
 }
 
+kundenpaket() {
+    echo -e "\n\e[36m--- Kundenpaket für den Windows-Flasher ---\e[0m"
+    echo "Box (ESP8266, im WLAN) -> Basis-config.dat, Sensorbox1, Auto Select, Dashboard (alle Sensoren)"
+    echo "-> WLAN löschen -> Dateisystem auslesen -> tools/oh-flasher/firmware + manifest.json"
+    read -p "Weiter? (j/n) [n]: " ok
+    [[ "$ok" =~ ^[jJyY]$ ]] && testbox kundenpaket || weiter
+}
+
 check_config() {
     echo -e "\n\e[36m--- config.dat / Backup-Tar prüfen ---\e[0m"
     read -e -p "Datei(en): " -a dateien
@@ -206,6 +214,8 @@ while true; do
     echo "7) 1-Wire-Scan DS18B20"
     echo "8) Syslog an/aus/Status"
     echo "9) config.dat / Backup-Tar prüfen"
+    echo "k) Kundenpaket für den Windows-Flasher erzeugen"
+    echo "f) Windows-Flasher hier testen (lokale Dateien)"
     echo "i) Fertig-Images laden (Branch devel)"
     echo "m) Serieller Monitor"
     echo "------------------------------------"
@@ -224,6 +234,8 @@ while true; do
         7) onewire_scan ;;
         8) syslog ;;
         9) check_config ;;
+        k|K) kundenpaket ;;
+        f|F) find_port && python3 "$REPO/tools/oh-flasher/bin/oh_flasher.py" --port "$PORT" --quelle lokal; weiter ;;
         i|I) download_images ;;
         m|M) monitor ;;
         q|Q) exit 0 ;;

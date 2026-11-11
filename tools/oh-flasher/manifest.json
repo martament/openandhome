@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "erzeugt": "2026-11-11 23:16",
+  "firmware": {
+    "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_collection_A_ESP8266_4M1M.bin",
+    "sha256": "9c2b126550f0c8df9eb6213e1f7d1ce089c2908dccaa1a0386d59e95ac7fd1b9"
+  },
+  "basis_config": {
+    "pfad": "configs/espeasy/standalone/basis/config.dat",
+    "sha256": "efaead61682c3e1657634499a8a6c0b4f2e4db0e0aded06ece7f4b3432ce7938"
+  },
+  "ressourcen": [
+    {
+      "pfad": "configs/espeasy/standalone/resources/header.txt",
+      "sha256": "d956bf6a684197c2d16dfca91feea69ef6189af5358863716b281ffd985f5ee1"
+    },
+    {
+      "pfad": "configs/espeasy/standalone/resources/footer.txt",
+      "sha256": "a4b1790ce6e757f6b815a9c33cfa4e2be4ad5d5f63eb3722aaf1d8c8fc1e0c1a"
+    },
+    {
+      "pfad": "configs/espeasy/standalone/resources/temperature.png",
+      "sha256": "ab4e096a9b85ee84f1dbafeeb7120b31ab2917911d906c3e5c7a48b130103f87"
+    },
+    {
+      "pfad": "configs/espeasy/standalone/resources/temperature1.png",
+      "sha256": "3ce92898f7a7a94e889e4041626ad86efd5870c0131cd87705a13f3939291ac2"
+    },
+    {
+      "pfad": "configs/espeasy/standalone/resources/humidity.png",
+      "sha256": "961f57c21a8f9d7c89b88b228fdea70cf693128a2a3ca3fed1589c43e2429dfc"
+    },
+    {
+      "pfad": "configs/espeasy/standalone/resources/distance.png",
+      "sha256": "1962111c8ac46bf70b855cd4abfb5f2f43255fca1a87dad31f9a580c2d76db88"
+    },
+    {
+      "pfad": "configs/espeasy/standalone/resources/openandhome_32.png",
+      "sha256": "e478bc19905cf5f01cd69404068e195a8374854003b2b61a77d9689734e47eaf"
+    },
+    {
+      "pfad": "configs/espeasy/standalone/resources/openandhome.css",
+      "sha256": "b45afc1d1d59489b9946d2251d422a0e389db00aa711b8c8b3034dfae7bb814f"
+    }
+  ],
+  "onewire_gpio": 0,
+  "tasks": [
+    {
+      "nr": 2,
+      "name": "Fuehler1",
+      "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+      "art": "ds18b20"
+    },
+    {
+      "nr": 3,
+      "name": "Fuehler2",
+      "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+      "art": "ds18b20"
+    },
+    {
+      "nr": 4,
+      "name": "Fuehler3",
+      "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+      "art": "ds18b20"
+    },
+    {
+      "nr": 5,
+      "name": "Fuehler4",
+      "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+      "art": "ds18b20"
+    },
+    {
+      "nr": 7,
+      "name": "Fuehler6",
+      "typ": "Environment - SI70xx/HTU21D",
+      "art": "i2c",
+      "adressen": [
+        64
+      ]
+    },
+    {
+      "nr": 8,
+      "name": "OLED_SSD1306",
+      "typ": "Display - OLED SSD1306/SH1106 Framed",
+      "art": "i2c",
+      "adressen": [
+        60,
+        61
+      ]
+    },
+    {
+      "nr": 12,
+      "name": "HCSR04",
+      "typ": "Position - HC-SR04, RCW-0001, etc.",
+      "art": "frage"
+    }
+  ]
+}
