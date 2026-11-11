@@ -136,8 +136,10 @@ Sensor gespielt. Danach `config.dat` hochladen und `reboot`.
 
 Helfer:
 - [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/oh_werkstatt.sh) — **intern, nur Linux**:
-  Name/Unit, `OWScan`, Syslog an/aus (HTTP), Teardown, `config.dat` prüfen,
-  Images laden. Standardweg USB (`/dev/ttyUSB*`, Benutzer braucht Gruppe `dialout`).
+  Box aufsetzen + 24h-Test starten, Test prüfen, Test beenden, Einzelschritte.
+  Standardweg USB (`/dev/ttyUSB*`, Benutzer braucht Gruppe `dialout`).
+  Namen: im Test `Testbox<Unit>`, bei Auslieferung `Sensorbox1`/Unit 0.
+  Web-Zugriff: „Allow IP range" 192.168.0.0–192.168.255.255 (liegt in `security.dat`).
 - [`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](tools/ohtoolbox/bin/linux_ohtoolbox.sh) — **für Endkunden**
   (WLAN setzen, Settings lesen, Debug-Log, Reboot). Nur Funktionen aufnehmen,
   die Kunden brauchen; Werkstatt-Funktionen gehören in `ohwerkstatt`.

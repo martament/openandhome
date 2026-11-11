@@ -31,6 +31,11 @@ find_port() {
         echo -e "\e[31mKein Sensor am USB gefunden.\e[0m"
         return 1
     fi
+    if [ ! -w "$PORT" ]; then
+        echo -e "\e[31mKeine Rechte auf $PORT.\e[0m sudo usermod -aG dialout $USER (danach neu anmelden)"
+        PORT=""
+        return 1
+    fi
     stty -F "$PORT" "$BAUD" cs8 -cstopb -parenb -echo raw
     echo -e "\e[32mSensor an Port: $PORT\e[0m"
 }
@@ -73,11 +78,43 @@ ask_box_ip() {
     [ -n "$BOX_IP" ]
 }
 
+# Ruft den Testablauf auf (tools/bin/espeasy_testbox.py), USB-Port wird mitgegeben
+testbox() {
+    find_port || { weiter; return; }
+    python3 "$BIN/espeasy_testbox.py" "$@" --port "$PORT"
+    # Nach Flash/Reboot kann sich die IP geändert haben
+    BOX_IP=""
+    weiter
+}
+
+test_starten() {
+    echo -e "\n\e[36m--- Box aufsetzen und 24h-Test starten ---\e[0m"
+    echo "Sicherung -> Flashen -> WLAN -> Basis-config.dat -> Testname/Zugriff ->"
+    echo "Sensoren erkennen -> Dashboard -> Werte prüfen -> Syslog an ($SYSLOG_TEST_IP)"
+    read -p "Ohne Flashen (Box hat schon das aktuelle Image)? (j/n) [n]: " ohne
+    if [[ "$ohne" =~ ^[jJyY]$ ]]; then
+        testbox aufsetzen --ohne-flash --syslog-ip "$SYSLOG_TEST_IP"
+    else
+        testbox aufsetzen --syslog-ip "$SYSLOG_TEST_IP"
+    fi
+}
+
+test_beenden() {
+    echo -e "\n\e[36m--- Test beenden ---\e[0m"
+    echo "Werte prüfen -> Syslog aus -> Name Sensorbox1/Unit 0 -> Zugriff 192.168.x"
+    read -p "WLAN-Daten danach löschen wie esp_resetap (nur WLAN-Boxen)? (j/n) [n]: " wlan
+    if [[ "$wlan" =~ ^[jJyY]$ ]]; then
+        testbox beenden --wlan-reset
+    else
+        testbox beenden --ohne-wlan-reset
+    fi
+}
+
 set_name() {
     echo -e "\n\e[36m--- Gerätename und Unit setzen ---\e[0m"
-    echo "Jede Testbox braucht einen eindeutigen Namen (MQTT %sysname%, Syslog)."
-    read -p "Name (z. B. Sensorbox13): " name
-    read -p "Unit-Nummer (z. B. 13): " unit
+    echo "Im Test: Testbox<Unit>, bei Auslieferung: Sensorbox1 / Unit 0."
+    read -p "Name: " name
+    read -p "Unit-Nummer: " unit
     if [ -z "$name" ] || ! [[ "$unit" =~ ^[0-9]+$ ]]; then
         echo -e "\e[31mName leer oder Unit keine Zahl. Abbruch.\e[0m"
         weiter
@@ -89,9 +126,8 @@ set_name() {
 
 onewire_scan() {
     echo -e "\n\e[36m--- 1-Wire-Scan (DS18B20-Adressen) ---\e[0m"
-    echo "Tipp: Fühler einzeln anstecken und nach jedem Fühler scannen,"
-    echo "die Reihenfolge ergibt Fuehler1..N (Plan Abschnitt 8)."
-    read -p "GPIO des 1-Wire-Busses: " gpio
+    read -p "GPIO des 1-Wire-Busses [0]: " gpio
+    gpio=${gpio:-0}
     if ! [[ "$gpio" =~ ^[0-9]+$ ]]; then
         echo -e "\e[31mGPIO muss eine Zahl sein.\e[0m"
         weiter
@@ -123,35 +159,12 @@ autoconfig() {
 }
 
 syslog() {
-    local aktion=$1
-    echo -e "\n\e[36m--- Syslog $aktion (HTTP /advanced) ---\e[0m"
+    echo -e "\n\e[36m--- Syslog (HTTP /advanced) ---\e[0m"
+    read -p "an / aus / status [status]: " aktion
+    aktion=${aktion:-status}
+    [[ "$aktion" =~ ^(an|aus|status)$ ]] || { echo "Ungültig."; weiter; return; }
     ask_box_ip || { echo "Keine IP angegeben."; weiter; return; }
     python3 "$BIN/espeasy_syslog.py" "$BOX_IP" "$aktion" --ip "$SYSLOG_TEST_IP"
-    weiter
-}
-
-teardown() {
-    echo -e "\n\e[36m--- Teardown nach dem 24h-Test ---\e[0m"
-    echo "1. Syslog aus (HTTP)   2. WLAN-Daten löschen (seriell, nur WLAN-Boxen)"
-    echo "3. Admin-Passwort löschen   4. Save + Reboot"
-    ask_box_ip || { echo "Keine IP angegeben."; weiter; return; }
-    read -p "Teardown für $BOX_IP jetzt starten? (j/n): " ok
-    [[ "$ok" =~ ^[jJyY]$ ]] || { echo "Abgebrochen."; weiter; return; }
-
-    if ! python3 "$BIN/espeasy_syslog.py" "$BOX_IP" aus; then
-        echo -e "\e[31mSyslog konnte nicht abgeschaltet werden - Teardown abgebrochen.\e[0m"
-        weiter
-        return
-    fi
-
-    local cmds=("password")
-    read -p "WLAN-Box (SSIDs löschen)? (j/n): " wlan
-    if [[ "$wlan" =~ ^[jJyY]$ ]]; then
-        cmds+=("WifiSSID ssid" "WifiKey wpakey" "WifiSSID2 ssid" "WifiKey2 wpakey")
-    fi
-    send_serial "${cmds[@]}" "Save" "Reboot" || { weiter; return; }
-    echo -e "\e[32mTeardown gesendet.\e[0m Prüfen: kein Syslog-Traffic mehr, AP öffnet sich (WLAN-Box)."
-    echo "Ergebnis und Testdatum in readme_image.txt bzw. readme.txt eintragen."
     weiter
 }
 
@@ -181,16 +194,20 @@ while true; do
     show_header
     echo -e "USB: ${PORT:-\e[90m(noch nicht gesucht)\e[0m}   Box-IP: ${BOX_IP:-\e[90m(keine)\e[0m}"
     echo "------------------------------------"
-    echo "1) Gerätename/Unit setzen          (seriell)"
-    echo "2) 1-Wire-Scan DS18B20             (seriell)"
-    echo "3) Syslog AN  ($SYSLOG_TEST_IP)     (HTTP)"
-    echo "4) Syslog AUS                      (HTTP)"
-    echo "5) Syslog-Status                   (HTTP)"
-    echo "6) Teardown nach 24h-Test          (HTTP + seriell)"
-    echo "7) config.dat / Backup-Tar prüfen"
-    echo "8) Fertig-Images laden             (Branch devel)"
-    echo "9) Serieller Monitor"
-    echo "a) Sensoren erkennen, Tasks einschalten (USB + HTTP)"
+    echo -e "\e[1;33mTest\e[0m"
+    echo "1) Box aufsetzen und 24h-Test starten"
+    echo "2) Test prüfen (Werte + Dashboard)"
+    echo "3) Test beenden (Syslog aus, Sensorbox1, opt. WLAN-Reset)"
+    echo "------------------------------------"
+    echo -e "\e[1;33mEinzelschritte\e[0m"
+    echo "4) Sensoren erkennen, Tasks einschalten"
+    echo "5) Dashboard erzeugen und hochladen"
+    echo "6) Gerätename/Unit setzen"
+    echo "7) 1-Wire-Scan DS18B20"
+    echo "8) Syslog an/aus/Status"
+    echo "9) config.dat / Backup-Tar prüfen"
+    echo "i) Fertig-Images laden (Branch devel)"
+    echo "m) Serieller Monitor"
     echo "------------------------------------"
     echo "WLAN setzen: tools/ohtoolbox/bin/linux_ohtoolbox.sh (Punkt 1)"
     echo "q) Beenden"
@@ -198,16 +215,17 @@ while true; do
 
     read -p "Ihre Wahl: " choice || exit 0
     case $choice in
-        1) set_name ;;
-        2) onewire_scan ;;
-        3) syslog an ;;
-        4) syslog aus ;;
-        5) syslog status ;;
-        6) teardown ;;
-        7) check_config ;;
-        8) download_images ;;
-        9) monitor ;;
-        a|A) autoconfig ;;
+        1) test_starten ;;
+        2) testbox pruefen ;;
+        3) test_beenden ;;
+        4) autoconfig ;;
+        5) testbox dashboard ;;
+        6) set_name ;;
+        7) onewire_scan ;;
+        8) syslog ;;
+        9) check_config ;;
+        i|I) download_images ;;
+        m|M) monitor ;;
         q|Q) exit 0 ;;
         *) echo -e "\e[31mUngültige Wahl\e[0m"; sleep 1 ;;
     esac

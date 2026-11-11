@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from espeasy_syslog import Box, FormParser  # noqa: E402
 
 PLUGIN_DS18B20 = 4
+PLUGIN_SYSINFO = 26
 # Plugin-Nr. -> moegliche I2C-Adressen
 I2C_PLUGINS = {
     14: {0x40},          # SI70xx/HTU21D
@@ -107,31 +108,23 @@ def dallas_option(html, adresse):
     return None
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Sensoren erkennen und Tasks passend einschalten.")
-    parser.add_argument("--port", default="/dev/ttyUSB0")
-    parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
-    parser.add_argument("--passwort", help="Admin-Passwort der Box, falls gesetzt")
-    parser.add_argument("--an", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks einschalten")
-    parser.add_argument("--aus", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks ausschalten")
-    parser.add_argument("--anwenden", action="store_true", help="Aenderungen wirklich schreiben")
-    args = parser.parse_args()
+def autokonfiguration(box, port, an=(), aus=(), anwenden=False):
+    """Scannt, zeigt die Aenderungen und schreibt sie bei anwenden=True.
 
-    host = args.host or box_ip(args.port)
-    box = Box(host, args.passwort)
+    Liefert die Namen der nicht erkennbaren Tasks (HC-SR04, Wassersensor ...)."""
     tasks = json.loads(box.get("/json"))["Sensors"]
-    print(f"Box {host}: {len(tasks)} Tasks")
+    print(f"Box {box.basis}: {len(tasks)} Tasks")
 
     formulare = {t["TaskNumber"]: lies_task(box, t["TaskNumber"]) for t in tasks}
     plugin = {nr: int(f["TDNUM"]) for nr, (_, f) in formulare.items() if f.get("TDNUM", "").isdigit()}
 
-    i2c = i2c_scan(args.port)
+    i2c = i2c_scan(port)
     print("I2C gefunden:", ", ".join(f"0x{a:02x}" for a in sorted(i2c)) or "nichts")
     ds_tasks = sorted(nr for nr, p in plugin.items() if p == PLUGIN_DS18B20)
     fuehler = []
     if ds_tasks:
         gpio = formulare[ds_tasks[0]][1].get("taskdevicepin1", "-1")
-        fuehler = ow_scan(args.port, gpio)
+        fuehler = ow_scan(port, gpio)
         print(f"1-Wire an GPIO {gpio}: {len(fuehler)} Fuehler {fuehler}")
         if len(fuehler) > len(ds_tasks):
             print(f"WARNUNG: {len(fuehler)} Fuehler, aber nur {len(ds_tasks)} DS18B20-Tasks in der config.dat")
@@ -139,7 +132,7 @@ def main():
         formulare.update({nr: lies_task(box, nr) for nr in ds_tasks})
 
     # Soll-Zustand je Task bestimmen
-    neu = {}
+    neu, nicht_erkennbar = {}, []
     for nr, (html, felder) in formulare.items():
         f, name, p = dict(felder), felder.get("TDN", ""), plugin.get(nr)
         if p in I2C_PLUGINS:
@@ -156,11 +149,15 @@ def main():
                     print(f"WARNUNG: Adresse {fuehler[k]} nicht im Auswahlfeld von '{name}' - bitte in der Weboberflaeche waehlen")
                 else:
                     f["dallas_addr0"] = wert
-        elif name in args.an or name in args.aus:
-            aktiv = name in args.an
-        else:
-            neu[nr] = f     # nicht erkennbar und nicht genannt: unveraendert
+        elif p in (PLUGIN_SYSINFO, *PLUGINS_OLED) or p is None:
+            neu[nr] = f     # Systeminfo / Display ohne I2C-Treffer-Logik: unveraendert
             continue
+        else:
+            nicht_erkennbar.append(name)
+            if name not in an and name not in aus:
+                neu[nr] = f     # nicht erkennbar und nicht genannt: unveraendert
+                continue
+            aktiv = name in an
         if aktiv:
             f["TDE"] = "on"
         else:
@@ -171,7 +168,7 @@ def main():
     werte = []
     for t in tasks:
         nr = t["TaskNumber"]
-        if plugin.get(nr) in PLUGINS_OLED or plugin.get(nr) == 26 or "TDE" not in neu[nr]:
+        if plugin.get(nr) in PLUGINS_OLED or plugin.get(nr) == PLUGIN_SYSINFO or "TDE" not in neu[nr]:
             continue
         for i in range(1, 5):
             wert = neu[nr].get(f"TDVN{i}")
@@ -194,16 +191,33 @@ def main():
             print(f"         {k}: {a!r} -> {b!r}")
         if diff:
             aenderungen += 1
-            if args.anwenden:
+            if anwenden:
                 f["edit"] = "1"
                 box.post(f"/devices?index={nr}&page=1", f)
 
     if not aenderungen:
         print("Keine Aenderungen noetig.")
-    elif args.anwenden:
+    elif anwenden:
         print(f"{aenderungen} Task(s) geschrieben.")
     else:
         print(f"{aenderungen} Task(s) wuerden geaendert - mit --anwenden schreiben.")
+    if nicht_erkennbar:
+        print("Nicht erkennbar (per --an/--aus waehlen):", ", ".join(nicht_erkennbar))
+    return nicht_erkennbar
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Sensoren erkennen und Tasks passend einschalten.")
+    parser.add_argument("--port", default="/dev/ttyUSB0")
+    parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
+    parser.add_argument("--passwort", help="Admin-Passwort der Box, falls gesetzt")
+    parser.add_argument("--an", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks einschalten")
+    parser.add_argument("--aus", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks ausschalten")
+    parser.add_argument("--anwenden", action="store_true", help="Aenderungen wirklich schreiben")
+    args = parser.parse_args()
+
+    box = Box(args.host or box_ip(args.port), args.passwort)
+    autokonfiguration(box, args.port, args.an, args.aus, args.anwenden)
 
 
 if __name__ == "__main__":

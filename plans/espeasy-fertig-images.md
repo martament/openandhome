@@ -478,6 +478,29 @@ mehr Fühlern als vorbereiteten Tasks (Professional bis 8).
    Eine `config.dat` aus Build 20240121 wurde von `mega-20260720` übernommen.
 6. Autokonfiguration (8.1), dann Name/Unit, Syslog an → 24h-Test.
 
+Automatisiert in [`tools/bin/espeasy_testbox.py`](../tools/bin/espeasy_testbox.py)
+(Werkstatt-Menü 1–3), komplett an der Testbox durchlaufen am 2026-11-11.
+Weitere Befunde:
+- **Die IP-Sperre liegt in `security.dat`**, nicht in `config.dat` — der
+  `config.dat`-Upload ändert sie nicht. `/json` ist von der Sperre ausgenommen,
+  `/advanced`, `/config`, `/upload` nicht.
+- **`ClearAccessBlock` + späteres `Save` schreibt „Allow All" fest.** Deshalb
+  setzt der Ablauf nach Name/Unit und beim Testende den Zugriff explizit auf
+  „Allow IP range" **192.168.0.0–192.168.255.255** (Config-Seite,
+  `ipblocklevel=2`, `iprangelow`/`iprangehigh`).
+- **Nach frischem Flash landete die Box im ersten Anlauf in einem anderen
+  Netz** (192.168.6.x statt 192.168.2.x, gleiche SSID), nach Reboot korrekt.
+  Der Ablauf startet bei Unerreichbarkeit bis zu 3× neu und fragt dann nach
+  einer IP.
+- **Namen:** im Test `Testbox<Unit>`, bei Auslieferung `Sensorbox1`/Unit 0.
+
+**Sicherheitsbewertung IP-Bereich 192.168.0.0/16:** vertretbar. Der Filter ist
+kein echter Schutz (jedes Gerät im Heimnetz 192.168.x kommt weiter auf die
+Weboberfläche; Schutz gibt nur ein Admin-Passwort), sperrt aber Zugriffe aus
+anderen Netzen. Nachteil: Kunden mit Heimnetz 10.x.x.x oder 172.16–31.x.x
+erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
+(„Reset IP-Filtering"). Der alte Eigenbuild hatte „Allow All".
+
 ---
 
 ## 9. Umsetzungsschritte (To-Do für die spätere Ausführung)

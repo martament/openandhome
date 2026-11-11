@@ -111,21 +111,25 @@ def main():
     parser.add_argument("--passwort", help="Admin-Passwort der Box, falls gesetzt")
     args = parser.parse_args()
 
-    box = Box(args.host, args.passwort)
+    setze_syslog(Box(args.host, args.passwort), args.aktion, args.ip, args.level)
+
+
+def setze_syslog(box, aktion, ip=TEST_SYSLOG_IP, level=LEVEL_INFO):
+    """aktion: 'status', 'an' oder 'aus'. Beendet mit Fehler, wenn die Box die Werte nicht uebernimmt."""
     felder, level_feld = lies_formular(box.get("/advanced"))
     zeige(felder, level_feld)
-    if args.aktion == "status":
+    if aktion == "status":
         return
 
-    felder["syslogip"] = args.ip if args.aktion == "an" else "0.0.0.0"
-    felder[level_feld] = args.level if args.aktion == "an" else "0"
+    felder["syslogip"] = ip if aktion == "an" else "0.0.0.0"
+    felder[level_feld] = level if aktion == "an" else "0"
     felder["edit"] = "1"
     print(f"\nSende: Syslog-IP {felder['syslogip']}, Level {felder[level_feld]} ...")
     box.post("/advanced", felder)
 
     neu, _ = lies_formular(box.get("/advanced"))
     zeige(neu, level_feld)
-    soll_ip = {"an": args.ip, "aus": "0.0.0.0"}[args.aktion]
+    soll_ip = {"an": ip, "aus": "0.0.0.0"}[aktion]
     if neu["syslogip"] not in (soll_ip, "" if soll_ip == "0.0.0.0" else soll_ip) or neu[level_feld] != felder[level_feld]:
         sys.exit("FEHLER: Box hat die Werte nicht uebernommen.")
     geaendert = [n for n in felder if n not in ("syslogip", level_feld, "edit") and neu.get(n) != felder[n]]
