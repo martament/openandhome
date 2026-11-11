@@ -660,3 +660,24 @@ nach WLAN und bricht ohne WLAN mit einem Hinweis ab.
 **Offen:** Verhalten von P004 „Auto Select" mit echtem Fühler (Testbox hat
 keinen DS18B20); Basis-`config.dat` braucht dafür „Auto Select" im ersten
 DS18B20-Task.
+
+---
+
+## 13. Basis-config.dat Standalone: Anpassungen (2026-11-11)
+
+Geprüft an der Testbox, umgesetzt in
+[`configs/espeasy/standalone/basis/config.dat`](../configs/espeasy/standalone/basis/config.dat)
+(Manifest neu erzeugt):
+
+| Einstellung | vorher | jetzt | Grund |
+|---|---|---|---|
+| NTP-Server | `192.168.178.1` (eigene FritzBox) | `de.pool.ntp.org` | beim Kunden erreichbar |
+| MQTT-Controller (C005 → `openandhome-server1`) | an | **aus** | Standalone ohne Server; Last sank von **100 % auf ~12 %**, freier RAM 7,4 → 9,6 KB |
+| WLAN Force No Sleep | aus | an | war in `Custom.h` gesetzt; stabilere Verbindung (Netzteil) |
+| WLAN Periodical Gratuitous ARP | aus | an | Router „vergessen" ruhige Geräte nicht |
+
+Formulare: NTP auf `/advanced`, Controller `/controllers?index=1`, WLAN-Optionen
+auf **`/network?index=1`** (`force_wifi_no_sleep`,
+`periodical_send_gratuitous_arp`). Das WLAN-Passwortfeld liefert dort nur
+`*****`; der Rundlauf lässt den gespeicherten Schlüssel unverändert (geprüft).
+Speichern der Netzwerk-Seite baut die WLAN-Verbindung neu auf.

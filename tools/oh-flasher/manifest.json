@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "erzeugt": "2026-11-11 23:16",
+  "erzeugt": "2026-11-11 23:35",
   "firmware": {
     "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_collection_A_ESP8266_4M1M.bin",
     "sha256": "9c2b126550f0c8df9eb6213e1f7d1ce089c2908dccaa1a0386d59e95ac7fd1b9"
   },
   "basis_config": {
     "pfad": "configs/espeasy/standalone/basis/config.dat",
-    "sha256": "efaead61682c3e1657634499a8a6c0b4f2e4db0e0aded06ece7f4b3432ce7938"
+    "sha256": "a98313614c8710fec19a2383e95b9f122623f5015efc345ba645166ef8f1fb6e"
   },
   "ressourcen": [
     {
