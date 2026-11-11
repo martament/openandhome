@@ -681,3 +681,26 @@ auf **`/network?index=1`** (`force_wifi_no_sleep`,
 `periodical_send_gratuitous_arp`). Das WLAN-Passwortfeld liefert dort nur
 `*****`; der Rundlauf lässt den gespeicherten Schlüssel unverändert (geprüft).
 Speichern der Netzwerk-Seite baut die WLAN-Verbindung neu auf.
+
+### 13.1 Image-Vergleich collection_A / collection_H (Testbox, 2026-11-11)
+
+Alle offiziellen ESP8266-4M1M-Images von `mega-20260720` nach den benötigten
+Plugins durchsucht (P001, P002, P004, P005, P013, P014, P023, P026, P028, P031,
+P033, P036, P037, P051, P089, C005): vollständig nur collection_A–H und
+climate_A. `normal` und `normal_beta_2ndheap` (mehr RAM durch 2. Heap) fehlen
+AM2320 (P051) und Ping (P089); `custom_*` fehlen 5–7 Plugins.
+
+| Image | Größe | Plugins | freier RAM | Last | Load LC |
+|---|---|---|---|---|---|
+| collection_A | 1011 kB | ~73 | 10.168 B | ~11,6 % | ~7.100 |
+| collection_H | 973 kB | ~61 | 10.048–10.912 B | ~11,1 % | ~11.200 |
+
+Ergebnis: **kein nennenswerter RAM-Gewinn**, aber deutlich mehr Loops/s und
+**OTA-Reserve**: Der OTA-Bereich fasst 1044464 Byte; A lässt nur ~9 kB frei,
+H ~47 kB. Entscheidung offen (Martin). Die Testbox läuft derzeit mit H.
+
+**AM2320** wird vorerst nicht gebraucht. Werkstatt-Autoerkennung und Flasher
+geben einen Hinweis aus, wenn am I2C-Bus ein Gerät ohne passenden Task hängt
+(0x5C = AM2320: anderes Image/andere config.dat nötig). Einschränkung: Der
+AM2320 schläft und antwortet dem I2C-Scanner nicht immer — der Hinweis ist
+nicht garantiert.

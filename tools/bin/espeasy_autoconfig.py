@@ -70,6 +70,21 @@ def box_ip(port):
     sys.exit("FEHLER: IP der Box per USB nicht lesbar (WLAN verbunden?). --host angeben.")
 
 
+# I2C-Geraete, die die Basis-config.dat (noch) nicht abdeckt -> Hinweis statt stiller Ignoranz
+I2C_HINWEISE = {
+    0x5C: "AM2320 - wird mit der aktuellen Basis-config.dat nicht unterstuetzt. Dafuer ein Image mit "
+          "AM2320-Plugin (P051, z. B. collection_A/H, nicht normal_2ndheap) und eine config.dat mit "
+          "AM2320-Task verwenden.",
+}
+
+
+def i2c_hinweise(gefunden, bekannt):
+    """Gibt Hinweise fuer gefundene I2C-Adressen aus, zu denen kein Task passt."""
+    for adresse in sorted(set(gefunden) - set(bekannt)):
+        text = I2C_HINWEISE.get(adresse, "unbekanntes Geraet - in der Basis-config.dat gibt es keinen passenden Task.")
+        print(f"HINWEIS: I2C-Adresse 0x{adresse:02x}: {text}")
+
+
 def i2c_scan(port):
     return {int(m.group(1), 16) for z in seriell(port, "I2CScanner")
             if (m := re.search(r"Found 0x([0-9a-fA-F]{2})", z))}
@@ -120,6 +135,7 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False):
 
     i2c = i2c_scan(port)
     print("I2C gefunden:", ", ".join(f"0x{a:02x}" for a in sorted(i2c)) or "nichts")
+    i2c_hinweise(i2c, {a for p in plugin.values() if p in I2C_PLUGINS for a in I2C_PLUGINS[p]})
     ds_tasks = sorted(nr for nr, p in plugin.items() if p == PLUGIN_DS18B20)
     fuehler = []
     if ds_tasks:

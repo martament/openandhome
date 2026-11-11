@@ -35,7 +35,7 @@ SITE_PACKAGES = os.path.join(HIER, "pythonportable", "Lib", "site-packages")
 sys.path[:0] = [os.path.join(HIER, "lib"), os.path.join(REPO, "tools", "bin")]
 import serial  # noqa: E402
 import serial.tools.list_ports  # noqa: E402
-from espeasy_autoconfig import autokonfiguration, i2c_scan, ow_scan  # noqa: E402
+from espeasy_autoconfig import autokonfiguration, i2c_hinweise, i2c_scan, ow_scan  # noqa: E402
 from espeasy_testbox import dashboard_hochladen, http_bereit, lade_hoch, sende, setze_zugriff, warte_ip  # noqa: E402
 
 
@@ -115,6 +115,7 @@ def pruefe_chip(port):
 def erkenne_und_schalte(port, manifest):
     """USB: I2C- und 1-Wire-Scan, passende Tasks ein-/ausschalten. Liefert (an, aus, Anzahl Fuehler)."""
     i2c = i2c_scan(port)
+    i2c_hinweise(i2c, {a for t in manifest["tasks"] if t["art"] == "i2c" for a in t["adressen"]})
     fuehler = ow_scan(port, manifest["onewire_gpio"])
     befehle, an, aus, ds = [], [], [], 0
     for t in manifest["tasks"]:
