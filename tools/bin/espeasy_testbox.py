@@ -55,10 +55,15 @@ BACKUPS = os.path.expanduser("~/openandhome-backups")
 KLASSEN = {
     "ESP8266": {
         "name": "standalone",
-        "image": "configs/espeasy/standalone/ESP_Easy_mega_*_collection_A_ESP8266_4M1M.bin",
+        "image": "configs/espeasy/standalone/ESP_Easy_mega_*_climate_B_ESP8266_4M1M.bin",
         "flash": ["-fs", "4MB", "0x0"],
         "basis": "configs/espeasy/standalone/basis/config.dat",
         "wlan": True,
+        # climate_B hat kein AM2320-Plugin (P051) -> bei erkanntem AM2320 collection_H
+        "am2320": {
+            "image": "configs/espeasy/standalone/ESP_Easy_mega_*_collection_H_ESP8266_4M1M.bin",
+            "basis": "configs/espeasy/standalone/basis_am2320/config.dat",
+        },
     },
     "ESP32": {
         "name": "professional",
@@ -214,6 +219,29 @@ def lies_formular_config(box):
     parser = FormParser()
     parser.feed(box.get("/config"))
     return parser.felder
+
+
+def am2320_erkannt(port):
+    """Der AM2320 schlaeft und antwortet oft erst beim zweiten Zugriff - daher zweimal scannen."""
+    from espeasy_autoconfig import i2c_scan
+    return any(0x5C in i2c_scan(port) for _ in range(2))
+
+
+def waehle_variante(port, klasse, image_aktuell, erzwingen=False):
+    """Prueft auf AM2320; flasht bei Bedarf das passende Image nach (Einstellungen bleiben).
+
+    Liefert den Pfad der zu verwendenden Basis-config.dat."""
+    variante = klasse.get("am2320")
+    if not variante or not (erzwingen or am2320_erkannt(port)):
+        return os.path.join(ROOT, klasse["basis"])
+    print("AM2320 erkannt (I2C 0x5C) -> Image mit AM2320-Plugin und AM2320-Basis-config.dat")
+    bild = sorted(glob.glob(os.path.join(ROOT, variante["image"])))[-1]
+    # Auch bei --ohne-flash: ohne passendes Image fehlt das AM2320-Plugin und der Task verschwindet
+    if os.path.basename(bild).removesuffix(".bin") != image_aktuell:
+        print(f"Flashe {os.path.basename(bild)} (nur Firmware, Einstellungen bleiben) ...")
+        esptool(port, "write_flash", *klasse["flash"], bild)
+        time.sleep(20)
+    return os.path.join(ROOT, variante["basis"])
 
 
 # --- esptool ---
@@ -392,7 +420,10 @@ def aufsetzen(args):
     ip = box.basis.removeprefix("http://")
 
     schritt("5/10 Basis-config.dat")
-    basis = frage("config.dat", os.path.relpath(os.path.join(ROOT, klasse["basis"]), os.getcwd()))
+    image_aktuell = json.loads(box.get("/json"))["System"].get("Binary Filename", "")
+    vorschlag = waehle_variante(port, klasse, image_aktuell, args.am2320)
+    box = http_bereit(port, warte_ip(port))
+    basis = frage("config.dat", os.path.relpath(vorschlag, os.getcwd()))
     with open(basis, "rb") as f:
         einstellungen = lese_settings(f.read())
     if einstellungen["Syslog_IP"] != "0.0.0.0" or einstellungen["SyslogLevel"]:
@@ -501,7 +532,12 @@ def kundenpaket(args):
     box = http_bereit(port, warte_ip(port, 60))
 
     schritt("2/3 Basis-config.dat laden, Task-Liste lesen")
-    basis = os.path.join(ROOT, KLASSEN[chip]["basis"])
+    quelle = KLASSEN[chip]["am2320"] if args.am2320 else KLASSEN[chip]
+    bild = sorted(glob.glob(os.path.join(ROOT, quelle["image"])))[-1]
+    image_aktuell = json.loads(box.get("/json"))["System"].get("Binary Filename", "")
+    if os.path.basename(bild).removesuffix(".bin") != image_aktuell:
+        sys.exit(f"FEHLER: Box laeuft mit {image_aktuell}, fuer diese Variante muss {os.path.basename(bild)} drauf sein.")
+    basis = os.path.join(ROOT, quelle["basis"])
     lade_hoch(box, basis, "config.dat")
     sende(port, "Reboot")
     time.sleep(10)
@@ -526,19 +562,23 @@ def kundenpaket(args):
         print(f"  Task {nr:2} {t['TaskName']:<14} {eintrag['art']}")
 
     schritt("3/3 Manifest")
-    bild = sorted(glob.glob(os.path.join(ROOT, KLASSEN[chip]["image"])))[-1]
     relativ = lambda p: os.path.relpath(p, ROOT).replace(os.sep, "/")
     eintrag = lambda p: {"pfad": relativ(p), "sha256": sha256(p)}
-    manifest = {
+    pfad = os.path.join(ROOT, "tools/oh-flasher/manifest.json")
+    teil = {"firmware": eintrag(bild), "basis_config": eintrag(basis), "onewire_gpio": gpio or 0, "tasks": tasks}
+    manifest = {}
+    if os.path.exists(pfad):
+        with open(pfad, encoding="utf-8") as f:
+            manifest = json.load(f)
+    if args.am2320:
+        manifest["am2320"] = teil
+    else:
+        manifest.update(teil)
+    manifest.update({
         "version": 1,
         "erzeugt": f"{datetime.datetime.now():%Y-%m-%d %H:%M}",
-        "firmware": eintrag(bild),
-        "basis_config": eintrag(basis),
         "ressourcen": [eintrag(os.path.join(RESSOURCEN, d)) for d in ["header.txt", "footer.txt", *DASHBOARD_DATEIEN]],
-        "onewire_gpio": gpio or 0,
-        "tasks": tasks,
-    }
-    pfad = os.path.join(ROOT, "tools/oh-flasher/manifest.json")
+    })
     with open(pfad, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
         f.write("\n")
@@ -561,6 +601,8 @@ def main():
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
     parser.add_argument("--ohne-flash", action="store_true", help="aufsetzen ohne Sicherung/Flashen")
+    parser.add_argument("--am2320", action="store_true",
+                        help="aufsetzen: AM2320-Variante erzwingen; kundenpaket: AM2320-Teil des Manifests erzeugen")
     parser.add_argument("--wlan-datei", help="Datei mit SSID (Zeile 1) und Key (Zeile 2)")
     parser.add_argument("--syslog-ip", default="192.168.9.4")
     parser.add_argument("--wlan-reset", action="store_true", help="beenden: WLAN ohne Rueckfrage zuruecksetzen")

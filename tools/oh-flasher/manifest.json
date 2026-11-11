@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "erzeugt": "2026-11-11 23:35",
+  "erzeugt": "2026-11-12 00:15",
   "firmware": {
-    "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_collection_A_ESP8266_4M1M.bin",
-    "sha256": "9c2b126550f0c8df9eb6213e1f7d1ce089c2908dccaa1a0386d59e95ac7fd1b9"
+    "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_climate_B_ESP8266_4M1M.bin",
+    "sha256": "1d661be97f12f5aa44d2f19e8001ac6b3557147d1b6191c5690fa13c1c77bf06"
   },
   "basis_config": {
     "pfad": "configs/espeasy/standalone/basis/config.dat",
@@ -94,5 +94,76 @@
       "typ": "Position - HC-SR04, RCW-0001, etc.",
       "art": "frage"
     }
-  ]
+  ],
+  "am2320": {
+    "firmware": {
+      "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_collection_H_ESP8266_4M1M.bin",
+      "sha256": "d34d0cb7fe45b50dc7aae81366ff66a817c7679b15bc95725c2200e14a230d68"
+    },
+    "basis_config": {
+      "pfad": "configs/espeasy/standalone/basis_am2320/config.dat",
+      "sha256": "3442a13db1821aab9a22a2114d11d297a2a1cb81b60c6d67a6b6a15a99bcc9c6"
+    },
+    "onewire_gpio": 0,
+    "tasks": [
+      {
+        "nr": 2,
+        "name": "Fuehler1",
+        "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+        "art": "ds18b20"
+      },
+      {
+        "nr": 3,
+        "name": "Fuehler2",
+        "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+        "art": "ds18b20"
+      },
+      {
+        "nr": 4,
+        "name": "Fuehler3",
+        "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+        "art": "ds18b20"
+      },
+      {
+        "nr": 5,
+        "name": "Fuehler4",
+        "typ": "Environment - DS18xxx/MAX31xxx/1-Wire Temperature",
+        "art": "ds18b20"
+      },
+      {
+        "nr": 6,
+        "name": "Fuehler5",
+        "typ": "Environment - AM2320",
+        "art": "i2c",
+        "adressen": [
+          92
+        ]
+      },
+      {
+        "nr": 7,
+        "name": "Fuehler6",
+        "typ": "Environment - SI70xx/HTU21D",
+        "art": "i2c",
+        "adressen": [
+          64
+        ]
+      },
+      {
+        "nr": 8,
+        "name": "OLED_SSD1306",
+        "typ": "Display - OLED SSD1306/SH1106 Framed",
+        "art": "i2c",
+        "adressen": [
+          60,
+          61
+        ]
+      },
+      {
+        "nr": 12,
+        "name": "HCSR04",
+        "typ": "Position - HC-SR04, RCW-0001, etc.",
+        "art": "frage"
+      }
+    ]
+  }
 }

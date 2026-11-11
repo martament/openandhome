@@ -176,11 +176,18 @@ def neu_aufsetzen(port, quelle):
         return
 
     gruen("3/4 Verbinde mit Ihrem WLAN und lade die Grundeinstellungen ...")
-    basis = quelle.datei(manifest["basis_config"])
     ressourcen = [quelle.datei(r, "ressourcen") for r in manifest["ressourcen"]]
     sende(port, f'WifiSSID,"{ssid}"', f'WifiKey,"{key}"', "Save", "Reboot")
     time.sleep(10)
     box = http_bereit(port, warte_ip(port))
+    # Der AM2320 braucht ein anderes Image; er schlaeft und antwortet oft erst beim zweiten Scan
+    if "am2320" in manifest and any(0x5C in i2c_scan(port) for _ in range(2)):
+        print("  AM2320 erkannt - spiele die passende Firmware ein (Einstellungen bleiben) ...")
+        manifest = dict(manifest, **manifest["am2320"])
+        esptool(port, "write_flash", "--flash_size", "4MB", "0x0", quelle.datei(manifest["firmware"]))
+        time.sleep(20)
+        box = http_bereit(port, warte_ip(port))
+    basis = quelle.datei(manifest["basis_config"])
     lade_hoch(box, basis, "config.dat")
     sende(port, "Reboot")
     time.sleep(10)

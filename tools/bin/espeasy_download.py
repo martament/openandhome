@@ -4,7 +4,7 @@
 Quelle: GitHub Releases von letscontrolit/ESPEasy. Das Skript
 - laeuft nur auf dem Branch 'devel' (Downloads nur dort, siehe AGENTS.md),
 - prueft die ZIP-Archive gegen den SHA256-Digest von GitHub,
-- legt pro Geraeteklasse genau ein Image ab (alte collection_A-Images werden entfernt),
+- legt pro Geraeteklasse die freigegebenen Images ab (Standalone: climate_B, collection_H fuer AM2320),
 - schreibt readme_image.txt mit Release-Tag, Asset, SHA256 und Flash-Adressen.
 
 Beispiele:
@@ -44,10 +44,10 @@ KLASSEN = {
     },
     "standalone": {
         "zip": "_ESP82xx_binaries.zip",
-        "bild": re.compile(r"^ESP_Easy_mega_\d+_collection_A_ESP8266_4M1M\.bin$"),
-        "alt": re.compile(r"^ESP_Easy_mega_\d+_collection_A_ESP8266_4M1M.*\.bin$"),
+        "bild": re.compile(r"^ESP_Easy_mega_\d+_(climate_B|collection_H)_ESP8266_4M1M\.bin$"),
+        "alt": re.compile(r"^ESP_Easy_mega_\d+_(collection_A|climate_B|collection_H)_ESP8266_4M1M.*\.bin$"),
         "ziel": "configs/espeasy/standalone",
-        "beschreibung": "Standalone/Wemos (ESP8266 4M1M, SPIFFS)",
+        "beschreibung": "Standalone/Wemos (ESP8266 4M1M, SPIFFS) - climate_B Standard, collection_H bei AM2320",
         "flash": [
             ".bin -> 0x000000 (Alias esp_flashstable_min)",
             "Filesystem SPIFFS @0x300000, Groesse 0x100000",

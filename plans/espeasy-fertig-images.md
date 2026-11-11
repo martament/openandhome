@@ -713,3 +713,31 @@ geben einen Hinweis aus, wenn am I2C-Bus ein Gerät ohne passenden Task hängt
 (0x5C = AM2320: anderes Image/andere config.dat nötig). Einschränkung: Der
 AM2320 schläft und antwortet dem I2C-Scanner nicht immer — der Hinweis ist
 nicht garantiert.
+
+### 13.2 Umstellung climate_B / AM2320-Variante — Stand 2026-11-12 (Arbeitsende)
+
+**Umgesetzt (devel):**
+- Standard-Image Standalone: **climate_B**; bei AM2320 (I2C 0x5C, zweimal
+  gescannt) **collection_H** + [`basis_am2320/config.dat`](../configs/espeasy/standalone/basis_am2320/config.dat)
+  (Task 6 `Fuehler5`, AM2320, aus; Autoerkennung schaltet ihn bei 0x5C ein).
+- Download-Skript lädt climate_B + collection_H, collection_A (ESP8266) entfernt.
+- Werkstatt `aufsetzen`: prüft auf AM2320, flasht collection_H nach
+  (nur Firmware, Einstellungen bleiben; auch bei `--ohne-flash`), schlägt
+  die AM2320-Basis vor; `--am2320` erzwingt die Variante.
+- Flasher: Manifest hat Teil `am2320`; bei 0x5C Firmware-Wechsel + AM2320-Basis.
+- Kundenpaket: `kundenpaket` (climate_B-Box) bzw. `kundenpaket --am2320`
+  (collection_H-Box) schreiben ihren Teil ins gemeinsame Manifest.
+
+**Getestet an der Testbox:** Flasher Standardweg (climate_B) komplett;
+Werkstatt mit `--am2320` erzwungen → collection_H nachgeflasht, Task 6
+vorhanden und aus (kein AM2320 angeschlossen), Prüfung OK.
+
+**Nicht getestet / offen:**
+- AM2320 mit **echtem Sensor** (Erkennung 0x5C, Werte, Dashboard-Zeile).
+- Flasher-AM2320-Zweig (nur über echten Sensor auslösbar).
+- Windows-Test des Flashers; Professional-Download unverändert (collection_A ESP32).
+- Doku (AGENTS.md, Readmes) nennt teils noch collection_A für Standalone.
+
+**Zustand Testbox bei Arbeitsende:** collection_H, AM2320-Basis-config,
+Name `Sensorbox1`/Unit 0, Syslog aus, WLAN `openandhome`, kein Test aktiv.
+Für den Standardstand: Flasher Menü 1 (Werkstatt `f`) erneut ausführen.

@@ -25,6 +25,8 @@ def main():
     eintraege = [manifest["firmware"], manifest["basis_config"], *manifest["ressourcen"]]
     if "dateisystem" in manifest:
         eintraege.append(manifest["dateisystem"])
+    if "am2320" in manifest:
+        eintraege += [manifest["am2320"]["firmware"], manifest["am2320"]["basis_config"]]
     for e in eintraege:
         with open(os.path.join(REPO, e["pfad"]), "rb") as f:
             if hashlib.sha256(f.read()).hexdigest() != e["sha256"]:

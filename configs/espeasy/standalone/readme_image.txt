@@ -1,14 +1,15 @@
-# Firmware-Image Standalone/Wemos (ESP8266 4M1M, SPIFFS)
+# Firmware-Image Standalone/Wemos (ESP8266 4M1M, SPIFFS) - climate_B Standard, collection_H bei AM2320
 # Automatisch erzeugt von tools/bin/espeasy_download.py - nicht von Hand aendern.
 
 Quelle:        https://github.com/letscontrolit/ESPEasy/releases/tag/mega-20260720
 Release-Tag:   mega-20260720 (veroeffentlicht 2026-07-20)
 Asset:         ESPEasy_mega_20260720_ESP82xx_binaries.zip
 Asset-SHA256:  562817082a4ae1fd3c25ef670dc2ea7d45aca4489419d6da87ab6dc98818ed1c
-Heruntergeladen: 2026-11-11
+Heruntergeladen: 2026-11-12
 
 Dateien (SHA256):
-  9c2b126550f0c8df9eb6213e1f7d1ce089c2908dccaa1a0386d59e95ac7fd1b9  ESP_Easy_mega_20260720_collection_A_ESP8266_4M1M.bin
+  1d661be97f12f5aa44d2f19e8001ac6b3557147d1b6191c5690fa13c1c77bf06  ESP_Easy_mega_20260720_climate_B_ESP8266_4M1M.bin
+  d34d0cb7fe45b50dc7aae81366ff66a817c7679b15bc95725c2200e14a230d68  ESP_Easy_mega_20260720_collection_H_ESP8266_4M1M.bin
 
 Flashen:
   - .bin -> 0x000000 (Alias esp_flashstable_min)

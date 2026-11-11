@@ -72,9 +72,8 @@ def box_ip(port):
 
 # I2C-Geraete, die die Basis-config.dat (noch) nicht abdeckt -> Hinweis statt stiller Ignoranz
 I2C_HINWEISE = {
-    0x5C: "AM2320 - wird mit der aktuellen Basis-config.dat nicht unterstuetzt. Dafuer ein Image mit "
-          "AM2320-Plugin (P051, z. B. collection_A/H, nicht normal_2ndheap) und eine config.dat mit "
-          "AM2320-Task verwenden.",
+    0x5C: "AM2320 - braucht Image collection_H und configs/espeasy/standalone/basis_am2320/config.dat "
+          "(Werkstatt-Menue 1 und Flasher waehlen das automatisch).",
 }
 
 
