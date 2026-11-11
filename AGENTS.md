@@ -152,6 +152,11 @@ lesen und per HTTP-Skript an `/devices` setzen (Plan Abschnitt 8, D-2).
   Testdatum (siehe Plan, Abschnitt 3). Das bestehende
   [`configs/espeasy/professional/3_hut21/readme.txt`](configs/espeasy/professional/3_hut21/readme.txt)
   ist nur ein Minimalbeispiel (2 Zeilen) und erfüllt diesen Standard noch nicht.
+- Fertig-Images nur mit [`tools/bin/espeasy_download.py`](tools/bin/espeasy_download.py)
+  laden (nur auf `devel`). Das Skript prüft SHA256, hält pro Geräteklasse ein
+  Image und schreibt `readme_image.txt` (Release-Tag, Asset, SHA256,
+  Flash-Adressen) — diese Datei nicht von Hand ändern; Testdatum nach dem
+  24h-Test eintragen.
 - Nicht mehr benötigte Build-Reste (`build/ESPEasy/*`) nur löschen, wenn der
   Nutzer es explizit freigibt — sie sind die Referenz für die Custom.h-Analyse.
 - Sensible Daten (WLAN-Passwörter) stehen teils in Aliassen/Dateien; bei neuen
