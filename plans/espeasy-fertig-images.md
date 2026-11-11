@@ -359,7 +359,7 @@ um „Name/Unit setzen", „Syslog an/aus (HTTP)", „1-Wire-Scan (`owscan`)",
 
 | Nr. | Prüfpunkt | So prüfen | Status |
 |---|---|---|---|
-| **A1** | Plugins/Controller je Image | ESP32 `collection_A`: geprüft — alles außer **P145** (nur Collection F) enthalten, C017 ok. **ESP8266 `collection_A_ESP8266_4M1M`:** P005, P013, P023, P145, Plugin-Stats/Chart.js in `define_plugin_sets.h` bzw. nach dem Flashen unter Devices prüfen | teilweise |
+| **A1** | Plugins/Controller je Image | Geprüft an den Images `mega-20260720` (Plugin-Namen im Binary): **beide** enthalten P001, P004, P005, P013, P014, P023, P028, P031, P033, P036, P037, P051, P089; ESP32 zusätzlich Zabbix (C017) und Email (N001). **P145 (MQxxx) fehlt in beiden** → klären, ob eine Variante P145 nutzt. Plugin-Stats/Chart.js (ESP8266) nach dem Flashen ansehen | **erledigt** bis auf P145 |
 | **A2** | Ethernet im ESP32-Image | `collection_A_ESP32_4M316k` → `[esp32_common_LittleFS_ETH]` → `FEATURE_ETHERNET=1` | **erledigt** (LAN-Praxistest im 24h-Test) |
 | **A3** | `ApDontForceSetup`-Verhalten upstream | ESPEasy-Quelle/Doku nach `ApDontForceSetup` durchsuchen; Kommando `wifiallowap` prüfen; sonst Workaround | offen |
 | **T1** | Syslog-Kommando | kein Kommando vorhanden; Weg: HTTP `/advanced` | **erledigt** |
@@ -405,11 +405,14 @@ Empfehlung: **1 Fühler → D-1; mehrere Fühler → `owscan` + Zuordnungsregel 
    für Stable-/Test-Varianten; Tag-Schema `stable-JJJJMMTT`.
 3. **R1 — Recherche-Checkliste (Abschnitt 7) abarbeiten:** A1 (ESP8266), A3,
    T2, S1, D-2; Ergebnisse in den Plan nachtragen.
-4. **D1 — Download-Skript konzipieren:** URL-Muster aus Abschnitt 2, ZIP
-   entpacken, gewünschtes Asset wählen, **SHA256** berechnen und in die
-   readme.txt schreiben, Zielordner (`configs/espeasy/professional/`,
-   `configs/espeasy/standalone/`), altes Image ersetzen statt anhäufen,
-   Ausführung nur auf `devel`.
+4. **D1 — Download-Skript** — **umgesetzt:**
+   [`tools/bin/espeasy_download.py`](../tools/bin/espeasy_download.py)
+   (Python 3, keine Zusatzpakete). Läuft nur auf `devel`, holt das Release
+   über die GitHub-API (`--tag`, Standard: neuestes), prüft die ZIPs gegen den
+   GitHub-SHA256-Digest, legt pro Klasse genau ein `collection_A`-Image ab
+   (alte per `git rm`), schreibt `readme_image.txt` (Tag, Asset, SHA256,
+   Flash-Adressen) und meldet, falls ein 4M1M-LittleFS-Collection-Image
+   erscheint. Erster Lauf: `mega-20260720` für beide Geräteklassen.
 5. **B1 — Variante-Definition entwerfen:** `variant.conf`-Schema (Name, Fühler
    Anzahl/Typ, Display, Wasser, MQTT) als Quelle für Dashboard **und**
    Config-Prüfung (Stufe 1).
@@ -449,8 +452,8 @@ Empfehlung: **1 Fühler → D-1; mehrere Fühler → `owscan` + Zuordnungsregel 
 | O-8 | Windows-Flasher [`tools/oh-flasher/`](../tools/oh-flasher/Readme.md) | preservieren oder auf `config.dat` umstellen — Nutzerentscheidung | offen |
 | O-9 | Syslog an/aus | kein Kommando → HTTP `/advanced` | gelöst, Feldnamen offen (T2) |
 | O-10 | Dynamische Device-Erzeugung per HTTP (Stufe 4) | erst nach Prüfung der `/devices`-API entscheiden | offen (D-2) |
-| **O-11** | WLAN-Zugangsdaten in `wemos_htu21d`-Backup-Tar (öffentlich) | Key rotieren, Tar entfernen, Regel „keine `security.dat`" | **offen — dringend** |
-| **O-12** | Wemos-Image-Wahl | `custom_312` ungeeignet (fehlende Plugins) → `collection_A_ESP8266_4M1M` | entschieden, A1 offen |
+| **O-11** | WLAN-Schlüssel in Tar, Flash-Dumps, `spiffs1M.bin` (2Sensoren, 3Sensoren, 3Sensoren_Wasser, wemos_htu21d) und alten Tasmota-Skripten | Historie per `git filter-repo` bereinigt (2026-11-11, Binärdateien entfernt, Text → `***REMOVED***`); Force-Push und Key-Rotation stehen aus. Varianten 2Sensoren/3Sensoren/3Sensoren_Wasser haben dadurch keine Config mehr → von einer Box neu sichern (ohne `security.dat`) | Historie erledigt, Push/Rotation offen |
+| **O-12** | Wemos-Image-Wahl | `custom_312` ungeeignet (fehlende Plugins) → `collection_A_ESP8266_4M1M` | **erledigt** (A1) |
 | **O-13** | Fühler-Zuordnung physisch ↔ Task | Verfahren in Abschnitt 8 | offen |
 | **O-14** | Repo-Größe durch Image-Historie | ein Image je Klasse im Baum, Tags, Aufräumen | offen |
 
