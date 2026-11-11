@@ -566,6 +566,26 @@ erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
 
 ---
 
+## 11. Akzeptanzkriterien
+
+- [`AGENTS.md`](../AGENTS.md) beschreibt Branch-Modell, beide Geräteklassen,
+  Flash-Layouts, Varianten-/Config-Regeln, Testverfahren und Leitregeln.
+- Keine `security.dat` mit Nicht-Default-Werten im Repo (O-11 erledigt).
+- `devel` enthält ausschließlich neue Downloads/Änderungen; `master` nur
+  getestete Stable-Stände mit readme.txt (Release-Tag, Asset, SHA256,
+  Collection, Testdatum).
+- Je Variante existieren `config.dat` (ohne Syslog, ohne `security.dat`)
+  **und** ein passend generiertes Dashboard mit identischen Task-Namen.
+- WLAN ist vollständig kommandogesteuert, Syslog vollständig per Skript/HTTP
+  gesteuert (setzen **und** löschen), ohne Anfassen einer Config-Datei.
+- Jede Testbox hat einen eindeutigen Namen/Unit.
+- Teardown-Test: Syslog gestoppt, SSIDs gelöscht, AP öffnet sich
+  (nur WLAN-Boxen).
+- DS18B20: Adressvergabe ohne manuelle Auswahl im Reiter Devices
+  (1 Fühler: Auto Select; mehrere: Skript + dokumentierte Zuordnung).
+
+---
+
 ## 12. Windows-Flasher umstellen (O-8)
 
 **Ist:** [`openandhome-flasher.ps1`](../tools/oh-flasher/bin/openandhome-flasher.ps1)
@@ -603,23 +623,3 @@ flowchart LR
 
 **Offene Fragen:** Welche Varianten bekommt der Kunde (1–4 Fühler,
 Wassersensor, HTU21D …)? Braucht es den Flasher auch für Professional (FL-6)?
-
----
-
-## 11. Akzeptanzkriterien
-
-- [`AGENTS.md`](../AGENTS.md) beschreibt Branch-Modell, beide Geräteklassen,
-  Flash-Layouts, Varianten-/Config-Regeln, Testverfahren und Leitregeln.
-- Keine `security.dat` mit Nicht-Default-Werten im Repo (O-11 erledigt).
-- `devel` enthält ausschließlich neue Downloads/Änderungen; `master` nur
-  getestete Stable-Stände mit readme.txt (Release-Tag, Asset, SHA256,
-  Collection, Testdatum).
-- Je Variante existieren `config.dat` (ohne Syslog, ohne `security.dat`)
-  **und** ein passend generiertes Dashboard mit identischen Task-Namen.
-- WLAN ist vollständig kommandogesteuert, Syslog vollständig per Skript/HTTP
-  gesteuert (setzen **und** löschen), ohne Anfassen einer Config-Datei.
-- Jede Testbox hat einen eindeutigen Namen/Unit.
-- Teardown-Test: Syslog gestoppt, SSIDs gelöscht, AP öffnet sich
-  (nur WLAN-Boxen).
-- DS18B20: Adressvergabe ohne manuelle Auswahl im Reiter Devices
-  (1 Fühler: Auto Select; mehrere: Skript + dokumentierte Zuordnung).
