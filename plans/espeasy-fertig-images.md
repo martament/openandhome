@@ -556,13 +556,53 @@ erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
 | O-5 | `DEFAULT_*` greift nur bei Erstinit | immer `config.dat` mitspielen | gelöst |
 | O-6 | Download-URL/Versionierung | — | **erledigt** (Abschnitt 2) |
 | O-7 | DS18B20-Adresse ohne Auswahl | 1 Fühler: Auto Select; mehrere: `owscan` + D-2 | teilweise (S1, D-2) |
-| O-8 | Windows-Flasher [`tools/oh-flasher/`](../tools/oh-flasher/Readme.md) | preservieren oder auf `config.dat` umstellen — Nutzerentscheidung | offen |
+| O-8 | Windows-Flasher [`tools/oh-flasher/`](../tools/oh-flasher/Readme.md) | **wird umgestellt** (Entscheidung 2026-11-11) — Plan in Abschnitt 12 | geplant |
 | O-9 | Syslog an/aus | kein Kommando → HTTP `/advanced` | gelöst, Feldnamen offen (T2) |
 | O-10 | Dynamische Device-Erzeugung per HTTP (Stufe 4) | erst nach Prüfung der `/devices`-API entscheiden | offen (D-2) |
 | **O-11** | WLAN-Schlüssel in Tar, Flash-Dumps, `spiffs1M.bin` (2Sensoren, 3Sensoren, 3Sensoren_Wasser, wemos_htu21d) und alten Tasmota-Skripten | Historie per `git filter-repo` bereinigt (2026-11-11, Binärdateien entfernt, Text → `***REMOVED***`); Force-Push und Key-Rotation stehen aus. Varianten 2Sensoren/3Sensoren/3Sensoren_Wasser haben dadurch keine Config mehr → von einer Box neu sichern (ohne `security.dat`) | Historie erledigt, Push/Rotation offen |
 | **O-12** | Wemos-Image-Wahl | `custom_312` ungeeignet (fehlende Plugins) → `collection_A_ESP8266_4M1M` | **erledigt** (A1) |
 | **O-13** | Fühler-Zuordnung physisch ↔ Task | Verfahren in Abschnitt 8 | offen |
 | **O-14** | Repo-Größe durch Image-Historie | ein Image je Klasse im Baum, Tags, Aufräumen | offen |
+
+---
+
+## 12. Windows-Flasher umstellen (O-8)
+
+**Ist:** [`openandhome-flasher.ps1`](../tools/oh-flasher/bin/openandhome-flasher.ps1)
+(PowerShell + portables Python 3.9 + esptool 3.0) für **ESP8266**:
+„Update" (nur Firmware `openandhome_stable.bin` @0x0, Einstellungen bleiben),
+„Löschen und Upgrade" (blank → erase → Firmware → `N_spiffs1M.bin` @0x300000 je
+Fühleranzahl 1–4 bzw. Wassersensor), „Debug" (seriell lesen), dazu je eine
+devel-Variante. Danach muss der Kunde die DS18B20-Adressen in der
+Weboberfläche wählen. Alle Firmware-Dateien sind Eigenbuilds.
+
+**Ziel:** gleiche Bedienung für den Kunden, aber mit dem freigegebenen
+Fertig-Image und Dateisystem-Abzügen, die aus **getesteten Boxen** stammen.
+
+```mermaid
+flowchart LR
+    W1[Werkstatt: Box mit Variante aufsetzen und testen] --> W2[Test beenden: Syslog aus, Sensorbox1, WLAN geloescht]
+    W2 --> W3[Kundenpaket erzeugen: Dateisystem per USB auslesen]
+    W3 --> W4[tools/oh-flasher/firmware: Image + Variante_fs.bin + readme]
+    W4 --> K1[Kunde: start_flasher.bat]
+    K1 --> K2[Firmware und Dateisystem der gewaehlten Variante schreiben]
+```
+
+**Bausteine**
+
+| Nr. | Schritt | Inhalt |
+|---|---|---|
+| FL-1 | Dateisystem-Bereich festlegen | ESP8266 4M1M: SPIFFS ab `0x300000`. Nur den FS-Bereich auslesen (laut Linker-Skript `0x300000`–`0x3FB000`, Länge `0xFB000`) — **nicht** die SDK-Sektoren dahinter, dort kann das SDK WLAN-Daten ablegen. An der Testbox verifizieren. |
+| FL-2 | Werkstatt-Menüpunkt „Kundenpaket erzeugen" | nach „Test beenden" mit WLAN-Reset: `read_flash 0x300000 0xFB000` → `tools/oh-flasher/firmware/<variante>_fs.bin`; Prüfung: `security.dat` im Abzug nur Defaults (Suche nach dem WLAN-Schlüssel wie bei O-11), Syslog aus, Name `Sensorbox1` |
+| FL-3 | Firmware im Flasher | `openandhome_stable.bin` → freigegebenes `ESP_Easy_mega_<TAG>_collection_A_ESP8266_4M1M.bin` (Kopie aus `configs/espeasy/standalone/`), Version in `firmware/readme_image.txt`; `blank_4MB.bin` entfällt (`erase_flash` genügt) |
+| FL-4 | Flasher-Menü | 1 Update (nur Firmware, Einstellungen bleiben — getestet: config.dat von 2024 läuft auf `mega-20260720`), 2 Löschen und neu aufsetzen (erase → Firmware → `<variante>_fs.bin`), 3 Debug, 4 Abbrechen. **devel-Optionen entfallen** (devel ist ein Git-Branch, nicht für Kunden). Variantenauswahl aus den vorhandenen `*_fs.bin` statt fest 1–4/Wasser. |
+| FL-5 | Nach dem Flashen | wie heute Hinweis auf WLAN-Einbindung; bei 1 Fühler entfällt die Adresswahl (P004 „Auto Select" in der Variante aktiv), bei mehreren Fühlern bleibt die Anleitung (Readme/Bilder) |
+| FL-6 | ESP32 (Professional) | prüfen, ob Kunden-Flasher dafür nötig ist; wenn ja: Chip-Erkennung (`esptool chip_id`), `factory.bin` @0x0, LittleFS-Abzug @0x3B1000 (`0x4F000`) |
+| FL-7 | Tests | auf Windows durch dich (PowerShell kann ich hier nicht ausführen); die Abzüge selbst teste ich unter Linux mit demselben esptool (flashen → Box startet als `Sensorbox1` mit richtiger Variante) |
+| FL-8 | Doku | [`tools/oh-flasher/Readme.md`](../tools/oh-flasher/Readme.md) und Bilder anpassen; Release `oh-flasher.zip` auf GitHub neu bauen |
+
+**Offene Fragen:** Welche Varianten bekommt der Kunde (1–4 Fühler,
+Wassersensor, HTU21D …)? Braucht es den Flasher auch für Professional (FL-6)?
 
 ---
 
