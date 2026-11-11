@@ -405,6 +405,54 @@ zufällige Zuordnung.
 
 Empfehlung: **1 Fühler → D-1; mehrere Fühler → `owscan` + Zuordnungsregel + D-2.**
 
+### 8.1 Autokonfiguration (Ziel, Machbarkeit an Testbox geprüft 2026-11-11)
+
+Anforderung: Beim Teststart sind alle Sensoren angeschlossen; die Box soll
+Fühler, Display und andere Sensoren selbst erkennen. Rückfallebene: nur die
+Anzahl DS18B20 angeben und den Rest in der Weboberfläche einstellen.
+
+**Befund an der Testbox (ESP8266, Build 20240121):**
+- `I2CScanner` per USB liefert die I2C-Adressen (`Found 0x3c` = OLED SSD1306,
+  `Found 0x40` = HTU21D/SI70xx).
+- `OWScan,<GPIO>` per USB liefert die 1-Wire-Adressen (ohne Fühler leer).
+- Die Device-Seite `/devices?index=<Task>&page=1` ist ein normales Formular
+  (POST auf dieselbe URL, `edit=1`). Relevante Felder: `TDE` (Task aktiv,
+  Checkbox), `TDN` (Name), `taskdevicepin1` (GPIO), bei P004
+  **`dallas_addr0`** (Auswahl aus den am Bus gefundenen Adressen), bei
+  I2C-Plugins `i2c_addr`, beim OLED (P036) die Zeilen `pc_arg1..12`.
+- Die vorhandene `config.dat` enthält bereits alle Tasks, nicht passende sind
+  deaktiviert (Fuehler1–4 DS18B20 an GPIO0, HTU21D, OLED, HC-SR04).
+
+**Konzept: eine Basis-`config.dat` je Geräteklasse statt vieler Varianten**
+
+```mermaid
+flowchart LR
+    A[Basis-config.dat: alle Tasks angelegt, deaktiviert] --> B[I2CScanner per USB]
+    A --> C[OWScan per USB]
+    B --> D[Tasks aktivieren: Display, HTU21D, AM2320, BME280]
+    C --> E[Fuehler1..N aktivieren, dallas_addr0 setzen]
+    D --> F[OLED-Zeilen und Dashboard aus aktiven Tasks erzeugen]
+    E --> F
+    F --> G[Nicht erkennbar abfragen: HC-SR04, Wassersensor]
+```
+
+| Hardware | Erkennung |
+|---|---|
+| DS18B20 (Anzahl, Adressen) | `OWScan,<GPIO>` — automatisch |
+| OLED SSD1306 (0x3C/0x3D) | `I2CScanner` — automatisch |
+| HTU21D/SI70xx (0x40), AM2320 (0x5C), BMx280 (0x76/0x77) | `I2CScanner` — automatisch |
+| HC-SR04, Wassersensor (GPIO/analog) | **nicht erkennbar** → Abfrage j/n im Werkstatt-Tool |
+
+**Zuordnung Fühler ↔ Task:** `OWScan` liefert die Adressen in
+Bus-Suchreihenfolge (nach Adresse sortiert), nicht nach Steckplatz. Soll
+„Fuehler1" ein bestimmter physischer Fühler sein, Fühler beschriften oder
+nacheinander anstecken (O-13). Sonst gilt: Reihenfolge = Scan-Reihenfolge.
+
+**Offen (mit angeschlossenen Fühlern und neuem Image prüfen):** Format der
+Optionswerte von `dallas_addr0` und Zuordnung zur `OWScan`-Ausgabe; Feldnamen
+im Image `mega-20260720` (Testbox läuft noch mit 20240121); Verhalten bei
+mehr Fühlern als vorbereiteten Tasks (Professional bis 8).
+
 ---
 
 ## 9. Umsetzungsschritte (To-Do für die spätere Ausführung)
