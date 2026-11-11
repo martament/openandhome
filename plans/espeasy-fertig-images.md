@@ -694,6 +694,15 @@ AM2320 (P051) und Ping (P089); `custom_*` fehlen 5–7 Plugins.
 |---|---|---|---|---|---|
 | collection_A | 1011 kB | ~73 | 10.168 B | ~11,6 % | ~7.100 |
 | collection_H | 973 kB | ~61 | 10.048–10.912 B | ~11,1 % | ~11.200 |
+| normal_beta_2ndheap | 913 kB | ~44 | 13.704–14.345 B | **25–30 %** | **~1.960** |
+| **climate_B** | **896 kB** | ~38 | **12.800–13.728 B** | ~13,4 % | ~7.100 |
+
+Nachtrag 2026-11-12: `climate_B` ist das kleinste Image mit allen genutzten
+Plugins (P001 Switch/Wassersensor, P002, P004, P005, P013 HC-SR04, P014,
+P023, P026, P028, P031, P033, P036, P037, C005); es fehlen nur AM2320 (P051)
+und Ping (P089). +2,8 KB RAM gegenüber A, ~120 kB OTA-Reserve.
+`normal_beta_2ndheap` hat zwar am meisten RAM, aber 4× weniger Loops/s und
+doppelte Last — verworfen.
 
 Ergebnis: **kein nennenswerter RAM-Gewinn**, aber deutlich mehr Loops/s und
 **OTA-Reserve**: Der OTA-Bereich fasst 1044464 Byte; A lässt nur ~9 kB frei,
