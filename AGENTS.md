@@ -26,10 +26,13 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
    und [`build/ESPEasy/myfiles/Custom.hESPEasy`](build/ESPEasy/myfiles/Custom.hESPEasy) ist **nicht mehr der
    aktuelle Weg** — die Custom.h dient nur noch als Analysequelle dafür, welche
    Optionen auf ein Fertig-Image angewendet werden müssen.
-2. **LittleFS statt SPIFFS.** Neuere ESPEasy-Builds verwenden LittleFS. Alte
-   `spiffs1M.bin`/`spiffs316k.bin`-Images sind mit neuen Firmware-Ständen
-   u. U. inkompatibel. Filesystem-Inhalte (Dashboard, Icons, CSS) werden bevorzugt
-   per Web-Upload gesetzt ([`configs/espeasy/standalone/resources/push_config.sh`](configs/espeasy/standalone/resources/push_config.sh)).
+2. **Filesystem: ESP32 = LittleFS, ESP8266 = SPIFFS.** Die ESP32-Release-Images
+   verwenden LittleFS; alte `spiffs316k.bin` sind damit inkompatibel. Die
+   ESP8266-4M1M-Release-Images verwenden weiterhin SPIFFS (ein LittleFS-Image
+   gibt es upstream nur als `custom_312_ESP8266_4M2M_LittleFS`, siehe Plan
+   Abschnitt 5 C). Filesystem-Inhalte (Dashboard, Icons, CSS, `config.dat`)
+   werden für beide per Web-Upload gesetzt
+   ([`configs/espeasy/standalone/resources/push_config.sh`](configs/espeasy/standalone/resources/push_config.sh)).
 3. **Flashen unter Linux per `esptool`**, entweder über die in der `.bashrc`
    hinterlegten Aliase oder über [`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](tools/ohtoolbox/bin/linux_ohtoolbox.sh)
    (Menü-Tool: WLAN setzen, Settings lesen, Debug-Log, Reboot).
@@ -41,17 +44,22 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
    README oder readme.txt des Ordners dokumentieren).
 6. **Branch-Modell Stable/Devel.** `devel` ist der Arbeitsstand: hier werden
    neue Fertig-Images **heruntergeladen**, Configs/Dashboard angepasst und
-   getestet. `main` ist Stable: nur getestete Kombinationen (Image +
-   `config.dat` + Dashboard + readme mit Herkunft/Testdatum), Merge aus `devel`
-   erst nach bestandenem Test. **Downloads ausschließlich auf `devel`.**
+   getestet. **`master` ist Stable** (wird nicht in `main` umbenannt, weil
+   Dashboard-Footer und Readmes auf `…/master/…` verlinken): nur getestete
+   Kombinationen (Image + `config.dat` + Dashboard + readme mit Release-Tag,
+   SHA256, Testdatum), Merge aus `devel` erst nach bestandenem Test.
+   **Downloads ausschließlich auf `devel`.**
 7. **Configs über `config.dat`, nicht über Flasher-Presets.** Stable-Releases
    bestehen aus Image + `config.dat` + Dashboard-Dateien — je Variante
    (Anzahl Fühler, verbaute Zusatzhardware wie Display/Wassersensor).
-   **WLAN-Zugangsdaten und Syslog-IP gehören NIE in eine `config.dat`** —
-   sie werden immer per Befehl gesetzt und gelöscht (`WifiSSID`/`WifiKey`/
-   `Save`/`reboot` bzw. Syslog-Kommando, siehe Testverfahren unten).
-   Für den Test wird die Syslog-IP `192.168.9.4` nachgerüstet.
-8. **24h-Testverfahren:** Testboxen laufen ca. 24 Stunden mit Syslog-Logging
+   **WLAN-Zugangsdaten und Syslog-IP gehören NIE in eine Release-Datei.**
+   WLAN steht in ESPEasy in `security.dat` und wird per Befehl gesetzt/gelöscht
+   (`WifiSSID`/`WifiKey`/`Save`/`reboot`). Die Syslog-IP steht in `config.dat`,
+   bleibt dort im Stable leer und wird im Test per HTTP an `/advanced` gesetzt
+   (ESPEasy hat kein Syslog-Kommando). Test-Syslog-IP: `192.168.9.4`.
+8. **Keine `security.dat` committen** (auch nicht in Backup-Tars), außer sie
+   enthält nachweislich nur Defaults (`ssid`/`wpakey`/`configesp`).
+9. **24h-Testverfahren:** Testboxen laufen ca. 24 Stunden mit Syslog-Logging
    auf `192.168.9.4`. Danach startet der Nutzer **manuell** das Teardown:
    Syslog aus, bei WLAN-Boxen SSIDs löschen (wie `esp_resetap`), damit beim
    Kunden der AP geöffnet wird. Details im Plan, Abschnitt 4.
@@ -78,8 +86,9 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 ### Professional (ESP32, 4 MB, **mit Ethernet/ETH**)
 
 - Image: `ESP_Easy_mega_*_collection_A_ESP32_4M316k.bin` (+ `.factory.bin`)
-- Achtung: der alte Eigenbuild hieß `custom_ESP32_4M316k_ETH` — beim Download
-  prüfen, ob das Fertig-Image Ethernet unterstützt (offener Punkt O-2 im Plan).
+- Ethernet ist enthalten (`FEATURE_ETHERNET=1` über `esp32_common_LittleFS_ETH`);
+  der alte Eigenbuild hieß `custom_ESP32_4M316k_ETH`. ETH-Settings stehen in
+  der Professional-`config.dat`.
 - Partitionierung: [`configs/espeasy/professional/esp32_partition_app1810k_spiffs316k.csv`](configs/espeasy/professional/esp32_partition_app1810k_spiffs316k.csv)
   (`app0` @0x10000, `app1` @0x1E0000, `eeprom` @0x3B0000, `spiffs` @0x3B1000 Größe 0x4F000)
 - Aliase: `esp32_flash_writefull` (0x000000), `esp32_flash_write` (0x3B1000, spiffs316k.bin),
@@ -87,8 +96,11 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 
 ### Standalone (ESP8266, 4 MB, 1 MB FS)
 
-- Image: `openandhome_stable.bin` / `openandhome_devel.bin` (früher selbst gebaut)
-- Filesystem: `spiffs1M.bin` @0x300000
+- Image neu: `ESP_Easy_mega_*_collection_A_ESP8266_4M1M.bin` — **nicht**
+  `custom_312_ESP8266_4M1M` (Release-Build ohne eure Custom.h, es fehlen u. a.
+  P013, P014, P051). Kein Zabbix (C017) und kein Email (N001) auf ESP8266.
+- Image alt: `openandhome_stable.bin` / `openandhome_devel.bin` (selbst gebaut)
+- Filesystem: **SPIFFS**, `spiffs1M.bin` @0x300000
 - Aliase: `esp_flashstable_min`, `esp_flash_write` (0x300000), `esp_flash_read` (0x300000, 0x100000),
   `esp_blank` (blank_4MB.bin), `esp_resetflash`
 
@@ -107,14 +119,16 @@ Sensor gespielt. Danach `config.dat` hochladen und `reboot`.
 
 ## 6. Testen der Sensorboxen (Devel)
 
-1. Image + `config.dat` der Variante flashen, dann **WLAN per Befehl** setzen
+1. Image + `config.dat` der Variante flashen, dann eindeutigen Namen setzen
+   (`Name,<box>`, `Unit,<n>`, `Save`), **WLAN per Befehl** setzen
    (`WifiSSID`/`WifiKey`/`Save`/`reboot`, Aliase `esp_sendap*`) und
-   **Syslog per Befehl** auf `192.168.9.4` nachrüsten (Kommando in Schritt T1
-   des Plans verifizieren, sonst Web-UI).
+   **Syslog per HTTP** an `/advanced` auf `192.168.9.4` nachrüsten
+   (kein Syslog-Kommando in ESPEasy; Formular komplett zurückschicken).
 2. Ca. 24 h betreiben, Logs am Syslog-Server auswerten (Boot-Zyklen,
    WLAN/ETH, MQTT, NTP, Sensorwerte, Regeln, Speicherverschleiß).
-3. **Teardown manuell:** Syslog-Logging abschalten (Kommando bzw. erneutes
-   Spielen der Stable-`config.dat`), danach bei WLAN-Boxen:
+3. **Teardown manuell:** Syslog-Logging per HTTP `/advanced` abschalten (nicht
+   die Stable-`config.dat` neu spielen — das überschreibt Name und
+   DS18B20-Adressen), danach bei WLAN-Boxen:
    `WifiSSID ssid` → `WifiKey wpakey` → `WifiSSID2 ssid` → `WifiKey2 wpakey`
    → `Save` → `reboot` (entspricht `esp_resetap`).
 4. Verifikation: kein Syslog-Traffic, SSIDs gelöscht, AP öffnet sich,
@@ -124,8 +138,9 @@ Helfer: [`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](tools/ohtoolbox/bin/linux_oht
 (WLAN setzen, Settings lesen, Debug-Log, Reboot).
 
 **DS18B20:** die Device-Adresse (1-Wire-MAC) muss sonst im Reiter Devices
-manuell gewählt werden — Automatisierung (Verhalten bei leerer Adresse testen,
-sonst HTTP-Skript) ist Schritt S1 im Plan.
+manuell gewählt werden. Bei 1 Fühler pro GPIO hilft die P004-Option
+„Auto Select Sensor"; bei mehreren Fühlern Adressen seriell mit `owscan`
+lesen und per HTTP-Skript an `/devices` setzen (Plan Abschnitt 8, D-2).
 
 ## 7. Regeln für Änderungen
 
@@ -133,7 +148,10 @@ sonst HTTP-Skript) ist Schritt S1 im Plan.
   `configs/espeasy/standalone/<variante>/` oder `configs/espeasy/professional/<variante>/`
   mit `table.txt`, `readme.txt` (Herkunft des Images, Version, Besonderheiten).
 - Jedes mitgelieferte Image mit Herkunft, ESPEasy-Version und Collection
-  dokumentieren (Vorbild: [`configs/espeasy/professional/3_hut21/readme.txt`](configs/espeasy/professional/3_hut21/readme.txt)).
+  dokumentieren. Ziel-Standard: Release-Tag, Asset-Name, SHA256, Collection und
+  Testdatum (siehe Plan, Abschnitt 3). Das bestehende
+  [`configs/espeasy/professional/3_hut21/readme.txt`](configs/espeasy/professional/3_hut21/readme.txt)
+  ist nur ein Minimalbeispiel (2 Zeilen) und erfüllt diesen Standard noch nicht.
 - Nicht mehr benötigte Build-Reste (`build/ESPEasy/*`) nur löschen, wenn der
   Nutzer es explizit freigibt — sie sind die Referenz für die Custom.h-Analyse.
 - Sensible Daten (WLAN-Passwörter) stehen teils in Aliassen/Dateien; bei neuen
