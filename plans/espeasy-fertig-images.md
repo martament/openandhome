@@ -588,38 +588,51 @@ erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
 
 ## 12. Windows-Flasher umstellen (O-8)
 
-**Ist:** [`openandhome-flasher.ps1`](../tools/oh-flasher/bin/openandhome-flasher.ps1)
-(PowerShell + portables Python 3.9 + esptool 3.0) für **ESP8266**:
-„Update" (nur Firmware `openandhome_stable.bin` @0x0, Einstellungen bleiben),
-„Löschen und Upgrade" (blank → erase → Firmware → `N_spiffs1M.bin` @0x300000 je
-Fühleranzahl 1–4 bzw. Wassersensor), „Debug" (seriell lesen), dazu je eine
-devel-Variante. Danach muss der Kunde die DS18B20-Adressen in der
-Weboberfläche wählen. Alle Firmware-Dateien sind Eigenbuilds.
+**Entscheidungen (2026-11-11):** Flasher wird umgestellt; er soll die
+Konfiguration **automatisch erkennen** und alles **aus unserem Repo laden**.
+**Nur Standalone (ESP8266)** — Professional-Kunden brauchen ihn nicht.
 
-**Ziel:** gleiche Bedienung für den Kunden, aber mit dem freigegebenen
-Fertig-Image und Dateisystem-Abzügen, die aus **getesteten Boxen** stammen.
+**Ist:** [`openandhome-flasher.ps1`](../tools/oh-flasher/bin/openandhome-flasher.ps1)
+(PowerShell + portables Python 3.9 + esptool 3.0 + pyserial 3.5): Update
+(nur Firmware), Löschen und Upgrade (Firmware + `N_spiffs1M.bin` nach
+Auswahl der Fühleranzahl), Debug, je stable/devel. Danach wählt der Kunde die
+DS18B20-Adressen von Hand. Alle Dateien liegen im ZIP (Eigenbuilds).
+
+**Befund an der Testbox:** `TaskEnable,<n>` / `TaskDisable,<n>` + `Save` per
+USB bleiben über einen Reboot erhalten → Sensoren lassen sich **ohne Netzwerk**
+passend zur erkannten Hardware ein-/ausschalten. Nur DS18B20-Adressen bei
+mehreren Fühlern, OLED-Zeilen und Dashboard brauchen HTTP.
+
+### 12.1 Ablauf
 
 ```mermaid
-flowchart LR
-    W1[Werkstatt: Box mit Variante aufsetzen und testen] --> W2[Test beenden: Syslog aus, Sensorbox1, WLAN geloescht]
-    W2 --> W3[Kundenpaket erzeugen: Dateisystem per USB auslesen]
-    W3 --> W4[tools/oh-flasher/firmware: Image + Variante_fs.bin + readme]
-    W4 --> K1[Kunde: start_flasher.bat]
-    K1 --> K2[Firmware und Dateisystem der gewaehlten Variante schreiben]
+flowchart TD
+    A[start_flasher.bat] --> B[Manifest von GitHub master laden]
+    B --> C[Firmware und Basis-config.dat laden, SHA256 pruefen]
+    C --> D[erase, Firmware schreiben]
+    D --> E[Basis-Dateisystem schreiben: config.dat, Dashboard-Dateien]
+    E --> F[USB: I2CScanner, OWScan]
+    F --> G[USB: TaskEnable/TaskDisable passend, Save]
+    G --> H{WLAN-Daten eingeben?}
+    H -- ja --> I[USB: WifiSSID/WifiKey, Box ins Netz]
+    I --> J[HTTP: Fuehler-Adressen, OLED-Zeilen, Dashboard, Name Sensorbox1]
+    H -- nein --> K[Hinweis: Adressen bei mehreren Fuehlern in der Weboberflaeche waehlen]
 ```
 
-**Bausteine**
+### 12.2 Bausteine
 
-| Nr. | Schritt | Inhalt |
+| Nr. | Baustein | Inhalt |
 |---|---|---|
-| FL-1 | Dateisystem-Bereich festlegen | ESP8266 4M1M: SPIFFS ab `0x300000`. Nur den FS-Bereich auslesen (laut Linker-Skript `0x300000`–`0x3FB000`, Länge `0xFB000`) — **nicht** die SDK-Sektoren dahinter, dort kann das SDK WLAN-Daten ablegen. An der Testbox verifizieren. |
-| FL-2 | Werkstatt-Menüpunkt „Kundenpaket erzeugen" | nach „Test beenden" mit WLAN-Reset: `read_flash 0x300000 0xFB000` → `tools/oh-flasher/firmware/<variante>_fs.bin`; Prüfung: `security.dat` im Abzug nur Defaults (Suche nach dem WLAN-Schlüssel wie bei O-11), Syslog aus, Name `Sensorbox1` |
-| FL-3 | Firmware im Flasher | `openandhome_stable.bin` → freigegebenes `ESP_Easy_mega_<TAG>_collection_A_ESP8266_4M1M.bin` (Kopie aus `configs/espeasy/standalone/`), Version in `firmware/readme_image.txt`; `blank_4MB.bin` entfällt (`erase_flash` genügt) |
-| FL-4 | Flasher-Menü | 1 Update (nur Firmware, Einstellungen bleiben — getestet: config.dat von 2024 läuft auf `mega-20260720`), 2 Löschen und neu aufsetzen (erase → Firmware → `<variante>_fs.bin`), 3 Debug, 4 Abbrechen. **devel-Optionen entfallen** (devel ist ein Git-Branch, nicht für Kunden). Variantenauswahl aus den vorhandenen `*_fs.bin` statt fest 1–4/Wasser. |
-| FL-5 | Nach dem Flashen | wie heute Hinweis auf WLAN-Einbindung; bei 1 Fühler entfällt die Adresswahl (P004 „Auto Select" in der Variante aktiv), bei mehreren Fühlern bleibt die Anleitung (Readme/Bilder) |
-| FL-6 | ESP32 (Professional) | prüfen, ob Kunden-Flasher dafür nötig ist; wenn ja: Chip-Erkennung (`esptool chip_id`), `factory.bin` @0x0, LittleFS-Abzug @0x3B1000 (`0x4F000`) |
-| FL-7 | Tests | auf Windows durch dich (PowerShell kann ich hier nicht ausführen); die Abzüge selbst teste ich unter Linux mit demselben esptool (flashen → Box startet als `Sensorbox1` mit richtiger Variante) |
-| FL-8 | Doku | [`tools/oh-flasher/Readme.md`](../tools/oh-flasher/Readme.md) und Bilder anpassen; Release `oh-flasher.zip` auf GitHub neu bauen |
+| FL-1 | **Python statt PowerShell-Logik** | Kern als `tools/oh-flasher/bin/oh_flasher.py` (läuft mit dem mitgelieferten Python 3.9, esptool, pyserial). Die `.ps1` startet nur noch Python. Gleicher Code ist unter Linux testbar (an der Testbox). |
+| FL-2 | **Manifest auf `master`** | `tools/oh-flasher/manifest.json`: Firmware-Datei, SHA256, Release-Tag, Basis-`config.dat`, Dashboard-Dateien, Erkennungsregeln. Geladen über `https://raw.githubusercontent.com/martament/openandhome/master/…` — damit bekommt der Kunde immer den **freigegebenen Stable-Stand**, nie `devel`. |
+| FL-3 | **Offline-Rückfall** | Ist GitHub nicht erreichbar, nimmt der Flasher die im ZIP mitgelieferte Kopie (gleiche Struktur). |
+| FL-4 | **Basis-Dateisystem** | Ein FS-Abzug (`0x300000`, Länge `0xFB000` — nicht die SDK-Sektoren dahinter, dort können WLAN-Daten liegen) aus einer getesteten Box im Auslieferungszustand: Basis-`config.dat` mit allen Tasks, Dashboard für alle Tasks, `security.dat` nur Defaults. Erzeugt per Werkstatt-Menü „Kundenpaket erzeugen"; vor dem Commit Prüfung auf WLAN-Daten. |
+| FL-5 | **Erkennung über USB** | `I2CScanner` (0x3C Display, 0x40 HTU21D, 0x5C AM2320, 0x76/77 BMx280), `OWScan,<GPIO>` (Anzahl DS18B20); danach `TaskEnable`/`TaskDisable` + `Save`. Nicht erkennbar (HC-SR04, Wassersensor): Rückfrage j/n. Wiederverwendung der Logik aus `espeasy_autoconfig.py`. |
+| FL-6 | **Optional WLAN** | Kunde kann WLAN-Daten eingeben (wie ohtoolbox Punkt 1). Dann läuft die vollständige Autoerkennung über HTTP: Fühler-Adressen, OLED-Zeilen, Dashboard nur mit vorhandenen Sensoren. Ohne WLAN: Box öffnet ihren AP wie bisher; bei 1 Fühler wählt P004 „Auto Select" die Adresse selbst, bei mehreren bleibt die Auswahl in der Weboberfläche. |
+| FL-7 | **Menü** | 1 Sensor neu aufsetzen (Ablauf 12.1), 2 Nur Firmware aktualisieren (Einstellungen bleiben), 3 Debug, 4 Beenden. **devel-Optionen und `blank_4MB.bin` entfallen.** |
+| FL-8 | **Aufräumen** | `tools/oh-flasher/firmware/` (Eigenbuilds, `N_spiffs1M.bin`) durch Manifest-Dateien ersetzen; Readme und Bilder anpassen; `oh-flasher.zip` als GitHub-Release neu bauen. |
+| FL-9 | **Tests** | Linux: `oh_flasher.py` komplett an der Testbox (mit/ohne WLAN). Windows: Start über `start_flasher.bat`, COM-Port-Erkennung, Download — durch dich. |
 
-**Offene Fragen:** Welche Varianten bekommt der Kunde (1–4 Fühler,
-Wassersensor, HTU21D …)? Braucht es den Flasher auch für Professional (FL-6)?
+**Offen:** Verhalten von P004 „Auto Select" mit echtem Fühler (Testbox hat
+keinen DS18B20); Basis-`config.dat` braucht dafür „Auto Select" im ersten
+DS18B20-Task.
