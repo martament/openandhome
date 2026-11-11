@@ -60,7 +60,8 @@ usb_box_ip() {
     local ausgabe
     ausgabe=$( { read_serial 3 & sleep 0.3; printf '\n' > "$PORT"; sleep 0.3; echo "Settings" > "$PORT"; wait; } | tr -d '\r')
     local ip
-    ip=$(sed -n 's/^ *IP Address *: *\([0-9.]*\).*/\1/p' <<< "$ausgabe" | head -n 1)
+    # Neuere Firmware stellt einen Zeitstempel voran ("24.920 : >  IP Address : ...")
+    ip=$(sed -n 's/.*IP Address *: *\([0-9.]*\).*/\1/p' <<< "$ausgabe" | head -n 1)
     [ -n "$ip" ] && [ "$ip" != "0.0.0.0" ] && BOX_IP="$ip"
 }
 
@@ -100,6 +101,24 @@ onewire_scan() {
     echo -e "\e[90mAntwort des Sensors:\e[0m"
     read_serial 4 | tee -a ow-scan.txt
     echo -e "\n\e[90m(auch in ow-scan.txt gespeichert)\e[0m"
+    weiter
+}
+
+autoconfig() {
+    echo -e "\n\e[36m--- Sensoren erkennen und Tasks einschalten ---\e[0m"
+    echo "Scannt I2C (Display, HTU21D, AM2320, BMx280) und 1-Wire (DS18B20) per USB."
+    find_port || { weiter; return; }
+    ask_box_ip || { echo "Keine IP angegeben."; weiter; return; }
+    python3 "$BIN/espeasy_autoconfig.py" --port "$PORT" --host "$BOX_IP" || { weiter; return; }
+
+    echo -e "\nNicht erkennbare Sensoren (z. B. HCSR04, Wassersensor) bleiben unverändert."
+    read -p "Davon einschalten (Tasknamen, Leerzeichen getrennt, leer = keine): " -a an
+    read -p "Davon ausschalten (Tasknamen, leer = keine): " -a aus
+    read -p "Änderungen jetzt schreiben? (j/n): " ok
+    if [[ "$ok" =~ ^[jJyY]$ ]]; then
+        python3 "$BIN/espeasy_autoconfig.py" --port "$PORT" --host "$BOX_IP" \
+            ${an:+--an "${an[@]}"} ${aus:+--aus "${aus[@]}"} --anwenden
+    fi
     weiter
 }
 
@@ -171,6 +190,7 @@ while true; do
     echo "7) config.dat / Backup-Tar prüfen"
     echo "8) Fertig-Images laden             (Branch devel)"
     echo "9) Serieller Monitor"
+    echo "a) Sensoren erkennen, Tasks einschalten (USB + HTTP)"
     echo "------------------------------------"
     echo "WLAN setzen: tools/ohtoolbox/bin/linux_ohtoolbox.sh (Punkt 1)"
     echo "q) Beenden"
@@ -187,6 +207,7 @@ while true; do
         7) check_config ;;
         8) download_images ;;
         9) monitor ;;
+        a|A) autoconfig ;;
         q|Q) exit 0 ;;
         *) echo -e "\e[31mUngültige Wahl\e[0m"; sleep 1 ;;
     esac

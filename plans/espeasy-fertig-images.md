@@ -448,10 +448,35 @@ Bus-Suchreihenfolge (nach Adresse sortiert), nicht nach Steckplatz. Soll
 „Fuehler1" ein bestimmter physischer Fühler sein, Fühler beschriften oder
 nacheinander anstecken (O-13). Sonst gilt: Reihenfolge = Scan-Reihenfolge.
 
-**Offen (mit angeschlossenen Fühlern und neuem Image prüfen):** Format der
-Optionswerte von `dallas_addr0` und Zuordnung zur `OWScan`-Ausgabe; Feldnamen
-im Image `mega-20260720` (Testbox läuft noch mit 20240121); Verhalten bei
+**Umgesetzt:** [`tools/bin/espeasy_autoconfig.py`](../tools/bin/espeasy_autoconfig.py)
+(Werkstatt-Menü Punkt `a`). Ohne `--anwenden` nur Anzeige der Änderungen.
+Getestet am 2026-11-11 an der Testbox mit `mega-20260720`: HTU21D und OLED
+ausgeschaltet → erkannt, eingeschaltet, OLED-Zeilen erzeugt, nach Reboot
+erhalten. Die Feldnamen sind zwischen den Versionen nicht stabil
+(`pconf_N` → `pconfigIndex_N`); deshalb schickt das Skript immer das
+komplette Formular zurück.
+
+**Offen (braucht DS18B20 an der Box):** Format der Optionswerte von
+`dallas_addr0` und Abgleich mit der `OWScan`-Ausgabe (das Skript sucht die
+gescannte Adresse im Optionstext und warnt, wenn sie fehlt); Verhalten bei
 mehr Fühlern als vorbereiteten Tasks (Professional bis 8).
+
+### 8.2 Erprobter Ablauf Neuflash (Testbox ESP8266, 2026-11-11)
+
+1. Sicherung: kompletter Flash (`esptool read_flash 0 0x400000`, ~100 s) und
+   `config.dat` über `http://<box>/download` — außerhalb des Repos ablegen
+   (enthält WLAN-Daten).
+2. `esptool erase_flash`, dann `write_flash -fs 4MB 0x0 <collection_A_ESP8266_4M1M.bin>`.
+   Unter Linux funktioniert das `esptool.py` 3.0 aus
+   `tools/oh-flasher/bin/pythonportable/Lib/site-packages` mit dem System-`pyserial`
+   (`PYTHONPATH=… python3 -m esptool`).
+3. WLAN per USB (`WifiSSID`, `WifiKey`, `Save`, `Reboot`).
+4. **`ClearAccessBlock` per USB**, wenn der Werkstatt-PC in einem anderen
+   Subnetz liegt: eine frisch geflashte Box erlaubt Web-Zugriffe nur aus dem
+   eigenen Subnetz (sonst „403 IP blocked").
+5. Basis-`config.dat` per HTTP-Upload (`/upload`, multipart), `Reboot`.
+   Eine `config.dat` aus Build 20240121 wurde von `mega-20260720` übernommen.
+6. Autokonfiguration (8.1), dann Name/Unit, Syslog an → 24h-Test.
 
 ---
 
