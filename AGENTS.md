@@ -134,8 +134,15 @@ Sensor gespielt. Danach `config.dat` hochladen und `reboot`.
 4. Verifikation: kein Syslog-Traffic, SSIDs gelöscht, AP öffnet sich,
    Ergebnis in `readme.txt` des Testordners → Merge-Freigabe.
 
-Helfer: [`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](tools/ohtoolbox/bin/linux_ohtoolbox.sh)
-(WLAN setzen, Settings lesen, Debug-Log, Reboot).
+Helfer:
+- [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/oh_werkstatt.sh) — **intern, nur Linux**:
+  Name/Unit, `OWScan`, Syslog an/aus (HTTP), Teardown, `config.dat` prüfen,
+  Images laden. Standardweg USB (`/dev/ttyUSB*`, Benutzer braucht Gruppe `dialout`).
+- [`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](tools/ohtoolbox/bin/linux_ohtoolbox.sh) — **für Endkunden**
+  (WLAN setzen, Settings lesen, Debug-Log, Reboot). Nur Funktionen aufnehmen,
+  die Kunden brauchen; Werkstatt-Funktionen gehören in `ohwerkstatt`.
+- [`tools/bin/espeasy_configcheck.py`](tools/bin/espeasy_configcheck.py) — prüft `config.dat`/Backup-Tars
+  (Syslog aus? `security.dat` nur Defaults?) vor jedem Commit.
 
 **DS18B20:** die Device-Adresse (1-Wire-MAC) muss sonst im Reiter Devices
 manuell gewählt werden. Bei 1 Fühler pro GPIO hilft die P004-Option

@@ -347,11 +347,21 @@ Speicherverschleiß (`ResetFlashWriteCounter`), Dashboard.
    eine eventuell gezogene Backup-`security.dat` enthält nur Defaults.
 5. Ergebnis in `readme.txt` des Testordners → Merge-Freigabe.
 
-**Werkzeuge (Umsetzung später):** Erweiterung von
-[`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](../tools/ohtoolbox/bin/linux_ohtoolbox.sh)
-um „Name/Unit setzen", „Syslog an/aus (HTTP)", „1-Wire-Scan (`owscan`)",
-„Teardown"; bestehende Menüpunkte und Aliase (`esp_sendap*`, `esp_resetap`,
-`esp_monitor`) bleiben gültig.
+**Werkzeuge — umgesetzt:** interne Funktionen liegen im Linux-Werkstatt-Tool
+[`tools/ohwerkstatt/oh_werkstatt.sh`](../tools/ohwerkstatt/oh_werkstatt.sh):
+Name/Unit, `OWScan`, Syslog an/aus/Status, Teardown, `config.dat`-Prüfung,
+Image-Download, Monitor. Standardweg ist **USB**; nur Syslog geht per HTTP,
+die Box-IP liest das Tool dabei per USB (`Settings`) aus.
+Die [`ohtoolbox`](../tools/ohtoolbox/bin/linux_ohtoolbox.sh) ist für
+Endkunden und bleibt unverändert (WLAN setzen/löschen, Reboot, AP-Mode …).
+Getestet am 2026-11-11 an einer Testbox (ESP8266, 192.168.2.59): Syslog
+an/aus, Name/Unit, IP per USB, `OWScan` (ohne Fühler, leere Antwort).
+
+**Seriell-Hinweis:** Nach dem Öffnen des Ports steht oft Datenmüll im
+Eingabepuffer des Sensors; das erste Kommando wird dann verworfen
+(„Command unknown"). Vor Kommandos immer eine Leerzeile senden.
+`Settings` gibt den WLAN-Key im Klartext aus — Ausgaben nicht in Tickets
+oder Logs übernehmen.
 
 ---
 
@@ -363,7 +373,8 @@ um „Name/Unit setzen", „Syslog an/aus (HTTP)", „1-Wire-Scan (`owscan`)",
 | **A2** | Ethernet im ESP32-Image | `collection_A_ESP32_4M316k` → `[esp32_common_LittleFS_ETH]` → `FEATURE_ETHERNET=1` | **erledigt** (LAN-Praxistest im 24h-Test) |
 | **A3** | `ApDontForceSetup`-Verhalten upstream | ESPEasy-Quelle/Doku nach `ApDontForceSetup` durchsuchen; Kommando `wifiallowap` prüfen; sonst Workaround | offen |
 | **T1** | Syslog-Kommando | kein Kommando vorhanden; Weg: HTTP `/advanced` | **erledigt** |
-| **T2** | Formularfeldnamen von `/advanced` (Syslog-IP/-Level) und Verhalten bei Teil-POST | `curl` GET `/advanced` an Testbox, Feldnamen notieren, Round-Trip-POST testen | offen |
+| **T2** | Formularfeldnamen von `/advanced` (Syslog-IP/-Level) und Verhalten bei Teil-POST | Felder `syslogip`, `syslog_log_level`; Speichern über verstecktes Feld `edit=1`. Vollständiger Formular-Rundlauf mit [`espeasy_syslog.py`](../tools/bin/espeasy_syslog.py) an der Testbox: übrige Felder unverändert | **erledigt** |
+| **B3** | Syslog in vorhandenen `config.dat` | [`espeasy_configcheck.py`](../tools/bin/espeasy_configcheck.py): Syslog aktiv in `professional/7Sensoren`, `professional/future`, `standalone/wemos_a0_feuchtigkeit`, `standalone/wemos_d5_testboard` und im `3_hut21`-Backup-Tar → vor Stable-Freigabe neu sichern (Syslog aus) | offen |
 | **S1** | P004 „Auto Select Sensor" | Checkbox existiert, funktioniert aber nur bei **1 Sensor pro GPIO** → am Testboard für 1-Fühler-Varianten verifizieren | teilweise |
 | **D-2** | Devices/Adressen per HTTP-POST `/devices` setzen | Feldname des Adress-Selectors (`Dallas1WireHelper`) ermitteln, curl-Test gegen Testbox inkl. Login | offen |
 | **O-6** | Download-URL-Muster | `https://github.com/letscontrolit/ESPEasy/releases/download/<TAG>/<ASSET>` | **erledigt** |
