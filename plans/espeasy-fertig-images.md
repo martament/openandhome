@@ -762,7 +762,7 @@ TaskDeviceNumber @198, TaskDevicePin1 @360, Protocol @192):
 | 3_hut21 | – | 3 | ja | Zabbix (Sonderanfertigung) |
 
 Alle: SysInfo, OLED (P036), I2C SDA 13 / SCL 16. **Zwei 1-Wire-Busse**
-(GPIO 4 und 2). Ziel-Basis = Obermenge: Wassersensor, Fuehler1–9 auf beiden
+(GPIO 4 und 2). Ziel-Basis = Obermenge: Wassersensor, Fuehler1–4 auf beiden
 Bussen, HTU21D, OLED, SysInfo; MQTT- und Zabbix-Controller **aus**.
 
 **Befunde an der angeschlossenen Box (Flash war leer = neu):**
@@ -806,7 +806,7 @@ vorbereitet, falls die Basis doch schon in Phase A als Dateisystem-Image mit mus
 
 **Basis** [`configs/espeasy/professional/basis/config.dat`](../configs/espeasy/professional/basis/config.dat)
 (mit mega-20260720 neu erzeugt): Task 1 Wassersensor (Switch, GPIO 34),
-2–10 Fuehler1–9 (DS18B20), 11 Kombifuehler (HTU21D), 12 OLED (P036),
+2–5 Fuehler1–4 (DS18B20), 11 Kombifuehler (HTU21D), 12 OLED (P036),
 13 System; Controller 1 HA-MQTT (`openandhome-server1`, aus), Controller 2
 Zabbix (aus); I2C 13/16, NTP `de.pool.ntp.org`, Syslog aus, Name `Sensorbox1`.
 
