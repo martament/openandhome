@@ -18,7 +18,7 @@ Device-Einstellungen, Zugriffsbereich und Dashboard gehen über HTTP.
 | 2 | Test prüfen: Messwerte plausibel? Dashboard vollständig ersetzt? |
 | 3 | **Test beenden:** Abschlussprüfung → Syslog aus → Name `Sensorbox1`/Unit 0 → Zugriffsbereich → optional WLAN löschen wie `esp_resetap` |
 | 4 | Sensoren erkennen (I2C, DS18B20), Tasks einschalten, OLED-Zeilen setzen |
-| 5 | Dashboard aus den aktiven Tasks erzeugen und hochladen |
+| 5 | Dashboard aus den aktiven Tasks erzeugen und hochladen (umbenannte Fühler erscheinen mit ihrem Task-Namen) |
 | 6 | Gerätename/Unit setzen |
 | 7 | 1-Wire-Scan (`OWScan,<GPIO>`) |
 | 8 | Syslog an/aus/Status |

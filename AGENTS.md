@@ -129,6 +129,9 @@ Das Dashboard `openandhome.esp` erzeugt [`tools/bin/espeasy_testbox.py`](tools/b
 (Werkstatt-Menü 5) aus den **aktiven Tasks** der Box: [`header.txt`](configs/espeasy/standalone/resources/header.txt)
 + generierte Tabelle + [`footer.txt`](configs/espeasy/standalone/resources/footer.txt), Upload samt Icons/CSS
 per HTTP. Es gibt keine festen Varianten mehr (die alten Variantenordner sind entfernt).
+Beschriftung: DS18B20 mit Standardnamen `FuehlerN` → „Fühler N“; umbenannte Fühler (Task-Name,
+z. B. `Heizungsvorlauf`) erscheinen mit ihrem Namen, andere Sensoren als „Wert (Task)“. Kunden
+benennen unter Devices um und erneuern dann mit Toolbox **s** Dashboard und Display.
 
 ## 6. Testen der Sensorboxen (Devel)
 

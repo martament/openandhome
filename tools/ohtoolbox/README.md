@@ -55,9 +55,22 @@ Die Toolbox erkennt beim Start, ob eine Standalone- oder Professional-Box angesc
 | 8 | WLAN-Zugangspunkt des Sensors starten |
 | 9 | IP-Filter zurücksetzen (bis zum Neustart), z. B. bei der Meldung „IP blocked“ |
 | n | Zeitserver (NTP) setzen – z. B. Ihr Router, wenn Ihr Netz kein Internet hat |
-| g | Gerätenamen ändern – bei mehreren Sensoren braucht jeder einen eigenen Namen |
-| s | **Sensoren neu erkennen** – nach Tausch oder Erweiterung eines Fühlers; Einstellungen bleiben. Erkennt Fühler, Display und Kombifühler, wählt die Fühleradressen und erneuert Anzeige und Dashboard. Nicht erkennbare Sensoren (Wasser-, Abstandssensor) werden abgefragt. |
+| g | Gerätenamen ändern – der Name der Sensorbox (z. B. Keller statt Sensorbox1); bei mehreren Sensoren braucht jeder einen eigenen Namen |
+| s | **Sensoren neu erkennen** – nach Tausch, Erweiterung oder Umbenennen eines Fühlers; Einstellungen bleiben. Erkennt Fühler, Display und Kombifühler, wählt die Fühleradressen und erneuert Anzeige und Dashboard. Nicht erkennbare Sensoren (Wasser-, Abstandssensor) werden abgefragt. |
 | k | **Grundkonfiguration wiederherstellen** – alle Einstellungen auf den Auslieferungszustand, danach Sensoren erkennen. Die Firmware bleibt. |
+
+### Fühler umbenennen
+
+Statt „Fühler 1“ soll im Dashboard z. B. „Heizungsvorlauf“ stehen:
+
+1. Weboberfläche des Sensors öffnen, Menü **Devices**, beim Fühler auf **Edit** und den
+   **Name** ändern (nur Buchstaben, Ziffern und `_`, z. B. `Heizungsvorlauf`), **Submit**.
+2. Toolbox starten und **s – Sensoren neu erkennen** wählen. Dashboard und Display werden mit
+   dem neuen Namen erzeugt.
+
+Hinweis: Nutzen Sie MQTT oder ein Smarthome-System, ändert sich mit dem Namen auch das
+Topic (`openandhome/<Sensorbox>/<Fühler>/Temperatur`). Eigene Anpassungen an den
+Display-Zeilen überschreibt **s**; nehmen Sie sie danach erneut vor.
 
 Für **s** und **k** muss der Sensor kurz im WLAN sein (die Toolbox fragt bei Bedarf danach).
 Bei Professional werden diese WLAN-Daten danach wieder gelöscht.
