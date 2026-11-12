@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Baut die Bedienungsanleitungen (Typ 2026.1) aus der Word-Vorlage 2023.1.
+"""Baut die Bedienungsanleitungen aus der Word-Vorlage 2023.1.
+
+Je eine Anleitung fuer alle Professional- und fuer alle Standalone-Boxen: keine
+Angaben zu einzelnen Ausstattungen (Fuehleranzahl, Zusatzsensoren) oder Firmware-Versionen.
 
 Standalone und Professional sind verschiedene Boxen (Gehaeuse, Board, Fuehler,
 Stromversorgung) - box-spezifische Inhalte stehen getrennt je Variante, nur
@@ -22,13 +25,14 @@ from xml.sax.saxutils import escape
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 VORLAGE = os.path.join(ROOT, "docs/2023 openandhome - Bedienungsanleitung - Professional Typ2023-1-Vers 2.docx")
 ZIELE = {
-    "professional": "docs/2026 openandhome - Bedienungsanleitung - Professional Typ2026-1.docx",
-    "standalone": "docs/2026 openandhome - Bedienungsanleitung - Standalone Typ2026-1.docx",
+    "professional": "docs/openandhome - Bedienungsanleitung - Professional.docx",
+    "standalone": "docs/openandhome - Bedienungsanleitung - Standalone.docx",
 }
 TITEL = {
-    "professional": "Bedienungsanleitung Sensor Professional 2026.1",
-    "standalone": "Bedienungsanleitung Sensor Standalone 2026.1",
+    "professional": "Bedienungsanleitung Sensorbox Professional",
+    "standalone": "Bedienungsanleitung Sensorbox Standalone",
 }
+STAND = "Stand: November 2026"
 SEITE_BREITE = 10432          # A4 minus Raender (737 dxa je Seite)
 NUM_SCHRITTE, NUM_PUNKTE, NUM_SCHRITTE_2 = 1, 2, 13   # 13 wird beim Bauen angelegt (Neustart bei A)
 
@@ -103,6 +107,9 @@ def tabelle(zeilen, breite_links=3400):
 DS18B20_DATEN = ["DS18B20 in Edelstahlhülse Ø 6 × 50 mm, wasserdicht, schwarzes Kabel",
                  "Messbereich −20 °C bis +125 °C",
                  "Genauigkeit ±0,5 °C im Bereich −10 °C bis +85 °C (Herstellerangabe)"]
+WASSER_DATEN = ["Typ WLS-06, schwarz, ABS, Temperaturbereich −20 °C bis +80 °C",
+                "Meldet eindringendes Wasser; auch als Überwachungs- oder Türkontakt nutzbar"]
+SOFTWARE = "ESPEasy (quelloffen); die installierte Version zeigt die Weboberfläche unter „Tools“ → „Info“"
 HTU21D_DATEN = ["HTU21D für Temperatur und relative Luftfeuchtigkeit",
                 "Luftfeuchtigkeit 0–100 % rF, Genauigkeit typ. ±2 % rF (20–80 % rF)",
                 "Temperatur −40 °C bis +125 °C, Genauigkeit typ. ±0,3 °C"]
@@ -196,7 +203,7 @@ FEHLER_TEMPERATUR = ("Angezeigte Temperatur ist zu hoch oder zu niedrig",
 
 
 def schluss(t):
-    t.append(absatz("Irrtum und technische Änderungen vorbehalten.", mitte=True, abstand_vor=240))
+    t.append(absatz(f"Irrtum und technische Änderungen vorbehalten. {STAND}", mitte=True, abstand_vor=240))
     t.append(absatz("Kopieren der Bedienungsanleitung in jeglicher Form (auch auszugsweise) nur nach schriftlicher "
                     "Zustimmung.", mitte=True))
     t.append(ueberschrift("Kontakt"))
@@ -208,22 +215,27 @@ def schluss(t):
 # --- Professional (Olimex ESP32-POE, nicht ISO, PoE) ---
 def inhalt_professional():
     t = []
-    einleitung(t, [fett("Temperatursensor Professional Typ 2026.1"),
-                   " – mit 3 Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, Display und "
-                   "Netzwerkanschluss mit Stromversorgung über das Netzwerkkabel (PoE)."])
+    einleitung(t, [fett("Sensorbox Professional"),
+                   " (alle Ausführungen) – Netzwerkanschluss mit Stromversorgung über das Netzwerkkabel (PoE), "
+                   "je nach Ausstattung mit Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, "
+                   "Wassersensor und Display."])
 
     t.append(ueberschrift("Funktionsbeschreibung"))
-    t.append(absatz("Die Sensorbox misst mit drei Temperaturfühlern (DS18B20) und einem Kombifühler (HTU21D) "
-                    "Temperaturen und die Luftfeuchtigkeit. Strom und Netzwerk erhält sie über ein einziges "
-                    "Netzwerkkabel (Power over Ethernet, PoE) – ein Netzteil ist nicht nötig."))
-    t.append(absatz("Das eingebaute Display zeigt die aktuellen Messwerte sowie abwechselnd die Netzwerkadresse "
-                    "(IP-Adresse) und den Namen der Sensorbox. Die Sensorbox bezieht ihre IP-Adresse automatisch "
-                    "von Ihrem Router (DHCP)."))
+    t.append(absatz("Die Sensorbox misst je nach Ausstattung mit bis zu neun Temperaturfühlern (DS18B20), einem "
+                    "Kombifühler für Temperatur und Luftfeuchtigkeit (HTU21D) und einem Wassersensor, der "
+                    "eindringendes Wasser meldet oder als Überwachungs- bzw. Türkontakt dient. Die angeschlossenen "
+                    "Fühler werden bei der Einrichtung in unserer Werkstatt automatisch erkannt."))
+    t.append(absatz("Strom und Netzwerk erhält die Sensorbox über ein einziges Netzwerkkabel (Power over Ethernet, "
+                    "PoE) – ein Netzteil ist nicht nötig."))
+    t.append(absatz("Ein Display (je nach Ausstattung) zeigt die aktuellen Messwerte sowie abwechselnd die "
+                    "Netzwerkadresse (IP-Adresse) und den Namen der Sensorbox. Die Sensorbox bezieht ihre "
+                    "IP-Adresse automatisch von Ihrem Router (DHCP)."))
     t.append(absatz("Über eine eingebaute Webseite (Dashboard) rufen Sie die Werte im Browser ab. Für die Einbindung "
                     "in Ihre Systeme stellt die Sensorbox die Messwerte als JSON und als Prometheus-Metriken bereit "
                     "und kann sie per MQTT oder an Zabbix weitergeben. Ab Werk sendet die Sensorbox keine Daten aus "
                     "Ihrem Netz."))
-    anwendungsbereich(t, ["Server- und Netzwerkschränke sowie Serverräume (Temperatur und Luftfeuchtigkeit)",
+    anwendungsbereich(t, ["Server- und Netzwerkschränke sowie Serverräume (Temperatur, Luftfeuchtigkeit, "
+                          "Wassereintritt, Türkontakt)",
                           "Heizung: Vorlauf, Rücklauf, Boiler, Solaranlage",
                           "Kühl- und Lagerräume (z. B. Wildbret), Klimaüberwachung",
                           "Temperaturüberwachung bei Schüttgut (z. B. Getreide)"])
@@ -231,13 +243,14 @@ def inhalt_professional():
     t.append(ueberschrift("Inbetriebnahme"))
     t.append(schritt("Verbinden Sie die Sensorbox mit einem Netzwerkkabel mit einem Netzwerkanschluss, der PoE "
                      "liefert (PoE-Switch oder PoE-Injektor nach IEEE 802.3af)."))
-    t.append(schritt("Die Sensorbox startet. Nach etwa einer halben Minute zeigt das Display die Messwerte sowie "
-                     "abwechselnd die IP-Adresse und den Namen „Sensorbox1“."))
+    t.append(schritt("Die Sensorbox startet. Nach etwa einer halben Minute ist sie im Netz erreichbar; mit Display "
+                     "zeigt sie die Messwerte sowie abwechselnd die IP-Adresse und den Namen „Sensorbox1“."))
     t.append(schritt("Öffnen Sie im Browser das Dashboard: ", fett("http://<IP-Adresse>/openandhome.esp"),
-                     " – die IP-Adresse lesen Sie im Display ab. Je nach Router funktioniert auch ",
+                     " – die IP-Adresse lesen Sie im Display oder in Ihrem Router ab. Je nach Router funktioniert auch ",
                      fett("http://sensorbox1/openandhome.esp"), " (bei einer FRITZ!Box auch http://sensorbox1.fritz.box)."))
-    t.append(schritt("Das Dashboard zeigt die Werte von Fühler 1 bis 3 sowie Temperatur und Luftfeuchtigkeit des "
-                     "Kombifühlers. Speichern Sie die Adresse als Lesezeichen."))
+    t.append(schritt("Das Dashboard zeigt die Werte aller angeschlossenen Fühler. Der Wassersensor meldet 0 "
+                     "(trocken bzw. Kontakt offen) oder 1 (Wasser erkannt bzw. Kontakt geschlossen). Speichern Sie die "
+                     "Adresse als Lesezeichen."))
     t.append(schritt("Setzen Sie mehrere Sensorboxen ein, geben Sie jeder einen eigenen Namen: ",
                      fett("http://<IP-Adresse>/config"), ", Feld „Unit Name“ ändern und mit „Submit“ speichern."))
     t.append(schritt("Empfehlung: Vergeben Sie auf derselben Seite ein Administrator-Passwort, damit niemand in Ihrem "
@@ -259,10 +272,11 @@ def inhalt_professional():
         ("Messumformer", "Olimex ESP32-POE mit Ethernet (10/100 Mbit/s), nicht galvanisch getrennt"),
         ("Stromversorgung", "Power over Ethernet nach IEEE 802.3af über das Netzwerkkabel"),
         ("Netzwerk", "Ethernet, IP-Adresse per DHCP"),
-        ("Software", "ESPEasy (Version mega-20260720)"),
-        ("Display", "OLED-Display: Messwerte, IP-Adresse und Gerätename"),
-        ("Temperaturfühler (3 Stück)", DS18B20_DATEN),
-        ("Kombifühler", HTU21D_DATEN),
+        ("Software", SOFTWARE),
+        ("Temperaturfühler (je nach Ausstattung bis zu 9)", DS18B20_DATEN),
+        ("Kombifühler (je nach Ausstattung)", HTU21D_DATEN),
+        ("Wassersensor (je nach Ausstattung)", WASSER_DATEN),
+        ("Display (je nach Ausstattung)", "OLED-Display: Messwerte, IP-Adresse und Gerätename"),
         ("Kabeldurchführungen", "Gummitüllen M16/M25 aus EPDM, grau"),
     ]))
     sicherheit(t, [
@@ -270,7 +284,7 @@ def inhalt_professional():
         "Der USB-Anschluss im Inneren ist nur für unseren Service vorgesehen. Er darf nie gleichzeitig mit dem "
         "PoE-Netzwerkkabel verbunden sein: Der Messumformer ist nicht galvanisch von der PoE-Versorgung getrennt, "
         "angeschlossene Geräte können beschädigt werden.",
-        "Der Kombifühler misst die Luftfeuchtigkeit; tauchen Sie ihn nicht in Wasser und schützen Sie ihn vor "
+        "Ein Kombifühler misst die Luftfeuchtigkeit; tauchen Sie ihn nicht in Wasser und schützen Sie ihn vor "
         "Kondenswasser.",
     ])
     konformitaet_entsorgung(t)
@@ -278,11 +292,12 @@ def inhalt_professional():
     t.append(ueberschrift("Fehlerbeschreibung"))
     t.append(tabelle([
         FEHLER_HTTPS,
-        ("Display bleibt dunkel, Sensorbox startet nicht",
+        ("Sensorbox startet nicht, nicht im Netz",
          "Prüfen Sie, ob der Netzwerkanschluss PoE liefert (Anschluss am PoE-Switch aktiv bzw. Injektor mit Strom "
          "versorgt) und ob das Kabel richtig eingesteckt ist. Versuchen Sie einen anderen PoE-Anschluss."),
         ("IP-Adresse unbekannt",
-         "Lesen Sie die IP-Adresse im Display ab oder suchen Sie in Ihrem Router nach dem Gerät „Sensorbox1“."),
+         "Lesen Sie die IP-Adresse im Display ab (falls vorhanden) oder suchen Sie in Ihrem Router nach dem Gerät "
+         "„Sensorbox1“."),
         FEHLER_IP_BLOCKED,
         ("Ein Fühler zeigt keinen Wert oder „NaN“",
          "Prüfen Sie Kabel und Stecker des Fühlers. Starten Sie die Sensorbox neu, indem Sie das Netzwerkkabel "
@@ -296,14 +311,16 @@ def inhalt_professional():
 # --- Standalone (WeMos D1 mini, ESP8266, WLAN, USB-Netzteil) ---
 def inhalt_standalone():
     t = []
-    einleitung(t, [fett("Temperatursensor Standalone Typ 2026.1"),
-                   " – Sensorbox mit WLAN und Stromversorgung über USB, je nach Ausstattung mit 1 bis 4 "
-                   "Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, Display oder Abstandssensor."])
+    einleitung(t, [fett("Sensorbox Standalone"),
+                   " (alle Ausführungen) – Sensorbox mit WLAN und Stromversorgung über USB, je nach Ausstattung mit "
+                   "Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, Wassersensor, Abstandssensor "
+                   "und Display."])
 
     t.append(ueberschrift("Funktionsbeschreibung"))
-    t.append(absatz("Die Sensorbox misst je nach Ausstattung mit Temperaturfühlern (DS18B20), einem Kombifühler für "
-                    "Temperatur und Luftfeuchtigkeit (HTU21D) oder einem Abstandssensor (HC-SR04). Die angeschlossenen "
-                    "Fühler werden bei der Einrichtung in unserer Werkstatt automatisch erkannt."))
+    t.append(absatz("Die Sensorbox misst je nach Ausstattung mit bis zu vier Temperaturfühlern (DS18B20), einem "
+                    "Kombifühler für Temperatur und Luftfeuchtigkeit (HTU21D oder AM2320), einem Wassersensor oder "
+                    "einem Abstandssensor (z. B. für Füllstände). Die angeschlossenen Fühler werden bei der Einrichtung "
+                    "in unserer Werkstatt automatisch erkannt."))
     t.append(absatz("Die Stromversorgung erfolgt über ein USB-Kabel. Ein Netzteil ist nicht im Lieferumfang "
                     "enthalten; Sie benötigen ein USB-Netzteil mit 5 Volt DC und mindestens 500 mA."))
     t.append(absatz("Die Sensorbox wird in Ihr WLAN eingebunden. Alternativ öffnet sie ein eigenes WLAN, über das "
@@ -362,13 +379,17 @@ def inhalt_standalone():
                     "und staubdicht"),
         ("Messumformer", "WeMos D1 mini (ESP8266) mit WLAN 2,4 GHz, eingebaut im Gehäuse"),
         ("Stromversorgung", "USB, 5 V DC, mindestens 500 mA (Netzteil nicht im Lieferumfang)"),
-        ("Software", "ESPEasy (Version mega-20260720)"),
-        ("Temperaturfühler (je nach Ausstattung 1–4)", DS18B20_DATEN),
-        ("Kombifühler (je nach Ausstattung)", HTU21D_DATEN),
+        ("Software", SOFTWARE),
+        ("Temperaturfühler (je nach Ausstattung bis zu 4)", DS18B20_DATEN),
+        ("Kombifühler (je nach Ausstattung)", [*HTU21D_DATEN, "alternativ AM2320 (Temperatur und Luftfeuchtigkeit)"]),
+        ("Wassersensor (je nach Ausstattung)", WASSER_DATEN),
+        ("Abstandssensor (je nach Ausstattung)", "Ultraschall HC-SR04, z. B. für Füllstandsmessung"),
         ("Display (je nach Ausstattung)", "OLED-Display mit den aktuellen Messwerten"),
         ("Kabeldurchführung", "Gummitülle M16 aus EPDM, grau"),
     ], breite_links=3900))
-    sicherheit(t, ["Betreiben Sie die Sensorbox nur mit der vorgesehenen Schutzkleinspannung 5 V DC über USB."])
+    sicherheit(t, ["Betreiben Sie die Sensorbox nur mit der vorgesehenen Schutzkleinspannung 5 V DC über USB.",
+                   "Ein Kombifühler misst die Luftfeuchtigkeit; tauchen Sie ihn nicht in Wasser und schützen Sie ihn "
+                   "vor Kondenswasser."])
     konformitaet_entsorgung(t)
 
     t.append(ueberschrift("Fehlerbeschreibung"))
@@ -435,7 +456,7 @@ def main():
     parser = argparse.ArgumentParser(description="Bedienungsanleitung erzeugen")
     parser.add_argument("--variante", choices=sorted(INHALT), required=True)
     parser.add_argument("--vorlage", default=VORLAGE)
-    parser.add_argument("--ziel", help="Standard: docs/2026 ... Typ2026-1.docx je Variante")
+    parser.add_argument("--ziel", help="Standard: docs/openandhome - Bedienungsanleitung - <Variante>.docx")
     args = parser.parse_args()
     baue(args.variante, args.vorlage, args.ziel or os.path.join(ROOT, ZIELE[args.variante]))
 
