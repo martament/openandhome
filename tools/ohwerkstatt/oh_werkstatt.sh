@@ -101,13 +101,8 @@ test_starten() {
 
 test_beenden() {
     echo -e "\n\e[36m--- Test beenden ---\e[0m"
-    echo "Werte prüfen -> Syslog aus -> Name Sensorbox1/Unit 0 -> Zugriff 192.168.x"
-    read -p "WLAN-Daten danach löschen wie esp_resetap (nur WLAN-Boxen)? (j/n) [n]: " wlan
-    if [[ "$wlan" =~ ^[jJyY]$ ]]; then
-        testbox beenden --wlan-reset
-    else
-        testbox beenden --ohne-wlan-reset
-    fi
+    echo "Werte prüfen -> Syslog aus -> Name Sensorbox1/Unit 0 -> Zugriff 192.168.x -> WLAN löschen, AP prüfen"
+    testbox beenden --wlan-reset
 }
 
 set_name() {
@@ -206,7 +201,7 @@ while true; do
     echo -e "\e[1;33mTest\e[0m"
     echo "1) Box aufsetzen und 24h-Test starten"
     echo "2) Test prüfen (Werte + Dashboard)"
-    echo "3) Test beenden (Syslog aus, Sensorbox1, opt. WLAN-Reset)"
+    echo "3) Test beenden (Syslog aus, Sensorbox1, WLAN-Reset)"
     echo "------------------------------------"
     echo -e "\e[1;33mEinzelschritte\e[0m"
     echo "4) Sensoren erkennen, Tasks einschalten"

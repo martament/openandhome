@@ -5,7 +5,7 @@ Quelle:        https://github.com/letscontrolit/ESPEasy/releases/tag/mega-202607
 Release-Tag:   mega-20260720 (veroeffentlicht 2026-07-20)
 Asset:         ESPEasy_mega_20260720_ESP32_binaries.zip
 Asset-SHA256:  d696306e02cbbd46dedfa81d1fcc21f520c40c030b9d3a0b57ae0078a2c9d0e7
-Heruntergeladen: 2026-11-11
+Heruntergeladen: 2026-11-12
 
 Dateien (SHA256):
   075bc946a49137d30b8a15b4c5627c334eab2e30f34a1ac70a000d39bf742fbe  ESP_Easy_mega_20260720_collection_A_ESP32_4M316k.bin
