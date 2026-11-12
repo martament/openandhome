@@ -173,10 +173,7 @@ def toolbox(t, professional):
                         "Für die Funktionen „Sensoren neu erkennen“ und „Grundkonfiguration“ verbindet sich die "
                         "Sensorbox kurz mit Ihrem WLAN; die Daten werden danach wieder gelöscht."))
     for b in ("Sensoren neu erkennen – nach dem Tausch oder Hinzufügen eines Fühlers",
-              "Fühler umbenennen – in der Weboberfläche unter „Devices“ beim Fühler „Edit“, Feld „Name“ "
-              "ändern (z. B. Heizungsvorlauf) und speichern, danach in der Toolbox „Sensoren neu erkennen“: "
-              "Dashboard und Display zeigen dann den neuen Namen. Bei MQTT ändert sich damit auch das Topic.",
-              "Zeitserver (NTP) setzen, Gerätename der Sensorbox ändern",
+              "Zeitserver (NTP) setzen, Gerätename ändern",
               *(() if professional else ("WLAN-Zugangsdaten setzen (mit Verbindungsprüfung) oder löschen",)),
               "Grundkonfiguration wiederherstellen, IP-Filter oder Admin-Passwort zurücksetzen",
               "Notfall und Updates: der mitgelieferte OH-Flasher („start_flasher.bat“ bzw. „flasher.sh“)"):
