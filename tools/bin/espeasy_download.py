@@ -39,7 +39,7 @@ KLASSEN = {
         "flash": [
             "factory.bin -> 0x000000 (Alias esp32_flash_writefull)",
             "Filesystem LittleFS @0x3B1000, Groesse 0x4F000 (esp32_partition_app1810k_spiffs316k.csv)",
-            "config.dat/Dashboard per Web-Upload (push_config.sh)",
+            "config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)",
         ],
     },
     "standalone": {
@@ -51,7 +51,7 @@ KLASSEN = {
         "flash": [
             ".bin -> 0x000000 (Alias esp_flashstable_min)",
             "Filesystem SPIFFS @0x300000, Groesse 0x100000",
-            "config.dat/Dashboard per Web-Upload (push_config.sh)",
+            "config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)",
         ],
         # Siehe Plan Abschnitt 5 C: bei LittleFS-Collection fuer 4M1M neu bewerten
         "hinweis": re.compile(r"collection.*ESP8266_4M1M.*LittleFS", re.IGNORECASE),

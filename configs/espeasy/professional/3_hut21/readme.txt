@@ -1,2 +1,0 @@
-- Build ist von der Webseite mit Collection A. Wir brauchten Zabbix, DS18B20 und HTU21 (ESP_Easy_mega_20260121_collection_A_ESP32_4M316k.bin)
-- In Zukunft gibt es nur noch LittleFS als Filesystem und selber bauen lohnt sich eher nicht. Daher die Nutzung der Builds von der Webseite

@@ -20,8 +20,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 ## 2. Leitregeln (WICHTIG)
 
 1. **Keine eigenen Firmware-Builds mehr.** ESPEasy-Images werden als fertige
-   Release-Binaries von der ESPEasy-Website geladen (siehe
-   [`configs/espeasy/professional/3_hut21/readme.txt`](configs/espeasy/professional/3_hut21/readme.txt)).
+   Release-Binaries von GitHub geladen ([`tools/bin/espeasy_download.py`](tools/bin/espeasy_download.py)).
    Der alte Eigenbuild über PlatformIO ([`build/ESPEasy/build_release.sh`](build/ESPEasy/build_release.sh))
    und [`build/ESPEasy/myfiles/Custom.hESPEasy`](build/ESPEasy/myfiles/Custom.hESPEasy) ist **nicht mehr der
    aktuelle Weg** — die Custom.h dient nur noch als Analysequelle dafür, welche
@@ -31,14 +30,15 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
    ESP8266-4M1M-Release-Images verwenden weiterhin SPIFFS (ein LittleFS-Image
    gibt es upstream nur als `custom_312_ESP8266_4M2M_LittleFS`, siehe Plan
    Abschnitt 5 C). Filesystem-Inhalte (Dashboard, Icons, CSS, `config.dat`)
-   werden für beide per Web-Upload gesetzt
-   ([`configs/espeasy/standalone/resources/push_config.sh`](configs/espeasy/standalone/resources/push_config.sh)).
-3. **Flashen unter Linux per `esptool`**, entweder über die in der `.bashrc`
-   hinterlegten Aliase oder über [`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](tools/ohtoolbox/bin/linux_ohtoolbox.sh)
-   (Menü-Tool: WLAN setzen, Settings lesen, Debug-Log, Reboot).
-4. **Windows-Kundenservice** läuft über [`tools/oh-flasher/`](tools/oh-flasher/Readme.md)
-   (PowerShell + portable Python + esptool) — hier liegen die Firmware-Presets
-   für 1–6 Sensoren unter `tools/oh-flasher/firmware/`.
+   werden für beide per Web-Upload gesetzt (Werkstatt-Tool bzw. Flasher).
+3. **Werkstatt (intern, Linux):** [`tools/ohwerkstatt/`](tools/ohwerkstatt/README.md) — Aufsetzen,
+   24h-Test, Testende, Kundenpaket. Flashen per `esptool`.
+4. **Endanwender:** [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) ist das **Standardwerkzeug**
+   (Linux/Windows, USB: WLAN mit Prüfung, Name, NTP, Resets, Debug).
+   [`tools/oh-flasher/`](tools/oh-flasher/Readme.md) ist nur die **Notlösung** (portables Python +
+   esptool: Sensoren neu erkennen, neu aufsetzen, Firmware); er lädt Firmware, Basis-config und
+   Regeln laut [`manifest.json`](tools/oh-flasher/manifest.json) aus dem Repo (Branch `master`).
+   Funktionen für Kunden gehören in die Toolbox; was die Weboberfläche braucht (Autoerkennung), in den Flasher.
 5. **Keine Firmware-Binaries als Text bearbeiten**, keine `.bin`-Dateien
    committen, die nicht aus einem Download stammen (Herleitung/Provenienz in
    README oder readme.txt des Ordners dokumentieren).
@@ -125,7 +125,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 Das Dashboard `openandhome.esp` erzeugt [`tools/bin/espeasy_testbox.py`](tools/bin/espeasy_testbox.py)
 (Werkstatt-Menü 5) aus den **aktiven Tasks** der Box: [`header.txt`](configs/espeasy/standalone/resources/header.txt)
 + generierte Tabelle + [`footer.txt`](configs/espeasy/standalone/resources/footer.txt), Upload samt Icons/CSS
-per HTTP. Die alten `table.txt`/`push_config.sh` je Variante sind nur noch Referenz.
+per HTTP. Es gibt keine festen Varianten mehr (die alten Variantenordner sind entfernt).
 
 ## 6. Testen der Sensorboxen (Devel)
 
@@ -163,14 +163,11 @@ lesen und per HTTP-Skript an `/devices` setzen (Plan Abschnitt 8, D-2).
 
 ## 7. Regeln für Änderungen
 
-- Neue Konfigurationsvarianten immer als eigener Ordner unter
-  `configs/espeasy/standalone/<variante>/` oder `configs/espeasy/professional/<variante>/`
-  mit `table.txt`, `readme.txt` (Herkunft des Images, Version, Besonderheiten).
-- Jedes mitgelieferte Image mit Herkunft, ESPEasy-Version und Collection
-  dokumentieren. Ziel-Standard: Release-Tag, Asset-Name, SHA256, Collection und
-  Testdatum (siehe Plan, Abschnitt 3). Das bestehende
-  [`configs/espeasy/professional/3_hut21/readme.txt`](configs/espeasy/professional/3_hut21/readme.txt)
-  ist nur ein Minimalbeispiel (2 Zeilen) und erfüllt diesen Standard noch nicht.
+- Keine Variantenordner: Neue Sensoren werden als (deaktivierter) Task in der
+  Basis-config ergänzt (`configs/espeasy/<klasse>/basis/`); die Autoerkennung schaltet
+  sie je Box ein. Nach Änderungen Kundenpaket/Manifest neu erzeugen (Werkstatt `k`).
+- Jedes mitgelieferte Image mit Release-Tag, Asset-Name, SHA256 und Testdatum
+  dokumentieren (`readme_image.txt`, siehe Plan, Abschnitt 3).
 - Fertig-Images nur mit [`tools/bin/espeasy_download.py`](tools/bin/espeasy_download.py)
   laden (nur auf `devel`). Das Skript prüft SHA256, hält pro Geräteklasse ein
   Image und schreibt `readme_image.txt` (Release-Tag, Asset, SHA256,

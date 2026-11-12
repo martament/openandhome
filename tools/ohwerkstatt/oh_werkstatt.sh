@@ -171,7 +171,7 @@ syslog() {
 kundenpaket() {
     echo -e "\n\e[36m--- Kundenpaket für den Windows-Flasher ---\e[0m"
     echo "Box (ESP8266, im WLAN) -> Basis-config.dat, Sensorbox1, Auto Select, Dashboard (alle Sensoren)"
-    echo "-> WLAN löschen -> Dateisystem auslesen -> tools/oh-flasher/firmware + manifest.json"
+    echo "-> Task-Liste lesen -> tools/oh-flasher/manifest.json"
     read -p "Weiter? (j/n) [n]: " ok
     [[ "$ok" =~ ^[jJyY]$ ]] && testbox kundenpaket || weiter
 }

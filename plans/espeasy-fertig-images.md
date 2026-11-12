@@ -825,3 +825,15 @@ Zabbix (aus); I2C 13/16, NTP `de.pool.ntp.org`, Syslog aus, Name `Sensorbox1`.
 
 **Offen:** HTU21D-Hardware, Box-Suche per DNS/MAC ohne USB (bisher
 IP-Eingabe), 24h-Test am PoE, Flasher bleibt Standalone-only.
+
+## 15. Aufräumen (2026-11-12)
+
+Entfernt (ersetzt durch Basis-config + Autoerkennung + generiertes Dashboard):
+alle Variantenordner unter `configs/espeasy/professional/` (3_hut21, 3–8Sensoren,
+alte config.dat/table.txt/push_config.sh) und `configs/espeasy/standalone/`
+(1Sensor … wemos_htu21d), `standalone/resources/config.dat` und `push_config.sh`,
+`tools/oh-flasher/firmware/` (Eigenbuilds, SPIFFS-Presets) und die alten
+Flasher-Screenshots `images/oh-flasher/`. Verweise auf diese Pfade in den
+Abschnitten oben sind Historie; die Inhalte liegen in der Git-Historie.
+Endanwender: ohtoolbox = Standard, OH-Flasher = Notlösung (beide Klassen).
+

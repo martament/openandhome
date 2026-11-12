@@ -9,7 +9,7 @@ Offsets nach SettingsStruct.h (ESPEasy mega), gleich fuer ESP8266 und ESP32.
 Akzeptiert auch Backup-Tars (config_*.tar) und prueft dort zusaetzlich security.dat.
 
 Beispiele:
-  tools/bin/espeasy_configcheck.py configs/espeasy/professional/config.dat
+  tools/bin/espeasy_configcheck.py configs/espeasy/professional/basis/config.dat
   tools/bin/espeasy_configcheck.py $(git ls-files 'configs/*config.dat')
 """
 

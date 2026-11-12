@@ -14,7 +14,7 @@ Dateien (SHA256):
 Flashen:
   - factory.bin -> 0x000000 (Alias esp32_flash_writefull)
   - Filesystem LittleFS @0x3B1000, Groesse 0x4F000 (esp32_partition_app1810k_spiffs316k.csv)
-  - config.dat/Dashboard per Web-Upload (push_config.sh)
+  - config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)
 
 Test (24h, Syslog 192.168.9.4) und Freigabe: siehe plans/espeasy-fertig-images.md, Abschnitt 6.
 Getestet am: (offen)

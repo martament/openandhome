@@ -14,7 +14,7 @@ Dateien (SHA256):
 Flashen:
   - .bin -> 0x000000 (Alias esp_flashstable_min)
   - Filesystem SPIFFS @0x300000, Groesse 0x100000
-  - config.dat/Dashboard per Web-Upload (push_config.sh)
+  - config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)
 
 Test (24h, Syslog 192.168.9.4) und Freigabe: siehe plans/espeasy-fertig-images.md, Abschnitt 6.
 Getestet am: (offen)
