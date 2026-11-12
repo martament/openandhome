@@ -323,6 +323,18 @@ def flash_leer(port):
     return True
 
 
+def setze_name(port, box, name, unit):
+    """Setzt Name/Unit und prueft per JSON nach; einmal wiederholen (bei ESP32 einmal verloren gegangen)."""
+    for versuch in range(2):
+        kommando(port, box, f"Name,{name}", f"Unit,{unit}", "Save")
+        time.sleep(1)
+        system = json.loads(box.get("/json"))["System"]
+        if system.get("Unit Name") == name and str(system.get("Unit Number")) == str(unit):
+            print(f"Name {name}, Unit {unit} gesetzt")
+            return
+    print(f"\033[31mWARNUNG: Name/Unit nicht uebernommen (Box meldet {system.get('Unit Name')}/{system.get('Unit Number')})\033[0m")
+
+
 def setze_zabbix(box, nr, server):
     """Zabbix-Controller (Sonderanfertigung) ein- oder ausschalten; Standard: aus."""
     p = f"/controllers?index={nr}"
@@ -539,7 +551,7 @@ def aufsetzen(args):
     schritt("6/10 Testname, Unit und Web-Zugriff")
     unit = frage("Unit-Nummer (eindeutig je Testbox)", "1")
     name = frage("Name im Test", f"Testbox{unit}")
-    sende(port, f"Name,{name}", f"Unit,{unit}", "Save")
+    setze_name(port, box, name, unit)
     setze_zugriff(box)
 
     schritt("7/10 Sensoren erkennen")
@@ -603,7 +615,7 @@ def beenden(args):
     setze_syslog(box, "aus")
 
     schritt(f"Auslieferungsname {AUSLIEFERUNG_NAME}, Web-Zugriff")
-    kommando(port, box, f"Name,{AUSLIEFERUNG_NAME}", f"Unit,{AUSLIEFERUNG_UNIT}", "Save")
+    setze_name(port, box, AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT)
     setze_zugriff(box)
 
     chip = "ESP32" if "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", "") else "ESP8266"
