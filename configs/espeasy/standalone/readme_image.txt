@@ -12,7 +12,7 @@ Dateien (SHA256):
   d34d0cb7fe45b50dc7aae81366ff66a817c7679b15bc95725c2200e14a230d68  ESP_Easy_mega_20260720_collection_H_ESP8266_4M1M.bin
 
 Flashen:
-  - .bin -> 0x000000 (Alias esp_flashstable_min)
+  - .bin -> 0x000000 (Neu-Aufspielen und Update)
   - Filesystem SPIFFS @0x300000, Groesse 0x100000
   - config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)
 

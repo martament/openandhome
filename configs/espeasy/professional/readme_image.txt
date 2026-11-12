@@ -12,7 +12,7 @@ Dateien (SHA256):
   5074c21a74bff3ca3eb8f4274923ef13b64dc629bfc6048aef7848a605466a2d  ESP_Easy_mega_20260720_collection_A_ESP32_4M316k.factory.bin
 
 Flashen:
-  - factory.bin -> 0x000000 (Alias esp32_flash_writefull)
+  - factory.bin -> 0x000000 (Neu-Aufspielen), .bin -> 0x10000 (Update)
   - Filesystem LittleFS @0x3B1000, Groesse 0x4F000 (esp32_partition_app1810k_spiffs316k.csv)
   - config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)
 

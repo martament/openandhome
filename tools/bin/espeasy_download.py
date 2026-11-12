@@ -37,7 +37,7 @@ KLASSEN = {
         "ziel": "configs/espeasy/professional",
         "beschreibung": "Professional (ESP32 4MB, Ethernet, LittleFS)",
         "flash": [
-            "factory.bin -> 0x000000 (Alias esp32_flash_writefull)",
+            "factory.bin -> 0x000000 (Neu-Aufspielen), .bin -> 0x10000 (Update)",
             "Filesystem LittleFS @0x3B1000, Groesse 0x4F000 (esp32_partition_app1810k_spiffs316k.csv)",
             "config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)",
         ],
@@ -49,7 +49,7 @@ KLASSEN = {
         "ziel": "configs/espeasy/standalone",
         "beschreibung": "Standalone/Wemos (ESP8266 4M1M, SPIFFS) - climate_B Standard, collection_H bei AM2320",
         "flash": [
-            ".bin -> 0x000000 (Alias esp_flashstable_min)",
+            ".bin -> 0x000000 (Neu-Aufspielen und Update)",
             "Filesystem SPIFFS @0x300000, Groesse 0x100000",
             "config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)",
         ],

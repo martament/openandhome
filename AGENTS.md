@@ -32,7 +32,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
    Abschnitt 5 C). Filesystem-Inhalte (Dashboard, Icons, CSS, `config.dat`)
    werden für beide per Web-Upload gesetzt (Werkstatt-Tool bzw. Flasher).
 3. **Werkstatt (intern, Linux):** [`tools/ohwerkstatt/`](tools/ohwerkstatt/README.md) — Aufsetzen,
-   24h-Test, Testende, Kundenpaket. Flashen per `esptool`.
+   24h-Test, Testende; Menü `k` erzeugt Manifest und `ohtoolbox.zip`. Flashen per `esptool`.
 4. **Endanwender:** ein Paket [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) (portables Python,
    Windows/Linux) mit **Toolbox** (Standard: WLAN, Name, NTP, Sensoren erkennen, Grundkonfiguration,
    Resets, Debug) und **OH-Flasher** (Firmware-Update, Neu-Aufspielen als Notfall). Beide nutzen
@@ -65,7 +65,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 9. **24h-Testverfahren:** Testboxen laufen ca. 24 Stunden mit Syslog-Logging
    auf `192.168.9.4`. Danach startet der Nutzer **manuell** das Teardown:
    Syslog aus, bei WLAN-Boxen SSIDs löschen (wie `esp_resetap`), damit beim
-   Kunden der AP geöffnet wird. Details im Plan, Abschnitt 4.
+   Kunden der AP geöffnet wird. Ablauf: Werkstatt-Menü 1–3 (Abschnitt 6).
 
 ## 3. Verzeichnisstruktur
 
@@ -74,14 +74,16 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 | [`build/ESPEasy/myfiles/Custom.hESPEasy`](build/ESPEasy/myfiles/Custom.hESPEasy) | **Maßgebliche** Compile-/Default-Optionen des alten Eigenbuilds |
 | [`build/ESPEasy/myfiles/*.patch`](build/ESPEasy/myfiles/) | 7 Patches (AP-Mode als Daily-Driver, ApDontForceSetup, SettingsStruct) |
 | [`build/Tasmota/`](build/Tasmota/) | Alte Tasmota-Builds und Releases — Umstellung siehe [`plans/tasmota-fertig-images.md`](plans/tasmota-fertig-images.md) |
-| [`configs/espeasy/professional/`](configs/espeasy/professional/) | **Professional (ESP32)**: collection_A-Image + `readme_image.txt`, Partition-CSV, Varianten-Ordner (alt) |
-| [`configs/espeasy/standalone/`](configs/espeasy/standalone/) | **Standalone (ESP8266 4M1M)**: collection_A-Image + `readme_image.txt`, Varianten-Ordner (alt) |
-| [`configs/espeasy/standalone/basis/config.dat`](configs/espeasy/standalone/basis/config.dat) | **Basis-config.dat** mit allen Tasks (Autoerkennung schaltet passende ein) |
+| [`configs/espeasy/professional/`](configs/espeasy/professional/) | **Professional (ESP32)**: collection_A (factory + App-Update), `readme_image.txt`, Partition-CSV, `basis/` (config.dat, rules1.txt) |
+| [`configs/espeasy/standalone/`](configs/espeasy/standalone/) | **Standalone (ESP8266 4M1M)**: climate_B (Standard) und collection_H (AM2320), `readme_image.txt`, `basis/` und `basis_am2320/` (config.dat, rules1.txt) |
+| [`tools/bin/oh_klassen.py`](tools/bin/oh_klassen.py) | **Eine Quelle** für Images, Basis-configs, Regeln und Hardware je Klasse; erzeugt das Manifest |
 | [`configs/espeasy/standalone/resources/`](configs/espeasy/standalone/resources/) | Dashboard-Bausteine für beide Klassen: `header.txt`, `footer.txt`, Icons, CSS |
 | [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) | Endanwender-Paket: Toolbox (Standard) und OH-Flasher (Update/Notfall) |
 | [`tools/ohwerkstatt/`](tools/ohwerkstatt/README.md) | Werkstatt-Tool (intern, Linux): Aufsetzen, 24h-Test, Testende |
-| [`tools/bin/`](tools/bin/) | Python-Helfer: Download, Autoerkennung, Syslog, config.dat-Prüfung, Testablauf |
-| [`docs/`](docs/) | PDF-Bedienungsanleitungen |
+| [`tools/bin/`](tools/bin/) | Python-Module: Download, Autoerkennung, Syslog, config.dat-Prüfung, Testablauf (Werkstatt), `oh_kunde.py` (Toolbox/Flasher) |
+| [`tools/docs/`](tools/docs/) | Anleitungs-Generator `anleitung.py` und Word-Vorlage |
+| [`docs/`](docs/) | Bedienungsanleitungen 2026 (Word), je eine für Standalone und Professional |
+| [`.github/workflows/ohtoolbox.yml`](.github/workflows/ohtoolbox.yml) | CI: Manifest prüfen, auf `master` Release `ohtoolbox-…` mit Release-Notes |
 | [`plans/`](plans/) | Planungs-/Konzeptdokumente |
 
 ## 4. Geräteklassen und Flash-Layouts
@@ -97,30 +99,29 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 - 1-Wire an GPIO 4 und 2, Wassersensor GPIO 34, I2C 13/16.
 - Zeitserver (Professional **und** Standalone, auch AM2320-Basis): `de.pool.ntp.org`; `basis/rules1.txt` fällt ohne Zeit nach 90 s auf das Gateway, nach weiteren 90 s auf 192.168.178.1 zurück (nur zur Laufzeit). Werkstatt und Kunden-Flasher (Manifest-Eintrag `regeln`) laden `rules1.txt` mit der Basis hoch; Endanwender ändern den NTP-Server über die Weboberfläche (`/advanced`) oder die ohtoolbox (Menü n).
 
-- Image: `ESP_Easy_mega_*_collection_A_ESP32_4M316k.bin` (+ `.factory.bin`)
-- Ethernet ist enthalten (`FEATURE_ETHERNET=1` über `esp32_common_LittleFS_ETH`);
-  der alte Eigenbuild hieß `custom_ESP32_4M316k_ETH`. ETH-Settings stehen in
-  der Professional-`config.dat`.
+- Image: `ESP_Easy_mega_*_collection_A_ESP32_4M316k.factory.bin` (Neu-Aufspielen @0x0) und
+  `…_4M316k.bin` (Update: App @0x10000 + otadata 0xE000/0x2000 löschen; NVS/Ethernet bleiben).
+  Ethernet ist enthalten (`FEATURE_ETHERNET=1`); die Ethernet-Hardware liegt im NVS (per USB gesetzt).
 - Partitionierung: [`configs/espeasy/professional/esp32_partition_app1810k_spiffs316k.csv`](configs/espeasy/professional/esp32_partition_app1810k_spiffs316k.csv)
   (`app0` @0x10000, `app1` @0x1E0000, `eeprom` @0x3B0000, `spiffs` @0x3B1000 Größe 0x4F000)
-- Aliase: `esp32_flash_writefull` (0x000000), `esp32_flash_write` (0x3B1000, spiffs316k.bin),
-  `esp32_flash_read`/`esp32_flash_readfull`, `esp_resetflash` (erase-flash)
+- `/download` liefert bei ESP32 ein TAR (config.dat, security.dat, …).
 
 ### Standalone (ESP8266, 4 MB, 1 MB FS)
 
-- Image neu: `ESP_Easy_mega_*_collection_A_ESP8266_4M1M.bin` — **nicht**
-  `custom_312_ESP8266_4M1M` (Release-Build ohne eure Custom.h, es fehlen u. a.
-  P013, P014, P051). Kein Zabbix (C017) und kein Email (N001) auf ESP8266.
-- Image alt: `openandhome_stable.bin` / `openandhome_devel.bin` (selbst gebaut)
-- Filesystem: **SPIFFS**, `spiffs1M.bin` @0x300000
-- Aliase: `esp_flashstable_min`, `esp_flash_write` (0x300000), `esp_flash_read` (0x300000, 0x100000),
-  `esp_blank` (blank_4MB.bin), `esp_resetflash`
+- Board: WeMos D1 mini (ESP8266), WLAN, USB-Versorgung.
+- Image: `ESP_Easy_mega_*_climate_B_ESP8266_4M1M.bin` (Standard, kleinstes passendes Image,
+  ~13 KB freier RAM); bei AM2320 (I2C 0x5C) `…_collection_H_…` mit `basis_am2320/` – Werkzeuge
+  wählen das automatisch. **Nicht** `custom_312` (es fehlen P013/P014/P051). Kein Zabbix/Email.
+- Flash @0x0; Update = dasselbe Image @0x0 (Dateisystem bleibt). Filesystem **SPIFFS** @0x300000.
+- Basis: 1-Wire GPIO 0 (Fuehler1–4), HTU21D, OLED, HC-SR04; MQTT aus.
 
-### Serielle Konfiguration (immer nach dem Flashen)
+### Serielle Konsole (beide Klassen)
 
-- WLAN-Zugangsdaten: `esp_sendap`, `esp_sendaphome`, `esp_sendaptest`, `esp_resetap`
-- Dauerhaft: `ResetFlashWriteCounter`, `Save`, `reboot`
-- Monitoring: `esp_monitor` (→ `pio device monitor --port /dev/ttyUSB0 --baud 115200`)
+- WLAN: `WifiSSID,"…"`, `WifiKey,"…"`, `Save`, `Reboot`; löschen mit `ssid`/`wpakey` (wie `esp_resetap`).
+- Weitere: `Name`, `Unit`, `NTPHost`, `I2CScanner`, `OWScan,<gpio>`, `TaskEnable/TaskDisable,<n>`,
+  `TaskClear,<n>` (nur seriell erlaubt), `logentry,%sysbuild_filename%` (Image-Name).
+- Port mit DTR/RTS **an** öffnen (sonst Reset bei ESP32); ESP32-Ausgabe enthält ANSI-Farbcodes.
+- Die alten `.bashrc`-Aliase (`esp_flashstable*`, `esp32_flash_write`, `spiffs*.bin`) sind überholt.
 
 ## 5. Dashboard / Web-UI
 
@@ -131,20 +132,14 @@ per HTTP. Es gibt keine festen Varianten mehr (die alten Variantenordner sind en
 
 ## 6. Testen der Sensorboxen (Devel)
 
-1. Image + `config.dat` der Variante flashen, dann eindeutigen Namen setzen
-   (`Name,<box>`, `Unit,<n>`, `Save`), **WLAN per Befehl** setzen
-   (`WifiSSID`/`WifiKey`/`Save`/`reboot`, Aliase `esp_sendap*`) und
-   **Syslog per HTTP** an `/advanced` auf `192.168.9.4` nachrüsten
-   (kein Syslog-Kommando in ESPEasy; Formular komplett zurückschicken).
-2. Ca. 24 h betreiben, Logs am Syslog-Server auswerten (Boot-Zyklen,
-   WLAN/ETH, MQTT, NTP, Sensorwerte, Regeln, Speicherverschleiß).
-3. **Teardown manuell:** Syslog-Logging per HTTP `/advanced` abschalten (nicht
-   die Stable-`config.dat` neu spielen — das überschreibt Name und
-   DS18B20-Adressen), danach bei WLAN-Boxen:
-   `WifiSSID ssid` → `WifiKey wpakey` → `WifiSSID2 ssid` → `WifiKey2 wpakey`
-   → `Save` → `reboot` (entspricht `esp_resetap`).
-4. Verifikation: kein Syslog-Traffic, SSIDs gelöscht, AP öffnet sich,
-   Ergebnis in `readme.txt` des Testordners → Merge-Freigabe.
+Mit [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/README.md):
+
+1. **Menü 1 – aufsetzen:** Chip erkennen (leerer Flash → keine Sicherung), flashen, bei
+   Professional Ethernet per USB, WLAN mit Prüfung, Zugriffsbereich, Basis-config + Regeln,
+   Testname `Testbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an.
+2. **Menü 2 – prüfen** (jederzeit, auch ohne USB per IP): Messwerte plausibel, Dashboard vollständig.
+3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus, Name `Sensorbox1`/Unit 0,
+   WLAN löschen (Professional: Vorgabe ja). Protokoll unter `~/openandhome-testprotokolle/`.
 
 Helfer:
 - [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/oh_werkstatt.sh) — **intern, nur Linux**:
@@ -165,7 +160,7 @@ lesen und per HTTP-Skript an `/devices` setzen (Plan Abschnitt 8, D-2).
 
 - Keine Variantenordner: Neue Sensoren werden als (deaktivierter) Task in der
   Basis-config ergänzt (`configs/espeasy/<klasse>/basis/`); die Autoerkennung schaltet
-  sie je Box ein. Nach Änderungen Kundenpaket/Manifest neu erzeugen (Werkstatt `k`).
+  sie je Box ein. Nach Änderungen das Manifest neu erzeugen (`python3 tools/bin/oh_klassen.py` bzw. Werkstatt `k`) und committen.
 - Jedes mitgelieferte Image mit Release-Tag, Asset-Name, SHA256 und Testdatum
   dokumentieren (`readme_image.txt`, siehe Plan, Abschnitt 3).
 - Fertig-Images nur mit [`tools/bin/espeasy_download.py`](tools/bin/espeasy_download.py)
