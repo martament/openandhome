@@ -89,7 +89,7 @@ testbox() {
 
 test_starten() {
     echo -e "\n\e[36m--- Box aufsetzen und 24h-Test starten ---\e[0m"
-    echo "Sicherung -> Flashen -> WLAN -> Basis-config.dat -> Testname/Zugriff ->"
+    echo "Flashen -> WLAN -> Basis-config.dat -> Testname/Zugriff ->"
     echo "Sensoren erkennen -> Dashboard -> Werte prüfen -> Syslog an ($SYSLOG_TEST_IP)"
     read -p "Ohne Flashen (Box hat schon das aktuelle Image)? (j/n) [n]: " ohne
     if [[ "$ohne" =~ ^[jJyY]$ ]]; then
@@ -215,6 +215,7 @@ while true; do
     echo "7) 1-Wire-Scan DS18B20"
     echo "8) Syslog an/aus/Status"
     echo "9) config.dat / Backup-Tar prüfen"
+    echo "b) Box sichern (kompletter Flash + config.dat)"
     echo "k) Manifest erzeugen und ohtoolbox.zip bauen"
     echo "f) OH-Flasher testen (lokale Dateien)"
     echo "t) Toolbox testen (lokale Dateien)"
@@ -235,6 +236,7 @@ while true; do
         7) onewire_scan ;;
         8) syslog ;;
         9) check_config ;;
+        b|B) testbox sicherung ;;
         k|K) kundenpaket ;;
         f|F) find_port && "$REPO/tools/ohtoolbox/flasher.sh" --port "$PORT" --quelle lokal; weiter ;;
         t|T) find_port && "$REPO/tools/ohtoolbox/toolbox.sh" --port "$PORT" --quelle lokal ;;

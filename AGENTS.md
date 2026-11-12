@@ -137,12 +137,12 @@ benennen unter Devices um und erneuern dann mit Toolbox **s** Dashboard und Disp
 
 Mit [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/README.md):
 
-1. **Menü 1 – aufsetzen:** Chip erkennen (leerer Flash → keine Sicherung), flashen, bei
-   Professional Ethernet per USB, WLAN mit Prüfung, Zugriffsbereich, Basis-config + Regeln,
+1. **Menü 1 – aufsetzen:** Chip erkennen, flashen (Sicherung vorher optional über Menü b), bei
+   Professional Ethernet per USB, WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`, sonst Abfrage), Zugriffsbereich, Basis-config + Regeln,
    Testname `Testbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an.
 2. **Menü 2 – prüfen** (jederzeit, auch ohne USB per IP): Messwerte plausibel, Dashboard vollständig.
-3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus, Name `Sensorbox1`/Unit 0,
-   WLAN löschen (Professional: Vorgabe ja). Protokoll unter `~/openandhome-testprotokolle/`.
+3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus (nach Neustart geprüft), Name `Sensorbox1`/Unit 0,
+   WLAN löschen (Professional: Vorgabe ja) und prüfen, ob nach dem Neustart der AP startet. Protokoll unter `~/openandhome-testprotokolle/`.
 
 Helfer:
 - [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/oh_werkstatt.sh) — **intern, nur Linux**:

@@ -14,15 +14,16 @@ Device-Einstellungen, Zugriffsbereich und Dashboard gehen über HTTP.
 
 | Punkt | Funktion |
 |---|---|
-| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Sicherung (Flash + Konfiguration nach `~/openandhome-backups/`; entfällt bei leerem Flash) → Flashen (Image der Klasse laut [`oh_klassen.py`](../bin/oh_klassen.py)) → Professional: Ethernet per USB → WLAN mit Prüfung → Web-Zugriff 192.168.0.0–192.168.255.255 → Basis-`config.dat` + `rules1.txt` (bei AM2320 automatisch collection_H/`basis_am2320`) → Testname `Testbox<Unit>` → Sensoren erkennen → Zabbix-Abfrage (Professional) → Dashboard → Werte- und Dashboard-Prüfung → Syslog an |
+| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Flashen (Image der Klasse laut [`oh_klassen.py`](../bin/oh_klassen.py)) → Professional: Ethernet per USB → WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`: Zeile 1 SSID, Zeile 2 Passwort, `chmod 600`; fehlt die Datei, wird gefragt) → Web-Zugriff 192.168.0.0–192.168.255.255 → Basis-`config.dat` + `rules1.txt` (bei AM2320 automatisch collection_H/`basis_am2320`) → Testname `Testbox<Unit>` → Sensoren erkennen → Zabbix-Abfrage (Professional) → Dashboard → Werte- und Dashboard-Prüfung → Syslog an |
 | 2 | Test prüfen: Messwerte plausibel? Dashboard vollständig ersetzt? |
-| 3 | **Test beenden:** Abschlussprüfung → Syslog aus → Name `Sensorbox1`/Unit 0 → Zugriffsbereich → optional WLAN löschen wie `esp_resetap` |
+| 3 | **Test beenden:** Abschlussprüfung → Syslog aus → Name `Sensorbox1`/Unit 0 → Zugriffsbereich → Neustart, prüfen ob Syslog wirklich aus ist → optional WLAN löschen wie `esp_resetap`, Neustart und prüfen, ob der AP startet (Boot-Log per USB oder WLAN-Scan per `nmcli`) |
 | 4 | Sensoren erkennen (I2C, DS18B20), Tasks einschalten, OLED-Zeilen setzen |
 | 5 | Dashboard aus den aktiven Tasks erzeugen und hochladen (umbenannte Fühler erscheinen mit ihrem Task-Namen) |
 | 6 | Gerätename/Unit setzen |
 | 7 | 1-Wire-Scan (`OWScan,<GPIO>`) |
 | 8 | Syslog an/aus/Status |
 | 9 | `config.dat` / Backup-Tar prüfen |
+| b | Box sichern (optional, vor dem Aufsetzen): kompletter Flash + `config.dat`/TAR nach `~/openandhome-backups/`; entfällt bei leerem Flash |
 | k | Manifest aus [`oh_klassen.py`](../bin/oh_klassen.py) erzeugen und `ohtoolbox.zip` bauen (keine Box nötig) |
 | t | Toolbox (Kundensicht) mit lokalen Dateien starten |
 | f | OH-Flasher (Kundensicht) mit lokalen Dateien starten |
@@ -53,7 +54,7 @@ Kunden-ZIP: baut die CI auf `master` automatisch (Release mit Release-Notes); lo
 
 - **USB und PoE nie gleichzeitig anschließen** — das Board ist nicht galvanisch
   getrennt (Olimex-Hinweis; unsere Boxen haben die Variante **ohne** ISO).
-- Menü 1 erkennt den ESP32 automatisch: leerer Flash → keine Sicherung;
+- Menü 1 erkennt den ESP32 automatisch;
   Ethernet wird per USB eingerichtet, die Konfiguration läuft über WLAN am USB.
 - Zabbix nur auf Nachfrage (Sonderanfertigung) bzw. `--zabbix <server>`.
 - 24h-Test am PoE: erst USB ab, dann PoE an. Menü 2/3 funktionieren auch ohne

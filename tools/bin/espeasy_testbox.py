@@ -26,6 +26,7 @@ import html
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -39,19 +40,21 @@ import serial
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from espeasy_autoconfig import PLUGIN_DS18B20, PLUGIN_SYSINFO, PLUGINS_OLED, autokonfiguration, oeffne  # noqa: E402
 from espeasy_configcheck import lese_settings  # noqa: E402
-from espeasy_syslog import Box, FormParser, setze_syslog  # noqa: E402
+from espeasy_syslog import Box, FormParser, lies_formular, setze_syslog  # noqa: E402
 from oh_klassen import DASHBOARD_DATEIEN, KLASSEN, manifest_schreiben  # noqa: E402
 from oh_klassen import RESSOURCEN as _RESSOURCEN  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RESSOURCEN = os.path.join(ROOT, _RESSOURCEN)
-ESPTOOL_PFAD = os.path.join(ROOT, "tools/oh-flasher/bin/pythonportable/Lib/site-packages")
+ESPTOOL_PFAD = os.path.join(ROOT, "tools/ohtoolbox/bin/pythonportable/Lib/site-packages")
 PROTOKOLLE = os.path.expanduser("~/openandhome-testprotokolle")
 # Erlaubter Web-Zugriff (Config -> Client IP filtering: Allow IP range)
 ZUGRIFF_VON, ZUGRIFF_BIS = "192.168.0.0", "192.168.255.255"
 # Name bei Auslieferung (wie bisher); im Test heisst die Box Testbox<Unit>
 AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT = "Sensorbox1", "0"
 BACKUPS = os.path.expanduser("~/openandhome-backups")
+# Werkstatt-WLAN: Zeile 1 SSID, Zeile 2 Passwort (chmod 600, nie ins Repo); fehlt sie, wird gefragt
+WLAN_DATEI = os.path.expanduser("~/.config/openandhome/wlan.txt")
 
 # Plausibilitaet je Messwertname: (min, max, verdaechtige Werte)
 GRENZEN = {
@@ -444,41 +447,51 @@ def pruefe(box, port=None):
         bericht.append(f"FEHLER  Dashboard: {e.url} -> HTTP {e.code}")
         ok = False
     for zeile in bericht:
-        farbe = "\033[32m" if zeile.startswith("OK") else "\033[33m" if zeile.startswith("WARN") else "\033[31m"
-        print(f"  {farbe}{zeile}\033[0m")
+        melde(zeile)
     return ok, bericht
 
 
+def melde(zeile):
+    farbe = "\033[32m" if zeile.startswith("OK") else "\033[33m" if zeile.startswith("WARN") else "\033[31m"
+    print(f"  {farbe}{zeile}\033[0m")
+
+
 # --- Ablaeufe ---
+def sicherung(args):
+    """Kompletten Flash und (falls im Netz) config.dat/TAR sichern - optional, eigener Menuepunkt."""
+    port = args.port
+    chip, mac = chip_info(port)
+    print(f"{chip}, MAC {mac}")
+    if flash_leer(port):
+        print("Flash ist leer (neues Board) - nichts zu sichern.")
+        return
+    ip = args.host or usb_ip(port)
+    ziel = os.path.join(BACKUPS, f"{datetime.datetime.now():%Y%m%d-%H%M}_{mac.replace(':', '')}")
+    os.makedirs(ziel, exist_ok=True)
+    print("Lese Flash (ca. 2 Minuten) ...")
+    esptool(port, "read_flash", "0", "0x400000", os.path.join(ziel, "flash_full_4MB.bin"))
+    if ip:
+        try:
+            # ESP32 liefert unter /download ein TAR mit allen Dateien
+            with open(os.path.join(ziel, "config_download.dat_oder_tar"), "wb") as f:
+                f.write(urllib.request.urlopen(f"http://{ip}/download", timeout=20).read())
+        except OSError as e:
+            print(f"config.dat nicht per HTTP ladbar ({e}) - Flash-Sicherung reicht zur Wiederherstellung.")
+    print(f"Sicherung: {ziel} (enthaelt WLAN-Daten, nicht ins Repo!)")
+
+
 def aufsetzen(args):
     port = args.port
-    schritt("1/10 Chip erkennen")
+    schritt("1/9 Chip erkennen")
     chip, mac = chip_info(port)
     klasse = KLASSEN[chip]
     print(f"{chip} ({klasse['name']}), MAC {mac}")
-    alte_ip = usb_ip(port)
 
     if not args.ohne_flash:
-        if flash_leer(port):
-            print("2/10 Flash ist leer (neues Board) - keine Sicherung noetig.")
-        elif ja("2/10 Vorher kompletten Flash und config.dat sichern?"):
-            ziel = os.path.join(BACKUPS, f"{datetime.datetime.now():%Y%m%d-%H%M}_{mac.replace(':', '')}")
-            os.makedirs(ziel, exist_ok=True)
-            print("Lese Flash (ca. 2 Minuten) ...")
-            esptool(port, "read_flash", "0", "0x400000", os.path.join(ziel, "flash_full_4MB.bin"))
-            if alte_ip:
-                try:
-                    # ESP32 liefert unter /download ein TAR mit allen Dateien
-                    with open(os.path.join(ziel, "config_download.dat_oder_tar"), "wb") as f:
-                        f.write(urllib.request.urlopen(f"http://{alte_ip}/download", timeout=20).read())
-                except OSError as e:
-                    print(f"config.dat nicht per HTTP ladbar ({e}) - Flash-Sicherung reicht zur Wiederherstellung.")
-            print(f"Sicherung: {ziel} (enthaelt WLAN-Daten, nicht ins Repo!)")
-
         bilder = sorted(glob.glob(os.path.join(ROOT, klasse["image"])))
         if not bilder:
             sys.exit(f"FEHLER: kein Image {klasse['image']} - erst Images laden (Menue i).")
-        schritt(f"3/10 Flashen: {os.path.basename(bilder[-1])}")
+        schritt(f"2/9 Flashen: {os.path.basename(bilder[-1])}")
         if not ja("Flash wird geloescht und neu beschrieben. Weiter?"):
             sys.exit("Abgebrochen.")
         esptool(port, "erase_flash")
@@ -486,15 +499,16 @@ def aufsetzen(args):
         print("Geflasht, warte auf Start ...")
         time.sleep(20)
 
-    schritt("4/10 Netzwerk")
+    schritt("3/9 Netzwerk")
     if "ethernet" in klasse:
         print("Ethernet (Olimex ESP32-POE) per USB einrichten ...")
         sende(port, f"NetworkImportConfig,3,{klasse['ethernet']}", "Save")
     if ja("WLAN-Zugangsdaten setzen?", klasse["wlan"]):
-        if args.wlan_datei:
-            with open(args.wlan_datei, encoding="utf-8") as f:
-                ssid, key = [z.rstrip("\n") for z in f.readlines()[:2]]
-            print(f"WLAN aus {args.wlan_datei}: {ssid}")
+        datei = args.wlan_datei or (WLAN_DATEI if os.path.isfile(WLAN_DATEI) else None)
+        if datei:
+            with open(datei, encoding="utf-8") as f:
+                ssid, key = ([z.rstrip("\r\n") for z in f.readlines()[:2]] + ["", ""])[:2]
+            print(f"WLAN aus {datei}: {ssid}")
         else:
             ssid = frage("WLAN-SSID")
             key = getpass.getpass("WPA-Key (unsichtbar): ")
@@ -504,7 +518,7 @@ def aufsetzen(args):
     box = http_bereit(port, ip)
     ip = box.basis.removeprefix("http://")
 
-    schritt("5/10 Basis-config.dat")
+    schritt("4/9 Basis-config.dat")
     image_aktuell = json.loads(box.get("/json"))["System"].get("Binary Filename", "")
     vorschlag = waehle_variante(port, klasse, image_aktuell, args.am2320)
     box = http_bereit(port, warte_ip(port))
@@ -525,13 +539,13 @@ def aufsetzen(args):
     box = http_bereit(port, warte_ip(port))
     ip = box.basis.removeprefix("http://")
 
-    schritt("6/10 Testname, Unit und Web-Zugriff")
+    schritt("5/9 Testname, Unit und Web-Zugriff")
     unit = frage("Unit-Nummer (eindeutig je Testbox)", "1")
     name = frage("Name im Test", f"Testbox{unit}")
     setze_name(port, box, name, unit)
     setze_zugriff(box)
 
-    schritt("7/10 Sensoren erkennen")
+    schritt("6/9 Sensoren erkennen")
     ow = klasse.get("ow_gpios")
     nicht_erkennbar = autokonfiguration(box, port, ow_gpios=ow)
     an = [n for n in nicht_erkennbar if ja(f"Ist '{n}' verbaut?", False)]
@@ -541,15 +555,15 @@ def aufsetzen(args):
         server = args.zabbix or (frage("Zabbix-Server (Sonderanfertigung, leer = kein Zabbix)") or None)
         setze_zabbix(box, klasse["zabbix_controller"], server)
 
-    schritt("8/10 Dashboard")
+    schritt("7/9 Dashboard")
     dashboard_hochladen(box)
 
-    schritt("9/10 Werte und Dashboard pruefen")
+    schritt("8/9 Werte und Dashboard pruefen")
     ok, bericht = pruefe(box, port)
     if not ok and not ja("Pruefung mit Fehlern. Test trotzdem starten?", False):
         sys.exit("Abgebrochen - Box laeuft ohne Syslog.")
 
-    schritt("10/10 Syslog an, Test laeuft")
+    schritt("9/9 Syslog an, Test laeuft")
     setze_syslog(box, "an", args.syslog_ip)
     start = datetime.datetime.now()
     protokoll = Protokoll(os.path.join(PROTOKOLLE, f"{name}_{start:%Y%m%d-%H%M}.txt"))
@@ -595,6 +609,12 @@ def beenden(args):
     setze_name(port, box, AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT)
     setze_zugriff(box)
 
+    schritt("Neustart, Syslog aus pruefen")
+    box, zeile = syslog_nach_neustart(port, box, ip)
+    ok = ok and zeile.startswith("OK")
+    bericht.append(zeile)
+    melde(zeile)
+
     chip = "ESP32" if "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", "") else "ESP8266"
     vorgabe = KLASSEN[chip].get("wlan_reset", False)
     frage_text = ("WLAN-Daten der Werkstatt loeschen (Professional laeuft beim Kunden ueber LAN)?" if vorgabe
@@ -602,8 +622,17 @@ def beenden(args):
     wlan = args.wlan_reset or (not args.ohne_wlan_reset and ja(frage_text, vorgabe))
     if wlan:
         schritt("WLAN zuruecksetzen")
-        kommando(port, box, "WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey", "Save", "Reboot")
-        print("Gesendet - die Box startet neu und oeffnet den AP.")
+        kommando(port, box, "WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey", "Save")
+        schritt("Neustart, AP pruefen")
+        ap_ok, ap_info = ap_pruefen(port, box, AUSLIEFERUNG_NAME)
+        if ap_ok:
+            zeile = f"OK      AP nach Neustart offen ({ap_info})"
+        elif chip == "ESP32":
+            zeile = f"WARNUNG AP nach Neustart nicht erkannt ({ap_info}) - bei aktivem Ethernet moeglich"
+        else:
+            zeile, ok = f"FEHLER  AP nach Neustart nicht erkannt ({ap_info})", False
+        bericht.append(zeile)
+        melde(zeile)
 
     ergebnis = "NICHT BESTANDEN" if not ok else "VORZEITIG BEENDET" if vorzeitig else "BESTANDEN"
     if protokoll:
@@ -615,6 +644,63 @@ def beenden(args):
                            f"Ergebnis: {ergebnis}")
         print(f"Protokoll: {protokoll.pfad}")
     print(f"\nErgebnis: {ergebnis}")
+
+
+def syslog_nach_neustart(port, box, ip, sekunden=90):
+    """Startet die Box neu und prueft, dass Syslog danach wirklich aus ist
+    (Einstellung gespeichert, nicht nur im RAM). Liefert (Box, Berichtszeile)."""
+    kommando(port, box, "Reboot")
+    time.sleep(10)
+    if usb_da(port):
+        ip = warte_ip(port, sekunden, abbrechen=False) or ip
+    ende = time.time() + sekunden
+    while True:
+        try:
+            box = Box(ip, None)
+            felder, level_feld = lies_formular(box.get("/advanced"))
+            break
+        except (OSError, SystemExit):
+            if time.time() > ende:
+                return box, f"FEHLER  Syslog: Box nach Neustart unter {ip} nicht erreichbar"
+            time.sleep(3)
+    syslog_ip, level = felder.get("syslogip", ""), felder.get(level_feld, "")
+    if syslog_ip in ("", "0.0.0.0") and level == "0":
+        return box, "OK      Syslog nach Neustart aus (IP leer, Level 0)"
+    return box, f"FEHLER  Syslog nach Neustart noch aktiv (IP {syslog_ip or '-'}, Level {level})"
+
+
+def ap_pruefen(port, box, name, sekunden=60):
+    """Startet die Box neu und prueft, ob der Access Point aufgeht.
+
+    Per USB wird das Boot-Log nach 'AP Mode' durchsucht; zusaetzlich (und ohne USB)
+    sucht der Werkstatt-PC per nmcli nach einem WLAN, das mit dem Box-Namen beginnt.
+    Liefert (ok, Hinweis)."""
+    if usb_da(port):
+        zeilen = sende(port, "Reboot", wartezeit=sekunden // 2)
+        treffer = [z for z in zeilen if re.search(r"AP Mode.*(enabled|ssid)", z, re.I)]
+        if treffer:
+            return True, f"Boot-Log: {treffer[-1]}"
+    else:
+        kommando(port, box, "Reboot")
+        time.sleep(15)
+    log = "kein 'AP Mode' im Boot-Log, " if usb_da(port) else ""
+    if not shutil.which("nmcli"):
+        return False, log + "nmcli fehlt fuer WLAN-Scan"
+    geraete = subprocess.run(["nmcli", "-t", "-f", "TYPE", "dev"], capture_output=True, text=True).stdout
+    if "wifi" not in geraete.split():
+        return False, log + "kein WLAN-Adapter am PC fuer WLAN-Scan"
+    ende = time.time() + sekunden
+    while time.time() < ende:
+        try:
+            ausgabe = subprocess.run(["nmcli", "-t", "-f", "SSID", "dev", "wifi", "list", "--rescan", "yes"],
+                                     capture_output=True, text=True, timeout=30).stdout
+        except (OSError, subprocess.TimeoutExpired):
+            ausgabe = ""
+        for ssid in ausgabe.splitlines():
+            if ssid.lower().startswith(name.lower()):
+                return True, f"WLAN '{ssid}' sichtbar"
+        time.sleep(5)
+    return False, log + f"kein WLAN '{name}*' sichtbar"
 
 
 def kundenpaket(args):
@@ -633,14 +719,14 @@ def sha256(pfad):
 
 def main():
     parser = argparse.ArgumentParser(description="Testablauf fuer openandhome-Sensorboxen.")
-    parser.add_argument("aktion", choices=["aufsetzen", "pruefen", "dashboard", "beenden", "kundenpaket"])
+    parser.add_argument("aktion", choices=["aufsetzen", "sicherung", "pruefen", "dashboard", "beenden", "kundenpaket"])
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
     parser.add_argument("--ohne-flash", action="store_true", help="aufsetzen ohne Sicherung/Flashen")
     parser.add_argument("--zabbix", metavar="SERVER", help="aufsetzen (Professional): Zabbix-Controller mit diesem Server einschalten")
     parser.add_argument("--am2320", action="store_true",
                         help="aufsetzen: AM2320-Variante erzwingen; kundenpaket: AM2320-Teil des Manifests erzeugen")
-    parser.add_argument("--wlan-datei", help="Datei mit SSID (Zeile 1) und Key (Zeile 2)")
+    parser.add_argument("--wlan-datei", help="Datei mit SSID (Zeile 1) und Key (Zeile 2), Standard ~/.config/openandhome/wlan.txt falls vorhanden")
     parser.add_argument("--syslog-ip", default="192.168.9.4")
     parser.add_argument("--wlan-reset", action="store_true", help="beenden: WLAN ohne Rueckfrage zuruecksetzen")
     parser.add_argument("--ohne-wlan-reset", action="store_true", help="beenden: WLAN nicht zuruecksetzen")
@@ -651,6 +737,9 @@ def main():
         return
     if args.aktion == "beenden":
         beenden(args)
+        return
+    if args.aktion == "sicherung":
+        sicherung(args)
         return
     if args.aktion == "kundenpaket":
         kundenpaket(args)

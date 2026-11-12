@@ -14,8 +14,10 @@ Beispiele:
 """
 
 import argparse
+import http.client
 import http.cookiejar
 import re
+import socket
 import sys
 import urllib.parse
 import urllib.request
@@ -69,13 +71,34 @@ class FormParser(HTMLParser):
 class Box:
     def __init__(self, host, passwort):
         self.basis = f"http://{host}"
-        self.oeffner = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+        self.cookies = http.cookiejar.CookieJar()
+        self.oeffner = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookies))
         if passwort:
             self.post("/login", {"password": passwort})
 
     def get(self, pfad):
-        with self.oeffner.open(self.basis + pfad, timeout=15) as antwort:
-            return antwort.read().decode("utf-8", "replace")
+        try:
+            with self.oeffner.open(self.basis + pfad, timeout=15) as antwort:
+                return antwort.read().decode("utf-8", "replace")
+        except http.client.BadStatusLine:
+            # ESPEasy liefert .esp-Seiten ohne HTTP-Header (nur Body) -> roh lesen
+            return self._get_roh(pfad)
+
+    def _get_roh(self, pfad):
+        host = urllib.parse.urlsplit(self.basis).netloc
+        cookies = "; ".join(f"{c.name}={c.value}" for c in self.cookies)
+        anfrage = f"GET {pfad} HTTP/1.0\r\nHost: {host}\r\n"
+        if cookies:
+            anfrage += f"Cookie: {cookies}\r\n"
+        teile = []
+        with socket.create_connection((host.split(":")[0], int(host.partition(":")[2] or 80)), timeout=15) as s:
+            s.sendall((anfrage + "Connection: close\r\n\r\n").encode())
+            while daten := s.recv(4096):
+                teile.append(daten)
+        text = b"".join(teile).decode("utf-8", "replace")
+        if text.startswith("HTTP/"):
+            text = text.split("\r\n\r\n", 1)[-1]
+        return text
 
     def post(self, pfad, felder):
         daten = urllib.parse.urlencode(felder).encode()
