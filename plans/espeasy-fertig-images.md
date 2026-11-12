@@ -741,3 +741,51 @@ vorhanden und aus (kein AM2320 angeschlossen), Prüfung OK.
 **Zustand Testbox bei Arbeitsende:** collection_H, AM2320-Basis-config,
 Name `Sensorbox1`/Unit 0, Syslog aus, WLAN `openandhome`, kein Test aktiv.
 Für den Standardstand: Flasher Menü 1 (Werkstatt `f`) erneut ausführen.
+
+---
+
+## 14. Professional (Olimex ESP32-POE) — Zwischenstand 2026-11-12
+
+Plan: `~/.claude/plans/in-openandhome-hat-mir-tender-magpie.md` (zwei Phasen,
+**USB und PoE nie gleichzeitig** — ESP32-POE ist nicht galvanisch getrennt).
+
+**Varianten-Analyse** (Plugins/Controller/GPIOs aus `config.dat`, Offsets
+TaskDeviceNumber @198, TaskDevicePin1 @360, Protocol @192):
+
+| Variante | Wassersensor (Switch, GPIO 34) | DS18B20 (GPIO 4 / 2) | HTU21D | Controller |
+|---|---|---|---|---|
+| config.dat | ja | 2 | – | HA-MQTT |
+| 3Sensoren | – | 3 | – | HA-MQTT |
+| 4Sensoren, 5Sensoren | ja | 4 | – | HA-MQTT |
+| 7Sensoren | ja | 7 | – | HA-MQTT |
+| 8SensorenLine (nur Dashboard) | – | 8 + FuehlerExtern | – | ? |
+| 3_hut21 | – | 3 | ja | Zabbix (Sonderanfertigung) |
+
+Alle: SysInfo, OLED (P036), I2C SDA 13 / SCL 16. **Zwei 1-Wire-Busse**
+(GPIO 4 und 2). Ziel-Basis = Obermenge: Wassersensor, Fuehler1–9 auf beiden
+Bussen, HTU21D, OLED, SysInfo; MQTT- und Zabbix-Controller **aus**.
+
+**Befunde an der angeschlossenen Box (Flash war leer = neu):**
+- collection_A_ESP32 (mega-20260720) startet am USB stabil, ohne LAN öffnet
+  sie nach ~10 s ihren AP (`Collection-A-ESP32`). Die früher beobachteten
+  Neustarts kamen vom leeren Flash.
+- **Alte `config.dat` (Build 20630 und älter) hängt beim Start** nach
+  „Build changed!“ (Migration) → alte Configs nicht direkt verwenden; die
+  Basis muss mit der neuen Firmware neu erzeugt werden.
+- **Ethernet rein per USB einstellbar:** ESP32 speichert die Netzwerk-Hardware
+  in NVS/KVS; `NetworkImportConfig,3,{"nwpluginID":3,"enabled":"true",
+  "route_prio":200,"Index":0,"phytype":0,"phyaddr":0,"MDC":23,"MDIO":18,
+  "pwr":12,"clock":3}` + `Save` → Boot meldet „LAN8720 … GPIO17 … ETH power ON“
+  (LAN8720 = 0, Takt 50 MHz APLL invertiert GPIO17 = 3, aus `EthernetParameters.h`).
+- `Name`, `Unit`, `OWScan,<gpio>` (Format `28-24-7b-…-c5 [DS18B20]`),
+  `I2CScanner` funktionieren über USB.
+- Testbox: 1 Fühler an GPIO 4, 2 Fühler an GPIO 2; Name `Testbox1`, Unit 1.
+
+**Nächste Schritte:** Box auf PoE → per HTTP Obermenge-Tasks anlegen,
+Controller aus, NTP/Zugriffsbereich, `config.dat` herunterladen als
+`configs/espeasy/professional/basis/config.dat`; danach Werkstatt-Ablauf
+(Phase A USB: Flash + ETH-Import + Name; Phase B PoE: config-Upload,
+Autoerkennung mit zwei 1-Wire-Bussen, Dashboard, Syslog). Prüfen, ob ein
+`config.dat`-Upload die per KVS gespeicherte Ethernet-Konfiguration lässt.
+[`espeasy_fsimage.py`](../tools/bin/espeasy_fsimage.py) (mklittlefs 4.1.0) ist
+vorbereitet, falls die Basis doch schon in Phase A als Dateisystem-Image mit muss.
