@@ -862,3 +862,12 @@ Endanwender: ohtoolbox = Standard, OH-Flasher = Notlösung (beide Klassen).
   Sensorbox1. Befund: Nach ClearAccessBlock sperrt die Box wieder, sobald der config.dat-Upload die
   Einstellungen neu laedt -> Zugriffsbereich wird jetzt **vor** den Uploads dauerhaft gesetzt
   (Toolbox/Flasher und Werkstatt).
+- **Standalone getestet (2026-11-12, Testbox ESP8266, Linux, Quelle lokal):**
+  Flasher Neu aufspielen (collection_H -> climate_B, HTU21D + Display erkannt, rules1.txt auf der Box),
+  Flasher Firmware-Update (Name `Testbox2` und Sensoren erhalten), Toolbox g/3/s/k (k setzt
+  `Sensorbox1` zurueck), Toolbox 5 + Neustart -> eigenes WLAN **„Sensorbox1“, 192.168.4.1** (wie in
+  der Anleitung; Passwort = ESPEasy-Standard `configesp`, nicht per Verbindung geprueft), Toolbox 1
+  mit falschem Passwort -> WLAN-Liste -> richtiges Passwort -> verbunden. NTP-Rueckfall auf dem
+  ESP8266: Gateway nach 90 s, 192.168.178.1 nach weiteren 90 s, Zeit da.
+  **Offen:** Windows (Toolbox/Flasher), echter AM2320, DS18B20 an einer Standalone-Box.
+
