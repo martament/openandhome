@@ -35,8 +35,9 @@ SITE_PACKAGES = os.path.join(HIER, "pythonportable", "Lib", "site-packages")
 sys.path[:0] = [os.path.join(HIER, "lib"), os.path.join(REPO, "tools", "bin")]
 import serial  # noqa: E402
 import serial.tools.list_ports  # noqa: E402
-from espeasy_autoconfig import autokonfiguration, oeffne, i2c_hinweise, i2c_scan, ow_scan  # noqa: E402
-from espeasy_testbox import dashboard_hochladen, http_bereit, lade_hoch, sende, setze_zugriff, warte_ip  # noqa: E402
+from espeasy_autoconfig import autokonfiguration, i2c_scan, oeffne  # noqa: E402
+from espeasy_testbox import (dashboard_hochladen, http_bereit, lade_hoch, sende, setze_zugriff, usb_ip,  # noqa: E402
+                             warte_ip, wlan_verbinden)  # noqa: E402
 
 
 def gruen(text):
@@ -103,114 +104,140 @@ def esptool(port, *argumente):
         sys.exit("FEHLER beim Flashen. Sensor neu anstecken und noch einmal versuchen.")
 
 
-def pruefe_chip(port):
+def erkenne_chip(port):
+    """'ESP8266' (Standalone) oder 'ESP32' (Professional)."""
     umgebung = dict(os.environ, PYTHONPATH=SITE_PACKAGES) if os.path.isdir(SITE_PACKAGES) else None
     ausgabe = subprocess.run([sys.executable, "-m", "esptool", "--port", port, "chip_id"],
                              capture_output=True, text=True, env=umgebung).stdout
-    if "ESP8266" not in ausgabe:
-        sys.exit("Dieser Flasher ist nur fuer den openandhome-Temperatursensor (ESP8266).")
+    if "ESP32" in ausgabe:
+        return "ESP32"
+    if "ESP8266" in ausgabe:
+        return "ESP8266"
+    sys.exit("Kein openandhome-Sensor erkannt. Sensor neu anstecken und noch einmal versuchen.")
+
+
+def poe_warnung():
+    print("\n\033[31mSensorbox Professional: USB und Netzwerkkabel (PoE) nie gleichzeitig anschliessen!\033[0m")
+    print("\033[31mDas Netzwerkkabel muss jetzt abgezogen sein - die Box wird ueber USB versorgt.\033[0m")
+    return ja("Ist das Netzwerkkabel abgezogen?")
+
+
+def wlan_eingeben():
+    ssid = input("Name Ihres WLANs (SSID): ").strip()
+    key = getpass.getpass("WLAN-Passwort (Eingabe unsichtbar): ")
+    return ssid, key
+
+
+def wlan_loeschen(port):
+    sende(port, "WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey", "Save")
+
+
+def professional_ende():
+    gruen("\nFertig. Die WLAN-Daten sind wieder geloescht.")
+    print("Ziehen Sie jetzt ZUERST das USB-Kabel ab und stecken Sie DANACH das Netzwerkkabel (PoE) an.")
+    print("Die IP-Adresse zeigt das Display bzw. Ihr Router (Geraet 'Sensorbox1').")
+
+
+def sensoren_einrichten(port, manifest, ressourcen):
+    """Sensoren erkennen, Dashboard, Zugriffsbereich (Box ist im WLAN)."""
+    box = http_bereit(port, warte_ip(port))
+    an, aus = [], []
+    for t in manifest["tasks"]:
+        if t["art"] == "frage":
+            (an if ja(f"Ist '{t['name']}' ({t['typ']}) an Ihrem Sensor angeschlossen?") else aus).append(t["name"])
+    autokonfiguration(box, port, an, aus, anwenden=True, ow_gpios=manifest.get("ow_gpios"))
+    dashboard_hochladen(box, ablage=CACHE, ressourcen=os.path.dirname(ressourcen[0]))
+    setze_zugriff(box)
+    return box
 
 
 # --- Ablaeufe ---
-def erkenne_und_schalte(port, manifest):
-    """USB: I2C- und 1-Wire-Scan, passende Tasks ein-/ausschalten. Liefert (an, aus, Anzahl Fuehler)."""
-    i2c = i2c_scan(port)
-    i2c_hinweise(i2c, {a for t in manifest["tasks"] if t["art"] == "i2c" for a in t["adressen"]})
-    fuehler = ow_scan(port, manifest["onewire_gpio"])
-    befehle, an, aus, ds = [], [], [], 0
-    for t in manifest["tasks"]:
-        if t["art"] == "ds18b20":
-            ds += 1
-            aktiv = ds <= len(fuehler)
-        elif t["art"] == "i2c":
-            aktiv = bool(set(t["adressen"]) & i2c)
-        else:
-            aktiv = ja(f"Ist '{t['name']}' ({t['typ']}) an Ihrem Sensor angeschlossen?")
-            (an if aktiv else aus).append(t["name"])
-        befehle.append(f"{'TaskEnable' if aktiv else 'TaskDisable'},{t['nr']}")
-        if aktiv:
-            print(f"  gefunden: {t['name']} ({t['typ']})")
-    print(f"  {len(fuehler)} Temperaturfuehler am 1-Wire-Bus")
-    sende(port, *befehle, "Save")
-    return an, aus, len(fuehler)
-
-
 def neu_aufsetzen(port, quelle):
     manifest = quelle.manifest()
+    chip = erkenne_chip(port)
+    if chip == "ESP32":
+        if "professional" not in manifest:
+            sys.exit("Fuer die Sensorbox Professional gibt es in diesem Stand keine Dateien - bitte Support kontaktieren.")
+        if not poe_warnung():
+            return
+        manifest = dict(manifest, **manifest["professional"])
+        print("Fuer die Einrichtung verbindet sich die Box kurz mit Ihrem WLAN; die Daten werden danach geloescht.")
     print(f"Freigegebener Stand vom {manifest['erzeugt']}: {os.path.basename(manifest['firmware']['pfad'])}")
     firmware = quelle.datei(manifest["firmware"])
-    pruefe_chip(port)
-
-    mit_wlan = ja("Sensor dabei in Ihr WLAN einbinden? Dann wird alles automatisch eingerichtet.", True)
-    if not mit_wlan and "dateisystem" not in manifest:
-        print("\nOhne WLAN ist das Neu-Aufsetzen mit diesem Stand noch nicht moeglich.")
-        print("Bitte mit WLAN starten oder unseren Support kontaktieren.")
-        return
-    if mit_wlan:
-        ssid = input("Name Ihres WLANs (SSID): ").strip()
-        key = getpass.getpass("WLAN-Passwort (Eingabe unsichtbar): ")
+    ressourcen = [quelle.datei(r, "ressourcen") for r in manifest["ressourcen"]]
+    ssid, key = wlan_eingeben()
     if not ja("Der Sensor wird vollstaendig geloescht und neu aufgesetzt. Weiter?", True):
         return
 
     gruen("\n1/4 Loesche den Sensor ...")
     esptool(port, "erase_flash")
     gruen("2/4 Schreibe Firmware ...")
-    if mit_wlan:
-        esptool(port, "write_flash", "--flash_size", "4MB", "0x0", firmware)
+    if chip == "ESP32":
+        esptool(port, "write_flash", "0x0", firmware)
     else:
-        dateisystem = quelle.datei(manifest["dateisystem"])
-        esptool(port, "write_flash", "--flash_size", "4MB", "0x0", firmware,
-                manifest["dateisystem"]["adresse"], dateisystem)
+        esptool(port, "write_flash", "--flash_size", "4MB", "0x0", firmware)
     print("Warte auf den Start des Sensors ...")
     time.sleep(20)
-
-    if not mit_wlan:
-        gruen("3/4 Erkenne angeschlossene Sensoren ...")
-        _, _, anzahl = erkenne_und_schalte(port, manifest)
-        sende(port, "Reboot")
-        gruen("4/4 Fertig.")
-        print("Der Sensor oeffnet jetzt sein eigenes WLAN (Access Point).")
-        print("Binden Sie ihn wie in der Anleitung beschrieben in Ihr WLAN ein.")
-        if anzahl > 1:
-            print("Waehlen Sie danach in der Oberflaeche unter 'Devices' bei jedem Fuehler die Device-Adresse.")
-        return
+    if chip == "ESP32":
+        # Ethernet (Olimex ESP32-POE) per USB einrichten - geht ohne Netzwerk
+        sende(port, f"NetworkImportConfig,3,{manifest['ethernet']}", "Save")
 
     gruen("3/4 Verbinde mit Ihrem WLAN und lade die Grundeinstellungen ...")
-    ressourcen = [quelle.datei(r, "ressourcen") for r in manifest["ressourcen"]]
-    sende(port, f'WifiSSID,"{ssid}"', f'WifiKey,"{key}"', "Save", "Reboot")
-    time.sleep(10)
-    box = http_bereit(port, warte_ip(port))
+    wlan_verbinden(port, ssid, key)
     # Der AM2320 braucht ein anderes Image; er schlaeft und antwortet oft erst beim zweiten Scan
-    if "am2320" in manifest and any(0x5C in i2c_scan(port) for _ in range(2)):
+    if chip == "ESP8266" and "am2320" in manifest and any(0x5C in i2c_scan(port) for _ in range(2)):
         print("  AM2320 erkannt - spiele die passende Firmware ein (Einstellungen bleiben) ...")
         manifest = dict(manifest, **manifest["am2320"])
         esptool(port, "write_flash", "--flash_size", "4MB", "0x0", quelle.datei(manifest["firmware"]))
         time.sleep(20)
-        box = http_bereit(port, warte_ip(port))
-    basis = quelle.datei(manifest["basis_config"])
-    lade_hoch(box, basis, "config.dat")
+    box = http_bereit(port, warte_ip(port))
+    lade_hoch(box, quelle.datei(manifest["basis_config"]), "config.dat")
     if "regeln" in manifest:
         # Zeitserver-Rueckfall auf Router / 192.168.178.1
         lade_hoch(box, quelle.datei(manifest["regeln"], "regeln"), "rules1.txt")
     sende(port, "Reboot")
     time.sleep(10)
-    box = http_bereit(port, warte_ip(port))
 
     gruen("4/4 Erkenne angeschlossene Sensoren und richte sie ein ...")
-    an, aus = [], []
-    for t in manifest["tasks"]:
-        if t["art"] == "frage":
-            (an if ja(f"Ist '{t['name']}' ({t['typ']}) an Ihrem Sensor angeschlossen?") else aus).append(t["name"])
-    autokonfiguration(box, port, an, aus, anwenden=True)
-    dashboard_hochladen(box, ablage=CACHE, ressourcen=os.path.dirname(ressourcen[0]))
-    setze_zugriff(box)
-    gruen(f"\nFertig. Ihr Sensor ist erreichbar unter {box.basis}")
+    box = sensoren_einrichten(port, manifest, ressourcen)
+    if chip == "ESP32":
+        wlan_loeschen(port)
+        professional_ende()
+    else:
+        gruen(f"\nFertig. Ihr Sensor ist erreichbar unter {box.basis}")
+
+
+def sensoren_neu(port, quelle):
+    """Sensoren neu erkennen, Einstellungen bleiben (z. B. nach Tausch oder Erweiterung eines Fuehlers)."""
+    manifest = quelle.manifest()
+    chip = erkenne_chip(port)
+    if chip == "ESP32":
+        if "professional" not in manifest or not poe_warnung():
+            return
+        manifest = dict(manifest, **manifest["professional"])
+    time.sleep(15)                    # chip_id startet den Sensor neu
+    if chip == "ESP8266" and "am2320" in manifest and any(0x5C in i2c_scan(port) for _ in range(2)):
+        manifest = dict(manifest, **manifest["am2320"])
+    ressourcen = [quelle.datei(r, "ressourcen") for r in manifest["ressourcen"]]
+    temporaer = False
+    if not usb_ip(port):
+        print("Fuer die Erkennung muss der Sensor im WLAN sein.")
+        temporaer = chip == "ESP32"
+        wlan_verbinden(port, *wlan_eingeben())
+    box = sensoren_einrichten(port, manifest, ressourcen)
+    if temporaer:
+        wlan_loeschen(port)
+        professional_ende()
+    else:
+        gruen(f"\nFertig. Ihr Sensor ist erreichbar unter {box.basis}")
 
 
 def nur_firmware(port, quelle):
     manifest = quelle.manifest()
+    if erkenne_chip(port) == "ESP32":
+        print("Fuer die Sensorbox Professional bitte 'Sensor neu aufsetzen' waehlen oder den Support kontaktieren.")
+        return
     firmware = quelle.datei(manifest["firmware"])
-    pruefe_chip(port)
     gruen("Schreibe neue Firmware. Ihre Einstellungen bleiben erhalten.")
     esptool(port, "write_flash", "--flash_size", "4MB", "0x0", firmware)
     gruen("Fertig.")
@@ -244,16 +271,21 @@ def main():
     print("*" * 78)
     print(f" openandhome-Flasher - Sensor an {port}")
     print("*" * 78)
-    print(" 1) Sensor neu aufsetzen (loeschen, Firmware, Sensoren erkennen, WLAN)")
-    print(" 2) Nur Firmware aktualisieren (Einstellungen bleiben erhalten)")
-    print(" 3) Debug (Ausgaben des Sensors anzeigen)")
-    print(" 4) Beenden")
-    wahl = input("Ihre Wahl [4]: ").strip() or "4"
+    print(" Notfall-Werkzeug. Fuer WLAN, Name, Zeitserver usw. bitte die openandhome-Toolbox nutzen.")
+    print("*" * 78)
+    print(" 1) Sensoren neu erkennen (Einstellungen bleiben, z. B. nach Fuehlertausch)")
+    print(" 2) Sensor neu aufsetzen (loeschen, Firmware, Grundeinstellungen, Sensoren erkennen)")
+    print(" 3) Nur Firmware aktualisieren (nur Standalone, Einstellungen bleiben)")
+    print(" 4) Debug (Ausgaben des Sensors anzeigen)")
+    print(" 5) Beenden")
+    wahl = input("Ihre Wahl [5]: ").strip() or "5"
     if wahl == "1":
-        neu_aufsetzen(port, quelle)
+        sensoren_neu(port, quelle)
     elif wahl == "2":
-        nur_firmware(port, quelle)
+        neu_aufsetzen(port, quelle)
     elif wahl == "3":
+        nur_firmware(port, quelle)
+    elif wahl == "4":
         debug(port)
 
 

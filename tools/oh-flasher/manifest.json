@@ -173,5 +173,32 @@
   "regeln": {
     "pfad": "configs/espeasy/standalone/basis/rules1.txt",
     "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+  },
+  "professional": {
+    "firmware": {
+      "pfad": "configs/espeasy/professional/ESP_Easy_mega_20260720_collection_A_ESP32_4M316k.factory.bin",
+      "sha256": "5074c21a74bff3ca3eb8f4274923ef13b64dc629bfc6048aef7848a605466a2d"
+    },
+    "basis_config": {
+      "pfad": "configs/espeasy/professional/basis/config.dat",
+      "sha256": "7e3e0e10542000c89d100492dd81f38d6008d11b73a63b0105cb550548db601f"
+    },
+    "regeln": {
+      "pfad": "configs/espeasy/professional/basis/rules1.txt",
+      "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+    },
+    "ow_gpios": [
+      4,
+      2
+    ],
+    "ethernet": "{\"nwpluginID\":3,\"enabled\":\"true\",\"route_prio\":200,\"Index\":0,\"phytype\":0,\"phyaddr\":0,\"MDC\":23,\"MDIO\":18,\"pwr\":12,\"clock\":3}",
+    "tasks": [
+      {
+        "nr": 1,
+        "name": "Wassersensor",
+        "typ": "Switch input - Switch",
+        "art": "frage"
+      }
+    ]
   }
 }

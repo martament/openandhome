@@ -2,7 +2,7 @@
 function Show-Header {
     Clear-Host
     Write-Host "====================================" -ForegroundColor Cyan
-    Write-Host "    Openandhome - Multi-Tool v2.6" -ForegroundColor Cyan
+    Write-Host "    Openandhome - Toolbox v3.0" -ForegroundColor Cyan
     Write-Host "====================================`n" -ForegroundColor Cyan
 }
 
@@ -50,6 +50,59 @@ function Open-Port {
         Read-Host "Drücken Sie Enter..."
         exit
     }
+}
+
+# Sendet Befehle und liefert die Antwort des Sensors als Text (ohne Farbcodes)
+function Send-AndRead($commands, $seconds = 2) {
+    $port = Open-Port
+    try {
+        Start-Sleep -Milliseconds 1500
+        $port.DiscardInBuffer()
+        $port.WriteLine("")
+        Start-Sleep -Milliseconds 300
+        foreach ($cmd in $commands) {
+            $port.WriteLine($cmd)
+            Start-Sleep -Milliseconds 300
+        }
+        $text = ""
+        $ende = (Get-Date).AddSeconds($seconds)
+        while ((Get-Date) -lt $ende) {
+            if ($port.BytesToRead -gt 0) { $text += $port.ReadExisting() }
+            Start-Sleep -Milliseconds 100
+        }
+        return ($text -replace "\x1b\[[0-9;]*m", "")
+    } finally {
+        if ($port) { $port.Close() }
+    }
+}
+
+# Standalone (ESP8266, WLAN) oder Professional (ESP32, Netzwerkkabel/PoE)
+function Get-BoxTyp {
+    $text = Send-AndRead @('logentry,%sysbuild_filename%') 2
+    if ($text -match "ESP32") { return "Professional" }
+    if ($text -match "ESP8266") { return "Standalone" }
+    return "unbekannt"
+}
+
+function Get-BoxIp {
+    $text = Send-AndRead @("Settings") 2
+    $m = [regex]::Match($text, "IP Address\s*:\s*([\d.]+)")
+    if ($m.Success -and $m.Groups[1].Value -ne "0.0.0.0") { return $m.Groups[1].Value }
+    return $null
+}
+
+# Sichtbare WLANs (staerkstes je Name), sortiert nach Signal
+function Get-WlanListe {
+    $text = Send-AndRead @("WifiScan") 8
+    $netze = @{}
+    foreach ($m in [regex]::Matches($text, "WIFI : \d+: (.+?) [0-9A-Fa-f:]{17} Ch:(\d+) \((-?\d+)dBm\)")) {
+        $name = $m.Groups[1].Value
+        $dbm = [int]$m.Groups[3].Value
+        if ($name -ne "#Hidden#" -and (-not $netze.ContainsKey($name) -or $dbm -gt $netze[$name])) {
+            $netze[$name] = $dbm
+        }
+    }
+    return $netze.GetEnumerator() | Sort-Object Value -Descending
 }
 
 function Show-Settings {
@@ -172,6 +225,11 @@ function ConvertFrom-SecureToPlain($secure) {
 
 function Set-Wifi {
     Write-Host "`n--- WLAN-Zugangsdaten setzen ---" -ForegroundColor Cyan
+    if ($script:BoxTyp -eq "Professional") {
+        Write-Host "Hinweis: Die Sensorbox Professional arbeitet mit dem Netzwerkkabel (PoE). WLAN brauchen Sie nur," -ForegroundColor Yellow
+        Write-Host "wenn Sie die Box ohne Netzwerkkabel betreiben wollen." -ForegroundColor Yellow
+        if ((Read-Host "Trotzdem WLAN setzen? (j/n)") -notmatch '^[jJyY]$') { return }
+    }
 
     $wifiSsid = Read-Host "WLAN-SSID"
     if ([string]::IsNullOrWhiteSpace($wifiSsid)) {
@@ -232,21 +290,73 @@ function Set-Wifi {
         )
     }
 
-    Send-Commands "WLAN-Daten setzen" $cmds
-
-    # WifiConnect greift laut Praxisberichten nicht immer zuverlässig,
-    # daher optionaler Reboot als sichere Variante.
-    $rebootChoice = Read-Host "Gerät jetzt neu verbinden/rebooten? (j/n)"
-    if ($rebootChoice -match '^[jJyY]$') {
-        Invoke-Reboot
+    while ($true) {
+        Write-Host "`nSende WLAN-Daten und starte den Sensor neu ..." -ForegroundColor Yellow
+        $null = Send-AndRead ($cmds + @("Save", "Reboot")) 1
+        Write-Host "Warte auf die Verbindung (bis zu 60 Sekunden) " -NoNewline
+        $ip = $null
+        for ($i = 0; $i -lt 12 -and -not $ip; $i++) {
+            Start-Sleep -Seconds 3
+            Write-Host "." -NoNewline
+            $ip = Get-BoxIp
+        }
+        if ($ip) {
+            Write-Host "`nVerbunden. Ihr Sensor ist erreichbar unter: http://$ip/openandhome.esp" -ForegroundColor Green
+            Read-Host "Zurück zum Menü mit Enter..."
+            return
+        }
+        Write-Host "`nDer Sensor kann sich nicht mit '$wifiSsid' verbinden." -ForegroundColor Red
+        Write-Host "Sichtbare WLANs:"
+        $netze = @(Get-WlanListe)
+        for ($i = 0; $i -lt $netze.Count; $i++) {
+            Write-Host ("  {0,2}) {1,-32} {2} dBm" -f ($i + 1), $netze[$i].Key, $netze[$i].Value)
+        }
+        if ($netze | Where-Object { $_.Key -eq $wifiSsid }) {
+            Write-Host "  ('$wifiSsid' ist sichtbar - vermutlich ist das Passwort falsch)" -ForegroundColor Yellow
+        }
+        $wahl = Read-Host "Nummer oder WLAN-Name (Enter = gleiches WLAN, q = Abbruch)"
+        if ($wahl -eq "q") { return }
+        if ($wahl -match '^\d+$' -and [int]$wahl -ge 1 -and [int]$wahl -le $netze.Count) {
+            $wifiSsid = $netze[[int]$wahl - 1].Key
+        } elseif ($wahl) {
+            $wifiSsid = $wahl
+        }
+        $wifiKey = ConvertFrom-SecureToPlain (Read-Host "Passwort für '$wifiSsid' (unsichtbar)" -AsSecureString)
+        $cmds = @(('WifiSSID,"{0}"' -f $wifiSsid), ('WifiKey,"{0}"' -f $wifiKey))
     }
+}
+
+function Set-Name {
+    Write-Host "`n--- Gerätename ändern ---" -ForegroundColor Cyan
+    Write-Host "Bei mehreren Sensoren braucht jeder einen eigenen Namen (z. B. Keller, Heizung)."
+    $name = Read-Host "Neuer Name (Buchstaben, Ziffern, - und _; leer = Abbruch)"
+    if (-not $name -or $name -notmatch '^[A-Za-z0-9_-]{1,24}$') {
+        Write-Host "Abgebrochen."
+        Read-Host "Zurück zum Menü mit Enter..."
+        return
+    }
+    Send-Commands "Gerätename setzen" @("Name,$name")
+    Write-Host "Nach einem Neustart ist der Sensor unter http://$name/openandhome.esp erreichbar (je nach Router)."
+}
+
+# --- SENSORBOX ERKENNEN ---
+Write-Host "Erkenne Sensorbox ..." -ForegroundColor Gray
+$script:BoxTyp = Get-BoxTyp
+if ($script:BoxTyp -eq "Professional") {
+    Write-Host "`nSensorbox Professional erkannt." -ForegroundColor Yellow
+    Write-Host "ACHTUNG: USB und Netzwerkkabel (PoE) nie gleichzeitig anschließen!" -ForegroundColor Red
+    Write-Host "Ziehen Sie das Netzwerkkabel ab, bevor Sie fortfahren." -ForegroundColor Red
+    Read-Host "Weiter mit Enter"
 }
 
 # --- HAUPT-SCHLEIFE (TEXT-MENÜ) ---
 $running = $true
 while ($running) {
     Show-Header
-    Write-Host "Verbunden mit: $COM" -ForegroundColor Green
+    Write-Host "Verbunden mit: $COM  -  Sensorbox $script:BoxTyp" -ForegroundColor Green
+    if ($script:BoxTyp -eq "Professional") {
+        Write-Host "ACHTUNG: Netzwerkkabel (PoE) muss abgezogen sein, solange USB steckt!" -ForegroundColor Red
+    }
     Write-Host "------------------------------------"
     Write-Host "1) " -NoNewline; Write-Host "WLAN-Zugangsdaten setzen (SSID/Key)" -ForegroundColor Yellow
     Write-Host "2) Neustart (Reboot)"
@@ -258,6 +368,7 @@ while ($running) {
     Write-Host "8) Start AP-Mode"
     Write-Host "9) Reset IP-Filtering"
     Write-Host "N) Zeitserver (NTP) setzen"
+    Write-Host "G) Gerätename ändern"
     Write-Host "------------------------------------"
     Write-Host "Q) Beenden"
     Write-Host ""
@@ -270,10 +381,12 @@ while ($running) {
         "3" { Show-Settings }
         "4" { Invoke-Debugger }
         "5" { Send-Commands "Reset Wifi" @("WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey") }
-        "6" { Send-Commands "Reset DHCP" @("IP 0.0.0.0") }
+        "6" { if ($script:BoxTyp -eq "Professional") { Send-Commands "Reset DHCP" @("IP 0.0.0.0", "ethip,0.0.0.0") } else { Send-Commands "Reset DHCP" @("IP 0.0.0.0") } }
         "7" { Send-Commands "Reset Admin" @("password") }
         "8" { Send-Commands "Start AP-Mode" @("WifiAPMode") }
         "9" { Send-Commands "Reset IP-Filtering" @("ClearAccessBlock") }
+        "g" { Set-Name }
+        "G" { Set-Name }
         "n" { Set-Ntp }
         "N" { Set-Ntp }
         "q" { $running = $false }

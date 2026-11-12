@@ -7,7 +7,7 @@ BAUD=115200
 show_header() {
     clear
     echo -e "\e[36m====================================\e[0m"
-    echo -e "\e[36m    Openandhome - Multi-Tool v2.4 (Linux)\e[0m"
+    echo -e "\e[36m    Openandhome - Toolbox v3.0 (Linux)\e[0m"
     echo -e "\e[36m====================================\e[0m\n"
 }
 
@@ -51,6 +51,47 @@ send_commands() {
     read -p "Zurück zum Menü mit Enter..."
 }
 
+# Sendet Befehle und gibt die Antwort des Sensors aus (ohne Farbcodes).
+# Aufruf: send_read <Sekunden> <Befehl> [Befehl ...]
+send_read() {
+    local sekunden=$1
+    shift
+    setup_port
+    {
+        timeout "${sekunden}s" cat "$PORT" &
+        sleep 0.3
+        printf '\n' > "$PORT"
+        sleep 0.3
+        for cmd in "$@"; do
+            echo "$cmd" > "$PORT"
+            sleep 0.3
+        done
+        wait
+    } | tr -d '\r' | sed 's/\x1b\[[0-9;]*m//g'
+}
+
+# Standalone (ESP8266, WLAN) oder Professional (ESP32, Netzwerkkabel/PoE)
+detect_box() {
+    local antwort
+    antwort=$(send_read 2 'logentry,%sysbuild_filename%')
+    case "$antwort" in
+        *ESP32*) BOX="Professional" ;;
+        *ESP8266*) BOX="Standalone" ;;
+        *) BOX="unbekannt" ;;
+    esac
+}
+
+box_ip() {
+    send_read 2 "Settings" | sed -n 's/.*IP Address *: *\([0-9.]*\).*/\1/p' | grep -v '^0\.0\.0\.0$' | head -n 1
+}
+
+# Sichtbare WLANs: "dBm<TAB>Name", staerkstes je Name, sortiert nach Signal
+wlan_liste() {
+    send_read 8 "WifiScan" \
+        | sed -n 's/.*WIFI : [0-9]*: \(.*\) [0-9A-Fa-f:]\{17\} Ch:[0-9]* (\(-\{0,1\}[0-9]*\)dBm).*/\2\t\1/p' \
+        | grep -v $'\t#Hidden#$' | sort -t$'\t' -k1,1nr | awk -F'\t' '!gesehen[$2]++'
+}
+
 show_settings() {
     echo -e "\n\e[36m--- Aktuelle Einstellungen ---\e[0m"
     setup_port
@@ -79,6 +120,12 @@ invoke_debugger() {
 
 set_wifi() {
     echo -e "\n\e[36m--- WLAN-Zugangsdaten setzen ---\e[0m"
+    if [ "$BOX" = "Professional" ]; then
+        echo -e "\e[33mHinweis: Die Sensorbox Professional arbeitet mit dem Netzwerkkabel (PoE). WLAN brauchen Sie nur,\e[0m"
+        echo -e "\e[33mwenn Sie die Box ohne Netzwerkkabel betreiben wollen.\e[0m"
+        read -p "Trotzdem WLAN setzen? (j/n): " trotzdem
+        [[ "$trotzdem" =~ ^[jJyY]$ ]] || return
+    fi
 
     read -p "WLAN-SSID: " wifi_ssid
     if [ -z "$wifi_ssid" ]; then
@@ -139,14 +186,56 @@ set_wifi() {
         )
     fi
 
-    send_commands "WLAN-Daten setzen" "${cmds[@]}"
+    while true; do
+        echo -e "\n\e[33mSende WLAN-Daten und starte den Sensor neu ...\e[0m"
+        send_read 1 "${cmds[@]}" "Save" "Reboot" > /dev/null
+        echo -n "Warte auf die Verbindung (bis zu 60 Sekunden) "
+        local ip=""
+        for i in $(seq 12); do
+            sleep 3
+            echo -n "."
+            ip=$(box_ip)
+            [ -n "$ip" ] && break
+        done
+        if [ -n "$ip" ]; then
+            echo -e "\n\e[32mVerbunden. Ihr Sensor ist erreichbar unter: http://$ip/openandhome.esp\e[0m"
+            read -p "Zurück zum Menü mit Enter..."
+            return
+        fi
+        echo -e "\n\e[31mDer Sensor kann sich nicht mit '$wifi_ssid' verbinden.\e[0m Sichtbare WLANs:"
+        local -a netze=()
+        local nr=0
+        while IFS=$'\t' read -r dbm name; do
+            nr=$((nr + 1))
+            netze+=("$name")
+            printf "  %2d) %-32s %s dBm\n" "$nr" "$name" "$dbm"
+        done < <(wlan_liste)
+        if printf '%s\n' "${netze[@]}" | grep -qxF "$wifi_ssid"; then
+            echo -e "  \e[33m('$wifi_ssid' ist sichtbar - vermutlich ist das Passwort falsch)\e[0m"
+        fi
+        read -p "Nummer oder WLAN-Name (Enter = gleiches WLAN, q = Abbruch): " wahl
+        [ "$wahl" = "q" ] && return
+        if [[ "$wahl" =~ ^[0-9]+$ ]] && [ "$wahl" -ge 1 ] && [ "$wahl" -le "${#netze[@]}" ]; then
+            wifi_ssid="${netze[$((wahl - 1))]}"
+        elif [ -n "$wahl" ]; then
+            wifi_ssid="$wahl"
+        fi
+        read -s -p "Passwort für '$wifi_ssid' (Eingabe unsichtbar): " wifi_key
+        echo ""
+        cmds=("WifiSSID,\"$wifi_ssid\"" "WifiKey,\"$wifi_key\"")
+    done
+}
 
-    # WifiConnect greift laut Praxisberichten nicht immer zuverlässig,
-    # daher optionaler Reboot als sichere Variante.
-    read -p "Gerät jetzt neu verbinden/rebooten? (j/n): " reboot_choice
-    if [[ "$reboot_choice" =~ ^[jJyY]$ ]]; then
-        do_reboot
+set_name() {
+    echo -e "\n\e[36m--- Gerätename ändern ---\e[0m"
+    echo "Bei mehreren Sensoren braucht jeder einen eigenen Namen (z. B. Keller, Heizung)."
+    read -p "Neuer Name (Buchstaben, Ziffern, - und _; leer = Abbruch): " name
+    if ! [[ "$name" =~ ^[A-Za-z0-9_-]{1,24}$ ]]; then
+        echo "Abgebrochen."
+        read -p "Zurück zum Menü mit Enter..."
+        return
     fi
+    send_commands "Gerätename setzen" "Name,$name"
 }
 
 set_ntp() {
@@ -172,9 +261,20 @@ do_reboot() {
 
 # --- HAUPTPROGRAMM ---
 find_port
+echo "Erkenne Sensorbox ..."
+detect_box
+if [ "$BOX" = "Professional" ]; then
+    echo -e "\n\e[33mSensorbox Professional erkannt.\e[0m"
+    echo -e "\e[31mACHTUNG: USB und Netzwerkkabel (PoE) nie gleichzeitig anschließen!\e[0m"
+    echo -e "\e[31mZiehen Sie das Netzwerkkabel ab, bevor Sie fortfahren.\e[0m"
+    read -p "Weiter mit Enter"
+fi
 while true; do
     show_header
-    echo -e "\e[32mVerbunden mit: $PORT\e[0m"
+    echo -e "\e[32mVerbunden mit: $PORT  -  Sensorbox $BOX\e[0m"
+    if [ "$BOX" = "Professional" ]; then
+        echo -e "\e[31mACHTUNG: Netzwerkkabel (PoE) muss abgezogen sein, solange USB steckt!\e[0m"
+    fi
     echo "------------------------------------"
     echo -e "1) \e[1;33mWLAN-Zugangsdaten setzen (SSID/Key)\e[0m"
     echo "2) Neustart (Reboot)"
@@ -186,22 +286,24 @@ while true; do
     echo "8) Start AP-Mode"
     echo "9) Reset IP-Filtering"
     echo "n) Zeitserver (NTP) setzen"
+    echo "g) Gerätename ändern"
     echo "------------------------------------"
     echo "q) Beenden"
     echo ""
 
-    read -p "Ihre Wahl: " choice
+    read -p "Ihre Wahl: " choice || exit 0
     case $choice in
         1) set_wifi ;;
         2) do_reboot ;;
         3) show_settings ;;
         4) invoke_debugger ;;
         5) send_commands "Reset Wifi" "WifiSSID ssid" "WifiKey wpakey" "WifiSSID2 ssid" "WifiKey2 wpakey" ;;
-        6) send_commands "Reset DHCP" "IP 0.0.0.0" ;;
+        6) if [ "$BOX" = "Professional" ]; then send_commands "Reset DHCP" "IP 0.0.0.0" "ethip,0.0.0.0"; else send_commands "Reset DHCP" "IP 0.0.0.0"; fi ;;
         7) send_commands "Reset Admin" "password" ;;
         8) send_commands "Start AP-Mode" "WifiAPMode" ;;
         9) send_commands "Reset IP-Filtering" "ClearAccessBlock" ;;
         n|N) set_ntp ;;
+        g|G) set_name ;;
         q|Q) exit 0 ;;
         *) echo -e "\e[31mUngültige Wahl\e[0m"; sleep 1 ;;
     esac
