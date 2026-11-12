@@ -86,6 +86,12 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 
 ### Professional (ESP32, 4 MB, **mit Ethernet/ETH**)
 
+- **Board: Olimex ESP32-POE — USB und PoE nie gleichzeitig** (keine galvanische Trennung).
+- Ethernet per USB: `NetworkImportConfig,3,{"nwpluginID":3,…,"MDC":23,"MDIO":18,"pwr":12,"clock":3}`.
+- Basis: [`configs/espeasy/professional/basis/config.dat`](configs/espeasy/professional/basis/config.dat)
+  (alle Sensoren, MQTT + Zabbix aus). Zabbix ist Sonderanfertigung (optional).
+- 1-Wire an GPIO 4 und 2, Wassersensor GPIO 34, I2C 13/16.
+
 - Image: `ESP_Easy_mega_*_collection_A_ESP32_4M316k.bin` (+ `.factory.bin`)
 - Ethernet ist enthalten (`FEATURE_ETHERNET=1` über `esp32_common_LittleFS_ETH`);
   der alte Eigenbuild hieß `custom_ESP32_4M316k_ETH`. ETH-Settings stehen in

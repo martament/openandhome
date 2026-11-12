@@ -45,3 +45,14 @@ Die Python-Helfer lassen sich auch einzeln aufrufen:
 [`espeasy_download.py`](../bin/espeasy_download.py).
 
 Kunden-ZIP bauen: `python3 tools/oh-flasher/paket_bauen.py` → `tools/oh-flasher/dist/oh-flasher.zip`.
+
+
+## Professional (Olimex ESP32-POE)
+
+- **USB und PoE nie gleichzeitig anschließen** — das Board ist nicht galvanisch
+  getrennt (Olimex-Hinweis). Ausnahme: ESP32-POE-ISO oder USB-Isolator.
+- Menü 1 erkennt den ESP32 automatisch: leerer Flash → keine Sicherung;
+  Ethernet wird per USB eingerichtet, die Konfiguration läuft über WLAN am USB.
+- Zabbix nur auf Nachfrage (Sonderanfertigung) bzw. `--zabbix <server>`.
+- 24h-Test am PoE: erst USB ab, dann PoE an. Menü 2/3 funktionieren auch ohne
+  USB (IP eingeben); Testende löscht die Werkstatt-WLAN-Daten (Vorgabe).

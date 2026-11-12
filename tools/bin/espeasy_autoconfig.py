@@ -44,9 +44,22 @@ OLED_ZEILEN = 12
 
 
 # --- USB ---
+def oeffne(port, timeout=0.2):
+    """Oeffnet den Port mit DTR und RTS aktiv (pyserial-Standard).
+
+    An der Olimex ESP32-POE getestet: DTR/RTS aus loest ueber die
+    Auto-Reset-Schaltung einen Reset aus, beide an nicht."""
+    s = serial.Serial()
+    s.port, s.baudrate, s.timeout = port, 115200, timeout
+    s.dtr = True
+    s.rts = True
+    s.open()
+    return s
+
+
 def seriell(port, kommando, wartezeit=3.0):
     """Sendet ein Kommando und liefert die Antwortzeilen (ohne Echo und Log-Praefix)."""
-    with serial.Serial(port, 115200, timeout=0.2) as s:
+    with oeffne(port) as s:
         s.write(b"\n")          # Datenmuell im Eingabepuffer verwerfen
         time.sleep(0.3)
         s.reset_input_buffer()
@@ -55,7 +68,7 @@ def seriell(port, kommando, wartezeit=3.0):
         while time.time() < ende:
             daten += s.read(4096)
     zeilen = []
-    for z in daten.decode("latin-1").replace("\r", "").split("\n"):
+    for z in re.sub(r"\x1b\[[0-9;]*m", "", daten.decode("latin-1")).replace("\r", "").split("\n"):
         z = re.sub(r"^[\d:.]+\s*:\s*>?\s*", "", z).strip()   # "24.920 : >  ..." -> "..."
         if z and kommando.lower() not in z.lower():
             zeilen.append(z)
@@ -122,9 +135,12 @@ def dallas_option(html, adresse):
     return None
 
 
-def autokonfiguration(box, port, an=(), aus=(), anwenden=False):
+def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None):
     """Scannt, zeigt die Aenderungen und schreibt sie bei anwenden=True.
 
+    ow_gpios: 1-Wire-Busse, die gescannt werden (Professional: 4 und 2); Standard
+    ist der GPIO des ersten DS18B20-Tasks. Fuehler1..N werden in Scan-Reihenfolge
+    vergeben und bekommen GPIO und Adresse ihres Busses.
     Liefert die Namen der nicht erkennbaren Tasks (HC-SR04, Wassersensor ...)."""
     tasks = json.loads(box.get("/json"))["Sensors"]
     print(f"Box {box.basis}: {len(tasks)} Tasks")
@@ -138,9 +154,10 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False):
     ds_tasks = sorted(nr for nr, p in plugin.items() if p == PLUGIN_DS18B20)
     fuehler = []
     if ds_tasks:
-        gpio = formulare[ds_tasks[0]][1].get("taskdevicepin1", "-1")
-        fuehler = ow_scan(port, gpio)
-        print(f"1-Wire an GPIO {gpio}: {len(fuehler)} Fuehler {fuehler}")
+        for gpio in ow_gpios or [formulare[ds_tasks[0]][1].get("taskdevicepin1", "-1")]:
+            gefunden = ow_scan(port, gpio)
+            print(f"1-Wire an GPIO {gpio}: {len(gefunden)} Fuehler {gefunden}")
+            fuehler += [(str(gpio), a) for a in gefunden]
         if len(fuehler) > len(ds_tasks):
             print(f"WARNUNG: {len(fuehler)} Fuehler, aber nur {len(ds_tasks)} DS18B20-Tasks in der config.dat")
         # Nach dem Scan neu lesen, damit das Adressfeld die gefundenen Fuehler anbietet
@@ -159,9 +176,20 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False):
             k = ds_tasks.index(nr)
             aktiv = k < len(fuehler)
             if aktiv:
-                wert = dallas_option(html, fuehler[k])
+                gpio, adresse = fuehler[k]
+                if f.get("taskdevicepin1") != gpio:
+                    f["taskdevicepin1"] = gpio
+                    if not anwenden:
+                        print(f"  '{name}': GPIO -> {gpio}, Adresse {adresse} (wird beim Anwenden gewaehlt)")
+                        neu[nr] = dict(f, TDE="on")
+                        continue
+                    # Adressliste haengt am gespeicherten GPIO: erst Pin speichern, dann neu lesen
+                    box.post(f"/devices?index={nr}&page=1", dict(f, edit="1"))
+                    html, felder_neu = lies_task(box, nr)
+                    f = dict(felder_neu)
+                wert = dallas_option(html, adresse)
                 if wert is None:
-                    print(f"WARNUNG: Adresse {fuehler[k]} nicht im Auswahlfeld von '{name}' - bitte in der Weboberflaeche waehlen")
+                    print(f"WARNUNG: Adresse {adresse} nicht im Auswahlfeld von '{name}' - bitte in der Weboberflaeche waehlen")
                 else:
                     f["dallas_addr0"] = wert
         elif p in (PLUGIN_SYSINFO, *PLUGINS_OLED) or p is None:

@@ -789,3 +789,39 @@ Autoerkennung mit zwei 1-Wire-Bussen, Dashboard, Syslog). Prüfen, ob ein
 `config.dat`-Upload die per KVS gespeicherte Ethernet-Konfiguration lässt.
 [`espeasy_fsimage.py`](../tools/bin/espeasy_fsimage.py) (mklittlefs 4.1.0) ist
 vorbereitet, falls die Basis doch schon in Phase A als Dateisystem-Image mit muss.
+
+### 14.1 Umsetzung Professional (2026-11-12)
+
+**Werkstatt-Ablauf (Menü 1) — komplett an der Testbox durchlaufen:**
+1. USB (kein PoE!): Chip erkennen; **leerer Flash** (neues Board) → keine
+   Sicherung; erase, `collection_A_ESP32_4M316k.factory.bin` @0x0.
+2. Ethernet per USB: `NetworkImportConfig,3,{…Olimex ESP32-POE…}` + `Save`.
+3. **Konfiguration über WLAN am USB** (wie Standalone, kein Umstecken):
+   WLAN per USB, Basis-`config.dat` per HTTP, Testname, Zugriffsbereich.
+   WLAN (Prio 100) und LAN (Prio 200) laufen parallel, LAN gewinnt.
+4. Autoerkennung mit **zwei 1-Wire-Bussen (GPIO 4, 2)**: Fühler werden in
+   Scan-Reihenfolge Fuehler1…9 zugeordnet, GPIO und Adresse je Task gesetzt.
+5. Zabbix-Abfrage (Sonderanfertigung, Standard leer = aus), Dashboard,
+   Werteprüfung, Syslog an.
+
+**Basis** [`configs/espeasy/professional/basis/config.dat`](../configs/espeasy/professional/basis/config.dat)
+(mit mega-20260720 neu erzeugt): Task 1 Wassersensor (Switch, GPIO 34),
+2–10 Fuehler1–9 (DS18B20), 11 Kombifuehler (HTU21D), 12 OLED (P036),
+13 System; Controller 1 HA-MQTT (`openandhome-server1`, aus), Controller 2
+Zabbix (aus); I2C 13/16, NTP `de.pool.ntp.org`, Syslog aus, Name `Sensorbox1`.
+
+**Befunde:**
+- ESP32 liefert unter `/download` ein **TAR** (config.dat, security.dat,
+  notification.dat, rules1.txt). WLAN-Daten stehen in `security.dat` —
+  Basis nur aus `config.dat`.
+- **Serieller Port:** Öffnen mit DTR/RTS **aktiv** (pyserial-Standard) löst
+  keinen Reset aus, DTR/RTS aus schon. ESP32-Konsole färbt mit ANSI-Codes →
+  vor dem Parsen entfernen.
+- Testende: WLAN-Reset bei Professional als Vorgabe „ja“; ohne USB (PoE)
+  gehen Name/Unit/WLAN-Reset/TaskRun per HTTP `/control?cmd=`.
+- **HTU21D der Testbox antwortet nicht** (kein I2C-ACK bei 400 und 100 kHz,
+  Messung NaN), Display an 0x3C schon → Hardware prüfen (Stecker/Kabel).
+- Testbox: 3 Fühler (1 an GPIO 4, 2 an GPIO 2), Display mit 3 Zeilen.
+
+**Offen:** HTU21D-Hardware, Box-Suche per DNS/MAC ohne USB (bisher
+IP-Eingabe), 24h-Test am PoE, Flasher bleibt Standalone-only.

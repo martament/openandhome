@@ -35,7 +35,7 @@ SITE_PACKAGES = os.path.join(HIER, "pythonportable", "Lib", "site-packages")
 sys.path[:0] = [os.path.join(HIER, "lib"), os.path.join(REPO, "tools", "bin")]
 import serial  # noqa: E402
 import serial.tools.list_ports  # noqa: E402
-from espeasy_autoconfig import autokonfiguration, i2c_hinweise, i2c_scan, ow_scan  # noqa: E402
+from espeasy_autoconfig import autokonfiguration, oeffne, i2c_hinweise, i2c_scan, ow_scan  # noqa: E402
 from espeasy_testbox import dashboard_hochladen, http_bereit, lade_hoch, sende, setze_zugriff, warte_ip  # noqa: E402
 
 
@@ -218,7 +218,7 @@ def debug(port):
     for zeile in sende(port, "ResetFlashWriteCounter", "Settings", wartezeit=2):
         print(zeile)
     try:
-        with serial.Serial(port, 115200, timeout=1) as s:
+        with oeffne(port, timeout=1) as s:
             while True:
                 zeile = s.readline().decode("latin-1").rstrip()
                 if zeile:

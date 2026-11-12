@@ -30,13 +30,14 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 
 import serial
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from espeasy_autoconfig import PLUGIN_DS18B20, PLUGIN_SYSINFO, PLUGINS_OLED, autokonfiguration  # noqa: E402
+from espeasy_autoconfig import PLUGIN_DS18B20, PLUGIN_SYSINFO, PLUGINS_OLED, autokonfiguration, oeffne  # noqa: E402
 from espeasy_configcheck import lese_settings  # noqa: E402
 from espeasy_syslog import Box, FormParser, setze_syslog  # noqa: E402
 
@@ -70,7 +71,15 @@ KLASSEN = {
         "image": "configs/espeasy/professional/ESP_Easy_mega_*_collection_A_ESP32_4M316k.factory.bin",
         "flash": ["0x0"],
         "basis": "configs/espeasy/professional/basis/config.dat",
-        "wlan": False,     # Professional laeuft ueber Ethernet
+        # Werkstatt laeuft per WLAN am USB (USB und PoE nie gleichzeitig, Olimex ESP32-POE
+        # ist nicht galvanisch getrennt); beim Kunden Ethernet
+        "wlan": True,
+        "wlan_reset": True,
+        # Olimex ESP32-POE: LAN8720 (0), MDC 23, MDIO 18, Power 12, 50 MHz APLL invertiert GPIO17 (3)
+        "ethernet": '{"nwpluginID":3,"enabled":"true","route_prio":200,"Index":0,"phytype":0,'
+                    '"phyaddr":0,"MDC":23,"MDIO":18,"pwr":12,"clock":3}',
+        "ow_gpios": [4, 2],
+        "zabbix_controller": 2,
     },
 }
 
@@ -117,7 +126,7 @@ class Protokoll:
 # --- USB ---
 def sende(port, *kommandos, wartezeit=1.5):
     """Sendet Kommandos (Leerzeile vorweg gegen Datenmuell) und liefert die Antwortzeilen."""
-    with serial.Serial(port, 115200, timeout=0.2) as s:
+    with oeffne(port) as s:
         s.write(b"\n")
         time.sleep(0.3)
         s.reset_input_buffer()
@@ -128,7 +137,23 @@ def sende(port, *kommandos, wartezeit=1.5):
         while time.time() < ende:
             daten += s.read(4096)
     return [re.sub(r"^[\d:.]+\s*:\s*>?\s*", "", z).strip()
-            for z in daten.decode("latin-1").replace("\r", "").split("\n") if z.strip()]
+            for z in re.sub(r"\x1b\[[0-9;]*m", "", daten.decode("latin-1")).replace("\r", "").split("\n") if z.strip()]
+
+
+def usb_da(port):
+    return bool(port) and os.path.exists(port)
+
+
+def kommando(port, box, *kommandos):
+    """Sendet Kommandos per USB, sonst per HTTP (/control?cmd=), z. B. Professional am PoE."""
+    if usb_da(port):
+        return sende(port, *kommandos)
+    for k in kommandos:
+        try:
+            box.get("/control?cmd=" + urllib.parse.quote(k))
+        except OSError:
+            pass     # Reboot/WLAN-Wechsel trennt die Verbindung
+    return []
 
 
 def usb_ip(port):
@@ -244,6 +269,36 @@ def waehle_variante(port, klasse, image_aktuell, erzwingen=False):
     return os.path.join(ROOT, variante["basis"])
 
 
+def flash_leer(port):
+    """True, wenn Bootloader und App-Bereich nur 0xFF enthalten (neues Board)."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        for adresse in ("0x1000", "0x10000"):
+            pfad = os.path.join(tmp, "probe.bin")
+            esptool(port, "read_flash", adresse, "0x40", pfad)
+            with open(pfad, "rb") as f:
+                if f.read() != b"\xff" * 0x40:
+                    return False
+    return True
+
+
+def setze_zabbix(box, nr, server):
+    """Zabbix-Controller (Sonderanfertigung) ein- oder ausschalten; Standard: aus."""
+    p = f"/controllers?index={nr}"
+    f = FormParser()
+    f.feed(box.get(p))
+    felder = dict(f.felder, edit="1")
+    if felder.get("protocol") != "17":
+        print(f"WARNUNG: Controller {nr} ist kein Zabbix-Controller - nichts geaendert.")
+        return
+    if server:
+        felder.update(controllerenabled="on", controllerhostname=server)
+    else:
+        felder.pop("controllerenabled", None)
+    box.post(p, felder)
+    print(f"Zabbix-Controller: {'an, Server ' + server if server else 'aus'}")
+
+
 # --- esptool ---
 def esptool(port, *argumente):
     umgebung = dict(os.environ, PYTHONPATH=ESPTOOL_PFAD)
@@ -325,11 +380,10 @@ def dashboard_hochladen(box, ablage=None, ressourcen=RESSOURCEN, alle=False):
 # --- Pruefung ---
 def pruefe(box, port=None):
     """Prueft Messwerte und Dashboard. Liefert (ok, Berichtszeilen)."""
-    if port:
-        # Aktive Tasks sofort messen lassen statt auf das Intervall zu warten
-        nummern = [t["TaskNumber"] for t in json.loads(box.get("/json"))["Sensors"] if t["TaskEnabled"] == "true"]
-        sende(port, *[f"TaskRun,{n}" for n in nummern], wartezeit=1)
-        time.sleep(4)
+    # Aktive Tasks sofort messen lassen statt auf das Intervall zu warten
+    nummern = [t["TaskNumber"] for t in json.loads(box.get("/json"))["Sensors"] if t["TaskEnabled"] == "true"]
+    kommando(port, box, *[f"TaskRun,{n}" for n in nummern])
+    time.sleep(4)
     bericht, ok = [], True
     werte = aktive_messwerte(box)
     if not werte:
@@ -357,8 +411,8 @@ def pruefe(box, port=None):
             if f"{task}#{wert}" in seite:
                 continue
             # Zahl mit Punkt oder Komma, nicht Teil einer laengeren Zahl
-            muster = str(zahl).replace(".", "[.,]")
-            if not re.search(rf"(?<![\d.,]){muster}(?![\d])", seite):
+            zahlen = {float(z.replace(",", ".")) for z in re.findall(r"-?\d+(?:[.,]\d+)?", seite)}
+            if float(zahl) not in zahlen:
                 bericht.append(f"WARNUNG Dashboard: Wert {task}#{wert}={zahl} nicht gefunden")
         for datei in ("openandhome.css", "temperature.png"):
             box.get("/" + datei)
@@ -381,14 +435,17 @@ def aufsetzen(args):
     alte_ip = usb_ip(port)
 
     if not args.ohne_flash:
-        if ja("2/10 Vorher kompletten Flash und config.dat sichern?"):
+        if flash_leer(port):
+            print("2/10 Flash ist leer (neues Board) - keine Sicherung noetig.")
+        elif ja("2/10 Vorher kompletten Flash und config.dat sichern?"):
             ziel = os.path.join(BACKUPS, f"{datetime.datetime.now():%Y%m%d-%H%M}_{mac.replace(':', '')}")
             os.makedirs(ziel, exist_ok=True)
             print("Lese Flash (ca. 2 Minuten) ...")
             esptool(port, "read_flash", "0", "0x400000", os.path.join(ziel, "flash_full_4MB.bin"))
             if alte_ip:
                 try:
-                    with open(os.path.join(ziel, "config.dat"), "wb") as f:
+                    # ESP32 liefert unter /download ein TAR mit allen Dateien
+                    with open(os.path.join(ziel, "config_download.dat_oder_tar"), "wb") as f:
                         f.write(urllib.request.urlopen(f"http://{alte_ip}/download", timeout=20).read())
                 except OSError as e:
                     print(f"config.dat nicht per HTTP ladbar ({e}) - Flash-Sicherung reicht zur Wiederherstellung.")
@@ -406,6 +463,9 @@ def aufsetzen(args):
         time.sleep(20)
 
     schritt("4/10 Netzwerk")
+    if "ethernet" in klasse:
+        print("Ethernet (Olimex ESP32-POE) per USB einrichten ...")
+        sende(port, f"NetworkImportConfig,3,{klasse['ethernet']}", "Save")
     if ja("WLAN-Zugangsdaten setzen?", klasse["wlan"]):
         if args.wlan_datei:
             with open(args.wlan_datei, encoding="utf-8") as f:
@@ -441,10 +501,14 @@ def aufsetzen(args):
     setze_zugriff(box)
 
     schritt("7/10 Sensoren erkennen")
-    nicht_erkennbar = autokonfiguration(box, port)
+    ow = klasse.get("ow_gpios")
+    nicht_erkennbar = autokonfiguration(box, port, ow_gpios=ow)
     an = [n for n in nicht_erkennbar if ja(f"Ist '{n}' verbaut?", False)]
     aus = [n for n in nicht_erkennbar if n not in an]
-    autokonfiguration(box, port, an, aus, anwenden=True)
+    autokonfiguration(box, port, an, aus, anwenden=True, ow_gpios=ow)
+    if "zabbix_controller" in klasse:
+        server = args.zabbix or (frage("Zabbix-Server (Sonderanfertigung, leer = kein Zabbix)") or None)
+        setze_zabbix(box, klasse["zabbix_controller"], server)
 
     schritt("8/10 Dashboard")
     dashboard_hochladen(box)
@@ -472,7 +536,9 @@ def aufsetzen(args):
 
 def beenden(args):
     port = args.port
-    ip = args.host or usb_ip(port)
+    if not usb_da(port):
+        port = None
+    ip = args.host or (usb_ip(port) if port else None) or frage("IP der Box (z. B. aus dem Router)")
     if not ip:
         sys.exit("FEHLER: IP nicht per USB lesbar - --host angeben.")
     box = http_bereit(port, ip) if port else Box(ip, None)
@@ -495,13 +561,17 @@ def beenden(args):
     setze_syslog(box, "aus")
 
     schritt(f"Auslieferungsname {AUSLIEFERUNG_NAME}, Web-Zugriff")
-    sende(port, f"Name,{AUSLIEFERUNG_NAME}", f"Unit,{AUSLIEFERUNG_UNIT}", "Save")
+    kommando(port, box, f"Name,{AUSLIEFERUNG_NAME}", f"Unit,{AUSLIEFERUNG_UNIT}", "Save")
     setze_zugriff(box)
 
-    wlan =args.wlan_reset or (not args.ohne_wlan_reset and ja("WLAN-Daten loeschen wie esp_resetap (nur WLAN-Boxen)?", False))
+    chip = "ESP32" if "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", "") else "ESP8266"
+    vorgabe = KLASSEN[chip].get("wlan_reset", False)
+    frage_text = ("WLAN-Daten der Werkstatt loeschen (Professional laeuft beim Kunden ueber LAN)?" if vorgabe
+                  else "WLAN-Daten loeschen wie esp_resetap (nur WLAN-Boxen)?")
+    wlan = args.wlan_reset or (not args.ohne_wlan_reset and ja(frage_text, vorgabe))
     if wlan:
         schritt("WLAN zuruecksetzen")
-        sende(port, "WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey", "Save", "Reboot")
+        kommando(port, box, "WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey", "Save", "Reboot")
         print("Gesendet - die Box startet neu und oeffnet den AP.")
 
     ergebnis = "NICHT BESTANDEN" if not ok else "VORZEITIG BEENDET" if vorzeitig else "BESTANDEN"
@@ -601,6 +671,7 @@ def main():
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
     parser.add_argument("--ohne-flash", action="store_true", help="aufsetzen ohne Sicherung/Flashen")
+    parser.add_argument("--zabbix", metavar="SERVER", help="aufsetzen (Professional): Zabbix-Controller mit diesem Server einschalten")
     parser.add_argument("--am2320", action="store_true",
                         help="aufsetzen: AM2320-Variante erzwingen; kundenpaket: AM2320-Teil des Manifests erzeugen")
     parser.add_argument("--wlan-datei", help="Datei mit SSID (Zeile 1) und Key (Zeile 2)")
