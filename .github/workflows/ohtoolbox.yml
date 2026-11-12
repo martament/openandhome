@@ -1,6 +1,6 @@
 # Baut ohtoolbox.zip (Toolbox + OH-Flasher) und veroeffentlicht bei Aenderungen auf master
 # ein neues Release ohtoolbox-JJJJ.MM.TT-N mit automatisch erzeugten Release-Notes.
-# Download immer: https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip
+# Download immer: https://github.com/martament/openandhome/releases/latest
 # devel: nur pruefen, ob tools/ohtoolbox/manifest.json zu den Dateien passt.
 name: ohtoolbox
 

@@ -165,9 +165,9 @@ def toolbox(t, professional):
     """Abschnitt zur openandhome-Toolbox (Standardwerkzeug, USB)."""
     t.append(ueberschrift("openandhome-Toolbox"))
     t.append(absatz("Mit der Toolbox richten Sie die Sensorbox über das USB-Kabel ein und beheben die häufigsten "
-                    "Probleme. Download: ", fett("https://github.com/martament/openandhome/releases/latest/download/"
-                                                  "ohtoolbox.zip"),
-                    " – entpacken und „start_toolbox.bat“ (Windows) bzw. „toolbox.sh“ (Linux) starten."))
+                    "Probleme. Download: ", fett("https://github.com/martament/openandhome/releases/latest"),
+                    " – dort „ohtoolbox.zip“ herunterladen, entpacken und „start_toolbox.bat“ (Windows) bzw. "
+                    "„toolbox.sh“ (Linux) starten."))
     if professional:
         t.append(absatz(fett("Achtung: "), "Ziehen Sie vorher das PoE-Netzwerkkabel ab – USB und PoE nie gleichzeitig. "
                         "Für die Funktionen „Sensoren neu erkennen“ und „Grundkonfiguration“ verbindet sich die "
@@ -287,7 +287,7 @@ def inhalt_professional():
     t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://<IP-Adresse>/advanced"),
                     " im Feld „NTP Hostname“ ein und speichern mit „Submit“."))
     t.append(absatz("Alternativ setzen Sie den Zeitserver mit der openandhome-Toolbox (Menüpunkt „Zeitserver (NTP) "
-                    "setzen“; Download unter https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip). "
+                    "setzen“; Download unter https://github.com/martament/openandhome/releases/latest). "
                     "Die Toolbox verbindet sich über den USB-Anschluss im Inneren der Sensorbox."))
     t.append(absatz(fett("Achtung: "), "Ziehen Sie vorher unbedingt das PoE-Netzwerkkabel ab. USB und PoE dürfen "
                     "nie gleichzeitig angeschlossen sein – der Messumformer ist nicht galvanisch getrennt, "
@@ -414,7 +414,7 @@ def inhalt_standalone():
     t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://sensorbox1/advanced"),
                     " im Feld „NTP Hostname“ ein und speichern mit „Submit“ – oder mit der openandhome-Toolbox "
                     "über das USB-Kabel (Menüpunkt „Zeitserver (NTP) setzen“; Download unter "
-                    "https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip)."))
+                    "https://github.com/martament/openandhome/releases/latest)."))
     abrufen(t, mit_zabbix=False)
 
     toolbox(t, professional=False)

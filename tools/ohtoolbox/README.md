@@ -14,10 +14,11 @@ FAQ: https://www.openandhome.de/index.php/2019/01/11/faq/
 
 ## Download
 
-**https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip**
+**https://github.com/martament/openandhome/releases/latest** – dort unter „Assets“
+`ohtoolbox.zip` herunterladen.
 
-Das Paket wird bei jeder Änderung automatisch neu gebaut; die Änderungen stehen in den
-Release-Notes unter https://github.com/martament/openandhome/releases. Firmware und
+Das Paket wird bei jeder Änderung automatisch neu gebaut; was sich geändert hat, steht in
+den Release-Notes auf derselben Seite. Firmware und
 Grundeinstellungen lädt das Programm beim Start aus dem Internet (immer der freigegebene
 Stand); ohne Internet nimmt es die mitgelieferten Dateien.
 

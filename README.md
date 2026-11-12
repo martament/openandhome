@@ -10,7 +10,7 @@ mit den offiziellen Release-Images, ohne Eigenbuild.
 
 - **Toolbox und OH-Flasher** (Windows/Linux): WLAN, Name, Zeitserver, Sensoren erkennen,
   Grundkonfiguration, Firmware-Update und Neu-Aufspielen:
-  **https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip** –
+  **https://github.com/martament/openandhome/releases/latest** (dort `ohtoolbox.zip` herunterladen) –
   Beschreibung in [`tools/ohtoolbox/README.md`](tools/ohtoolbox/README.md).
 - **Bedienungsanleitungen:** [`docs/`](docs/)
 
