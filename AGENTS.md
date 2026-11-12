@@ -21,7 +21,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 
 1. **Keine eigenen Firmware-Builds mehr.** ESPEasy-Images werden als fertige
    Release-Binaries von GitHub geladen ([`tools/bin/espeasy_download.py`](tools/bin/espeasy_download.py)).
-   Der alte Eigenbuild über PlatformIO ([`build/ESPEasy/build_release.sh`](build/ESPEasy/build_release.sh))
+   Der alte Eigenbuild über PlatformIO (entfernt, siehe Git-Historie)
    und [`build/ESPEasy/myfiles/Custom.hESPEasy`](build/ESPEasy/myfiles/Custom.hESPEasy) ist **nicht mehr der
    aktuelle Weg** — die Custom.h dient nur noch als Analysequelle dafür, welche
    Optionen auf ein Fertig-Image angewendet werden müssen.
