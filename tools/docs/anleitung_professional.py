@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Baut die Anleitung Professional Typ 2026.1 auf Basis der Word-Vorlage 2023.1.
 
+Nur fuer Professional (Olimex ESP32-POE, nicht ISO) - Standalone ist eine andere Box
+mit eigener Anleitung.
+
 Vorlage (Formatvorlagen, Kopf-/Fusszeile, Logo, Nummerierung) bleibt erhalten,
 nur der Inhalt von word/document.xml wird ersetzt.
   python3 tools/docs/anleitung_professional.py \
@@ -164,7 +167,7 @@ def inhalt():
     t.append(ueberschrift("Technische Daten"))
     t.append(tabelle([
         ("Gehäuse", "Kunststoffgehäuse 155 × 90 × 62 mm (L × B × H), grau/klar, feuchtigkeitsbeständig und staubdicht"),
-        ("Messumformer", "Olimex ESP32-POE-ISO mit Ethernet (10/100 Mbit/s)"),
+        ("Messumformer", "Olimex ESP32-POE mit Ethernet (10/100 Mbit/s), nicht galvanisch getrennt"),
         ("Stromversorgung", "Power over Ethernet nach IEEE 802.3af über das Netzwerkkabel"),
         ("Netzwerk", "Ethernet, IP-Adresse per DHCP"),
         ("Software", "ESPEasy (Version mega-20260720)"),
@@ -180,7 +183,7 @@ def inhalt():
 
     t.append(ueberschrift("Sicherheitshinweise / Risikobewertung"))
     for b in ("Betreiben Sie die Sensorbox nur an einem PoE-Anschluss nach IEEE 802.3af (PoE-Switch oder PoE-Injektor).",
-              "Der USB-Anschluss im Inneren ist nur für unseren Service vorgesehen.",
+              "Der USB-Anschluss im Inneren ist nur für unseren Service vorgesehen. Er darf nie gleichzeitig mit dem PoE-Netzwerkkabel verbunden sein: Der Messumformer ist nicht galvanisch von der PoE-Versorgung getrennt, angeschlossene Geräte können beschädigt werden.",
               "Die Sensorbox ist in einem stabilen Gehäuse eingebaut; schützen Sie sie zusätzlich gegen Schlag.",
               "Der Kombifühler misst die Luftfeuchtigkeit; tauchen Sie ihn nicht in Wasser und schützen Sie ihn "
               "vor Kondenswasser.",

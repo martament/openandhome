@@ -50,7 +50,7 @@ Kunden-ZIP bauen: `python3 tools/oh-flasher/paket_bauen.py` → `tools/oh-flashe
 ## Professional (Olimex ESP32-POE)
 
 - **USB und PoE nie gleichzeitig anschließen** — das Board ist nicht galvanisch
-  getrennt (Olimex-Hinweis). Ausnahme: ESP32-POE-ISO oder USB-Isolator.
+  getrennt (Olimex-Hinweis; unsere Boxen haben die Variante **ohne** ISO).
 - Menü 1 erkennt den ESP32 automatisch: leerer Flash → keine Sicherung;
   Ethernet wird per USB eingerichtet, die Konfiguration läuft über WLAN am USB.
 - Zabbix nur auf Nachfrage (Sonderanfertigung) bzw. `--zabbix <server>`.
