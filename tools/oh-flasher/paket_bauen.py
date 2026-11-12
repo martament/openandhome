@@ -27,6 +27,7 @@ def main():
         eintraege.append(manifest["dateisystem"])
     if "am2320" in manifest:
         eintraege += [manifest["am2320"]["firmware"], manifest["am2320"]["basis_config"]]
+    eintraege += [teil["regeln"] for teil in (manifest, manifest.get("am2320", {})) if "regeln" in teil]
     for e in eintraege:
         with open(os.path.join(REPO, e["pfad"]), "rb") as f:
             if hashlib.sha256(f.read()).hexdigest() != e["sha256"]:

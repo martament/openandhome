@@ -164,6 +164,14 @@
         "typ": "Position - HC-SR04, RCW-0001, etc.",
         "art": "frage"
       }
-    ]
+    ],
+    "regeln": {
+      "pfad": "configs/espeasy/standalone/basis_am2320/rules1.txt",
+      "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+    }
+  },
+  "regeln": {
+    "pfad": "configs/espeasy/standalone/basis/rules1.txt",
+    "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
   }
 }

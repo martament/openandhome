@@ -1,0 +1,22 @@
+// openandhome: Zeitserver-Rueckfall, falls der eingetragene NTP-Server keine Zeit liefert
+// (z. B. Netz ohne Internet). Stufe 1 nach 90 s: eigener Router (Gateway),
+// Stufe 2 nach weiteren 90 s: 192.168.178.1 (Standard der FRITZ!Box).
+// Nur bis zum naechsten Neustart, es wird nichts gespeichert.
+On System#Boot do
+  TimerSet,1,90
+endon
+
+On Rules#Timer=1 do
+  if %unixtime% < 1700000000
+    LogEntry,NTP-Rueckfall-Gateway
+    NTPHost,%gateway%
+    TimerSet,2,90
+  endif
+endon
+
+On Rules#Timer=2 do
+  if %unixtime% < 1700000000
+    LogEntry,NTP-Rueckfall-192.168.178.1
+    NTPHost,192.168.178.1
+  endif
+endon

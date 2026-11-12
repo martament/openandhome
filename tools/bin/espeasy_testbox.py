@@ -694,6 +694,9 @@ def kundenpaket(args):
     eintrag = lambda p: {"pfad": relativ(p), "sha256": sha256(p)}
     pfad = os.path.join(ROOT, "tools/oh-flasher/manifest.json")
     teil = {"firmware": eintrag(bild), "basis_config": eintrag(basis), "onewire_gpio": gpio or 0, "tasks": tasks}
+    regeln = os.path.join(os.path.dirname(basis), "rules1.txt")
+    if os.path.exists(regeln):
+        teil["regeln"] = eintrag(regeln)
     manifest = {}
     if os.path.exists(pfad):
         with open(pfad, encoding="utf-8") as f:

@@ -189,6 +189,9 @@ def neu_aufsetzen(port, quelle):
         box = http_bereit(port, warte_ip(port))
     basis = quelle.datei(manifest["basis_config"])
     lade_hoch(box, basis, "config.dat")
+    if "regeln" in manifest:
+        # Zeitserver-Rueckfall auf Router / 192.168.178.1
+        lade_hoch(box, quelle.datei(manifest["regeln"], "regeln"), "rules1.txt")
     sende(port, "Reboot")
     time.sleep(10)
     box = http_bereit(port, warte_ip(port))

@@ -264,6 +264,13 @@ def inhalt_professional():
                     "danach 192.168.178.1 (Standard der FRITZ!Box)."))
     t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://<IP-Adresse>/advanced"),
                     " im Feld „NTP Hostname“ ein und speichern mit „Submit“."))
+    t.append(absatz("Alternativ setzen Sie den Zeitserver mit der openandhome-Toolbox (Menüpunkt „Zeitserver (NTP) "
+                    "setzen“; Download unter https://github.com/martament/openandhome, Ordner tools/ohtoolbox). "
+                    "Die Toolbox verbindet sich über den USB-Anschluss im Inneren der Sensorbox."))
+    t.append(absatz(fett("Achtung: "), "Ziehen Sie vorher unbedingt das PoE-Netzwerkkabel ab. USB und PoE dürfen "
+                    "nie gleichzeitig angeschlossen sein – der Messumformer ist nicht galvanisch getrennt, "
+                    "angeschlossene Geräte können beschädigt werden. Die Sensorbox wird während der Einstellung über "
+                    "USB versorgt; stecken Sie danach erst das USB-Kabel ab und dann das Netzwerkkabel wieder an."))
     abrufen(t, mit_zabbix=True)
 
     t.append(ueberschrift("Ihre Sensorbox Professional"))
@@ -371,6 +378,14 @@ def inhalt_standalone():
     t.append(schritt("Öffnen Sie im Browser ", fett("http://192.168.4.1/openandhome.esp"), ".", liste=NUM_SCHRITTE_2))
     t.append(absatz(fett("Wichtig: "), "Hat die Sensorbox schon einmal WLAN-Zugangsdaten erhalten, versucht sie "
                     "ständig, dieses WLAN zu erreichen. Löschen Sie dann die Zugangsdaten (siehe Fehlerbeschreibung)."))
+    t.append(ueberschrift("Uhrzeit (Zeitserver)"))
+    t.append(absatz("Die Sensorbox holt die Uhrzeit ab Werk aus dem Internet (de.pool.ntp.org). Klappt das nicht, "
+                    "nutzt sie nach etwa 1,5 Minuten automatisch Ihren Router als Zeitserver und versucht danach "
+                    "192.168.178.1 (Standard der FRITZ!Box)."))
+    t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://sensorbox1/advanced"),
+                    " im Feld „NTP Hostname“ ein und speichern mit „Submit“ – oder mit der openandhome-Toolbox "
+                    "über das USB-Kabel (Menüpunkt „Zeitserver (NTP) setzen“; Download unter "
+                    "https://github.com/martament/openandhome, Ordner tools/ohtoolbox)."))
     abrufen(t, mit_zabbix=False)
 
     t.append(ueberschrift("Ihre Sensorbox mit WLAN"))
