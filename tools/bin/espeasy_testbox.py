@@ -372,7 +372,8 @@ def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
         art = wert.lower()
         if "1-Wire" in typ:
             fuehler_nr += 1
-            label = f"Fühler {fuehler_nr}"
+            # Eigene Namen (z. B. "Heizungsvorlauf") uebernehmen, Standardnamen FuehlerN -> "Fühler N"
+            label = f"Fühler {fuehler_nr}" if re.fullmatch(r"Fuehler\d+", task) else task
             icon = "temperature.png" if fuehler_nr % 2 else "temperature1.png"
         else:
             label = f"{wert} ({task})"
