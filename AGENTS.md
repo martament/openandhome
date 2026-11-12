@@ -93,6 +93,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 - Basis: [`configs/espeasy/professional/basis/config.dat`](configs/espeasy/professional/basis/config.dat)
   (alle Sensoren, MQTT + Zabbix aus). Zabbix ist Sonderanfertigung (optional).
 - 1-Wire an GPIO 4 und 2, Wassersensor GPIO 34, I2C 13/16.
+- Zeitserver: `de.pool.ntp.org`; [`basis/rules1.txt`](configs/espeasy/professional/basis/rules1.txt) fällt ohne Zeit nach 90 s auf das Gateway, nach weiteren 90 s auf 192.168.178.1 zurück (nur zur Laufzeit). Werkstatt lädt `rules1.txt` mit der Basis hoch; Endanwender ändern den NTP-Server über die Weboberfläche (`/advanced`) oder die ohtoolbox (Menü n).
 
 - Image: `ESP_Easy_mega_*_collection_A_ESP32_4M316k.bin` (+ `.factory.bin`)
 - Ethernet ist enthalten (`FEATURE_ETHERNET=1` über `esp32_common_LittleFS_ETH`);

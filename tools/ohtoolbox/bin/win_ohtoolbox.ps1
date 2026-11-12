@@ -139,6 +139,19 @@ function Send-Commands($label, $commands) {
     }
 }
 
+function Set-Ntp {
+    Write-Host "`n--- Zeitserver (NTP) setzen ---" -ForegroundColor Cyan
+    Write-Host "Standard ist de.pool.ntp.org (Internet). Ohne Internet z. B. die Adresse Ihres Routers"
+    Write-Host "(FRITZ!Box: 192.168.178.1) eintragen."
+    $ntp = Read-Host "NTP-Server (leer = Abbruch)"
+    if (-not $ntp -or $ntp -notmatch '^[A-Za-z0-9.-]+$') {
+        Write-Host "Abgebrochen."
+        Read-Host "Zurück zum Menü mit Enter..."
+        return
+    }
+    Send-Commands "NTP-Server setzen" @("NTPHost,$ntp")
+}
+
 function Invoke-Reboot {
     Write-Host "`nSende Reboot-Befehl..." -ForegroundColor Yellow
     $port = Open-Port
@@ -244,6 +257,7 @@ while ($running) {
     Write-Host "7) Reset Admin Password"
     Write-Host "8) Start AP-Mode"
     Write-Host "9) Reset IP-Filtering"
+    Write-Host "N) Zeitserver (NTP) setzen"
     Write-Host "------------------------------------"
     Write-Host "Q) Beenden"
     Write-Host ""
@@ -260,6 +274,8 @@ while ($running) {
         "7" { Send-Commands "Reset Admin" @("password") }
         "8" { Send-Commands "Start AP-Mode" @("WifiAPMode") }
         "9" { Send-Commands "Reset IP-Filtering" @("ClearAccessBlock") }
+        "n" { Set-Ntp }
+        "N" { Set-Ntp }
         "q" { $running = $false }
         "Q" { $running = $false }
     }

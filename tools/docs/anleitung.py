@@ -225,8 +225,7 @@ def inhalt_professional():
     t.append(ueberschrift("Funktionsbeschreibung"))
     t.append(absatz("Die Sensorbox misst je nach Ausstattung mit bis zu vier Temperaturfühlern (DS18B20), einem "
                     "Kombifühler für Temperatur und Luftfeuchtigkeit (HTU21D) und einem Wassersensor, der "
-                    "eindringendes Wasser meldet oder als Überwachungs- bzw. Türkontakt dient. Die angeschlossenen "
-                    "Fühler werden bei der Einrichtung in unserer Werkstatt automatisch erkannt."))
+                    "eindringendes Wasser meldet oder als Überwachungs- bzw. Türkontakt dient."))
     t.append(absatz("Strom und Netzwerk erhält die Sensorbox über ein einziges Netzwerkkabel (Power over Ethernet, "
                     "PoE) – ein Netzteil ist nicht nötig."))
     t.append(absatz("Ein Display (je nach Ausstattung) zeigt die aktuellen Messwerte sowie abwechselnd die "
@@ -258,6 +257,13 @@ def inhalt_professional():
     t.append(schritt("Empfehlung: Vergeben Sie auf derselben Seite ein Administrator-Passwort, damit niemand in Ihrem "
                      "Netz die Einstellungen ändern kann."))
     hinweis_ip_bereich(t)
+
+    t.append(ueberschrift("Uhrzeit (Zeitserver)"))
+    t.append(absatz("Die Sensorbox holt die Uhrzeit ab Werk aus dem Internet (de.pool.ntp.org). Ist Ihr Netz ohne "
+                    "Internet, nutzt sie nach etwa 1,5 Minuten automatisch Ihren Router als Zeitserver und versucht "
+                    "danach 192.168.178.1 (Standard der FRITZ!Box)."))
+    t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://<IP-Adresse>/advanced"),
+                    " im Feld „NTP Hostname“ ein und speichern mit „Submit“."))
     abrufen(t, mit_zabbix=True)
 
     t.append(ueberschrift("Ihre Sensorbox Professional"))

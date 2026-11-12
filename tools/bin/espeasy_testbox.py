@@ -543,6 +543,10 @@ def aufsetzen(args):
     if einstellungen["Syslog_IP"] != "0.0.0.0" or einstellungen["SyslogLevel"]:
         print("WARNUNG: In der Basis-config.dat ist Syslog aktiv - fuer Stable neu sichern.")
     lade_hoch(box, basis, "config.dat")
+    regeln = os.path.join(os.path.dirname(basis), "rules1.txt")
+    if os.path.exists(regeln):
+        # z. B. Professional: NTP-Rueckfall auf Gateway / 192.168.178.1
+        lade_hoch(box, regeln, "rules1.txt")
     sende(port, "Reboot")
     time.sleep(10)
     box = http_bereit(port, warte_ip(port))

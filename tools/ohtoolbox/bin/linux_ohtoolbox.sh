@@ -149,6 +149,19 @@ set_wifi() {
     fi
 }
 
+set_ntp() {
+    echo -e "\n\e[36m--- Zeitserver (NTP) setzen ---\e[0m"
+    echo "Standard ist de.pool.ntp.org (Internet). Ohne Internet z. B. die Adresse Ihres Routers"
+    echo "(FRITZ!Box: 192.168.178.1) eintragen."
+    read -p "NTP-Server (leer = Abbruch): " ntp
+    if [ -z "$ntp" ] || ! [[ "$ntp" =~ ^[A-Za-z0-9.-]+$ ]]; then
+        echo "Abgebrochen."
+        read -p "Zurück zum Menü mit Enter..."
+        return
+    fi
+    send_commands "NTP-Server setzen" "NTPHost,$ntp"
+}
+
 do_reboot() {
     echo -e "\n\e[33mSende Reboot-Befehl...\e[0m"
     setup_port
@@ -172,6 +185,7 @@ while true; do
     echo "7) Reset Admin Password"
     echo "8) Start AP-Mode"
     echo "9) Reset IP-Filtering"
+    echo "n) Zeitserver (NTP) setzen"
     echo "------------------------------------"
     echo "q) Beenden"
     echo ""
@@ -187,6 +201,7 @@ while true; do
         7) send_commands "Reset Admin" "password" ;;
         8) send_commands "Start AP-Mode" "WifiAPMode" ;;
         9) send_commands "Reset IP-Filtering" "ClearAccessBlock" ;;
+        n|N) set_ntp ;;
         q|Q) exit 0 ;;
         *) echo -e "\e[31mUngültige Wahl\e[0m"; sleep 1 ;;
     esac
