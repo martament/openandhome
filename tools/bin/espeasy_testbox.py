@@ -164,7 +164,7 @@ def usb_ip(port):
     return None
 
 
-def warte_ip(port, sekunden=90):
+def warte_ip(port, sekunden=90, abbrechen=True):
     print(f"Warte auf Netzwerk (max. {sekunden} s) ...", end="", flush=True)
     ende = time.time() + sekunden
     while time.time() < ende:
@@ -177,7 +177,48 @@ def warte_ip(port, sekunden=90):
             return ip
         print(".", end="", flush=True)
         time.sleep(3)
+    if not abbrechen:
+        print(" keine IP")
+        return None
     sys.exit("\nFEHLER: Box bekommt keine IP (WLAN-Daten / Kabel pruefen).")
+
+
+def wlan_scan(port):
+    """WLANs aus 'WifiScan' (USB): [(ssid, dBm, Kanal)], je SSID das staerkste, sortiert nach Signal."""
+    netze = {}
+    for z in sende(port, "WifiScan", wartezeit=8):
+        m = re.search(r"WIFI : \d+: (.+?) [0-9A-Fa-f:]{17} Ch:(\d+) \((-?\d+)dBm\)", z)
+        if m and m.group(1) != "#Hidden#":
+            ssid, kanal, dbm = m.group(1), int(m.group(2)), int(m.group(3))
+            if ssid not in netze or dbm > netze[ssid][1]:
+                netze[ssid] = (ssid, dbm, kanal)
+    return sorted(netze.values(), key=lambda n: -n[1])
+
+
+def wlan_verbinden(port, ssid, key):
+    """Setzt WLAN per USB und prueft die Verbindung. Klappt sie nicht, werden die
+    sichtbaren WLANs angezeigt und SSID/Passwort neu abgefragt. Liefert die IP."""
+    while True:
+        print(f"Verbinde mit WLAN '{ssid}' ...")
+        sende(port, f'WifiSSID,"{ssid}"', f'WifiKey,"{key}"', "Save", "Reboot")
+        time.sleep(10)
+        ip = warte_ip(port, 60, abbrechen=False)
+        if ip:
+            return ip
+        print(f"\033[31mWLAN '{ssid}' nicht erreichbar oder Passwort falsch.\033[0m Sichtbare WLANs:")
+        netze = wlan_scan(port)
+        for i, (name, dbm, kanal) in enumerate(netze, 1):
+            print(f"  {i:2}) {name:<32} {dbm} dBm  Kanal {kanal}")
+        if any(n[0] == ssid for n in netze):
+            print(f"  ('{ssid}' ist sichtbar - vermutlich falsches Passwort)")
+        wahl = frage("Nummer oder SSID (Enter = gleiche SSID, q = Abbruch)", "")
+        if wahl.lower() == "q":
+            sys.exit("Abgebrochen: kein WLAN.")
+        if wahl.isdigit() and 1 <= int(wahl) <= len(netze):
+            ssid = netze[int(wahl) - 1][0]
+        elif wahl:
+            ssid = wahl
+        key = getpass.getpass(f"Passwort fuer '{ssid}' (unsichtbar): ")
 
 
 def erreichbar(port, ip):
@@ -474,9 +515,10 @@ def aufsetzen(args):
         else:
             ssid = frage("WLAN-SSID")
             key = getpass.getpass("WPA-Key (unsichtbar): ")
-        sende(port, f'WifiSSID,"{ssid}"', f'WifiKey,"{key}"', "Save", "Reboot")
-        time.sleep(10)
-    box = http_bereit(port, warte_ip(port))
+        ip = wlan_verbinden(port, ssid, key)
+    else:
+        ip = warte_ip(port)
+    box = http_bereit(port, ip)
     ip = box.basis.removeprefix("http://")
 
     schritt("5/10 Basis-config.dat")
