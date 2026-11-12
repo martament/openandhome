@@ -161,6 +161,25 @@ def abrufen(t, mit_zabbix):
                     "https://espeasy.readthedocs.io"))
 
 
+def toolbox(t, professional):
+    """Abschnitt zur openandhome-Toolbox (Standardwerkzeug, USB)."""
+    t.append(ueberschrift("openandhome-Toolbox"))
+    t.append(absatz("Mit der Toolbox richten Sie die Sensorbox über das USB-Kabel ein und beheben die häufigsten "
+                    "Probleme. Download: ", fett("https://github.com/martament/openandhome/releases/latest/download/"
+                                                  "ohtoolbox.zip"),
+                    " – entpacken und „start_toolbox.bat“ (Windows) bzw. „toolbox.sh“ (Linux) starten."))
+    if professional:
+        t.append(absatz(fett("Achtung: "), "Ziehen Sie vorher das PoE-Netzwerkkabel ab – USB und PoE nie gleichzeitig. "
+                        "Für die Funktionen „Sensoren neu erkennen“ und „Grundkonfiguration“ verbindet sich die "
+                        "Sensorbox kurz mit Ihrem WLAN; die Daten werden danach wieder gelöscht."))
+    for b in ("Sensoren neu erkennen – nach dem Tausch oder Hinzufügen eines Fühlers",
+              "Zeitserver (NTP) setzen, Gerätename ändern",
+              *(() if professional else ("WLAN-Zugangsdaten setzen (mit Verbindungsprüfung) oder löschen",)),
+              "Grundkonfiguration wiederherstellen, IP-Filter oder Admin-Passwort zurücksetzen",
+              "Notfall und Updates: der mitgelieferte OH-Flasher („start_flasher.bat“ bzw. „flasher.sh“)"):
+        t.append(punkt(b))
+
+
 def messreihe(t):
     t.append(ueberschrift("Messreihe"))
     t.append(absatz("Der Golden Master Sensorbox Openandhome wurde in einer Messreihe mit einem geeichten Testo 112 "
@@ -199,7 +218,9 @@ FEHLER_HTTPS = ("Webseite ist nicht erreichbar",
                 "Achten Sie darauf, dass die Adresse mit http:// beginnt. Manche Browser ersetzen sie durch "
                 "https://, die Sensorbox ist aber nur über http:// erreichbar.")
 FEHLER_IP_BLOCKED = ("Meldung „IP blocked“",
-                     "Ihr Netz verwendet keine Adressen 192.168.x.x. Bitte wenden Sie sich an unseren Support.")
+                     "Ihr Netz verwendet keine Adressen 192.168.x.x. Mit der Toolbox („IP-Filter zurücksetzen“) "
+                     "ist die Weboberfläche bis zum nächsten Neustart erreichbar; dauerhaft passen Sie den Bereich "
+                     "unter „Config“ → „Client IP filtering“ an oder wenden sich an unseren Support.")
 FEHLER_TEMPERATUR = ("Angezeigte Temperatur ist zu hoch oder zu niedrig",
                      "Nach einem Standortwechsel braucht der Fühler einige Minuten. Für eine Differenz von ±5 °C "
                      "sind etwa 10 Minuten Wartezeit nötig.")
@@ -273,6 +294,8 @@ def inhalt_professional():
                     "angeschlossene Geräte können beschädigt werden. Die Sensorbox wird während der Einstellung über "
                     "USB versorgt; stecken Sie danach erst das USB-Kabel ab und dann das Netzwerkkabel wieder an."))
     abrufen(t, mit_zabbix=True)
+
+    toolbox(t, professional=True)
 
     t.append(ueberschrift("Ihre Sensorbox Professional"))
     for b in ("Mit deutscher Bedienungsanleitung und deutschem Support",
@@ -370,6 +393,11 @@ def inhalt_standalone():
                      "eigenen Namen („Unit Name“)."))
     hinweis_ip_bereich(t)
 
+    t.append(absatz(fett("Alternativ mit der openandhome-Toolbox: "),
+                    "Verbinden Sie die Sensorbox per USB-Kabel mit Ihrem Rechner, starten Sie die Toolbox und wählen "
+                    "Sie „WLAN-Zugangsdaten setzen“. Die Toolbox prüft die Verbindung und zeigt am Ende die Adresse "
+                    "Ihres Dashboards (Download siehe Abschnitt „openandhome-Toolbox“)."))
+
     t.append(ueberschrift("Inbetriebnahme nur mit dem Smartphone (geringe Reichweite)"))
     t.append(absatz("Diese Möglichkeit nutzen Sie, wenn am Einsatzort kein WLAN vorhanden ist."))
     t.append(schritt("Versorgen Sie die Sensorbox über das USB-Kabel mit Strom.", liste=NUM_SCHRITTE_2))
@@ -388,6 +416,8 @@ def inhalt_standalone():
                     "über das USB-Kabel (Menüpunkt „Zeitserver (NTP) setzen“; Download unter "
                     "https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip)."))
     abrufen(t, mit_zabbix=False)
+
+    toolbox(t, professional=False)
 
     t.append(ueberschrift("Ihre Sensorbox mit WLAN"))
     for b in ("Mit deutscher Bedienungsanleitung und deutschem Support",
@@ -427,8 +457,8 @@ def inhalt_standalone():
          "ihr eigenes WLAN „Sensorbox1“ und Sie beginnen erneut bei Schritt B. Bringen Sie die Sensorbox "
          "gegebenenfalls aus der Reichweite Ihres WLANs."),
         ("Sensorbox soll ohne WLAN-Router laufen, Zugangsdaten sind gespeichert",
-         "Gehen Sie wie bei der Inbetriebnahme vor und geben Sie als WLAN-Name „ssid“ und als Passwort „wpakey“ "
-         "ein. Damit sind die Zugangsdaten gelöscht."),
+         "Am einfachsten mit der Toolbox: „WLAN-Daten löschen“. Oder gehen Sie wie bei der Inbetriebnahme vor und "
+         "geben Sie als WLAN-Name „ssid“ und als Passwort „wpakey“ ein."),
         ("Mit dem WLAN der Sensorbox verbunden, Seiten nicht erreichbar",
          "Entfernen Sie das WLAN „Sensorbox1“ aus den gespeicherten WLANs Ihres Geräts und beginnen Sie erneut."),
         FEHLER_IP_BLOCKED,

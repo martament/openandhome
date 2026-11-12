@@ -14,7 +14,7 @@ Device-Einstellungen, Zugriffsbereich und Dashboard gehen über HTTP.
 
 | Punkt | Funktion |
 |---|---|
-| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Sicherung (Flash + `config.dat`, `~/openandhome-backups/`) → Flashen (aktuelles `collection_A`-Image) → WLAN (USB) → Basis-`config.dat` (`configs/espeasy/<klasse>/basis/`) → Testname `Testbox<Unit>`, Web-Zugriff 192.168.0.0–192.168.255.255 → Sensoren erkennen → Dashboard → Werte- und Dashboard-Prüfung → Syslog an |
+| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Sicherung (Flash + Konfiguration nach `~/openandhome-backups/`; entfällt bei leerem Flash) → Flashen (Image der Klasse laut [`oh_klassen.py`](../bin/oh_klassen.py)) → Professional: Ethernet per USB → WLAN mit Prüfung → Web-Zugriff 192.168.0.0–192.168.255.255 → Basis-`config.dat` + `rules1.txt` (bei AM2320 automatisch collection_H/`basis_am2320`) → Testname `Testbox<Unit>` → Sensoren erkennen → Zabbix-Abfrage (Professional) → Dashboard → Werte- und Dashboard-Prüfung → Syslog an |
 | 2 | Test prüfen: Messwerte plausibel? Dashboard vollständig ersetzt? |
 | 3 | **Test beenden:** Abschlussprüfung → Syslog aus → Name `Sensorbox1`/Unit 0 → Zugriffsbereich → optional WLAN löschen wie `esp_resetap` |
 | 4 | Sensoren erkennen (I2C, DS18B20), Tasks einschalten, OLED-Zeilen setzen |

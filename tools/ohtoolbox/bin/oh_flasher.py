@@ -39,9 +39,9 @@ def erkenne_chip(port):
 
 def update(port, quelle, chip):
     print("\n--- Firmware aktualisieren (Einstellungen bleiben) ---")
-    # Standalone: Variante passend zur laufenden Firmware (climate_B oder collection_H fuer AM2320)
-    am2320 = "collection_H" in k.image_name(port) if chip == "ESP8266" else False
-    klasse = k.klasse(quelle, chip, am2320=am2320)
+    # Standalone: collection_H, wenn sie schon laeuft oder ein AM2320 antwortet, sonst climate_B
+    am2320 = True if chip == "ESP8266" and "collection_H" in k.image_name(port) else None
+    klasse = k.klasse(quelle, chip, port, am2320=am2320)
     neu = os.path.basename(klasse.get("firmware_update", klasse["firmware"])["pfad"])
     print(f"Spiele {neu} ein.")
     if not k.ja("Weiter?", True):

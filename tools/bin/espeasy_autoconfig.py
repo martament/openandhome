@@ -260,10 +260,15 @@ def main():
     parser.add_argument("--an", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks einschalten")
     parser.add_argument("--aus", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks ausschalten")
     parser.add_argument("--anwenden", action="store_true", help="Aenderungen wirklich schreiben")
+    parser.add_argument("--ow-gpios", nargs="*", type=int, help="1-Wire-Busse (Standard: je Box-Klasse)")
     args = parser.parse_args()
 
     box = Box(args.host or box_ip(args.port), args.passwort)
-    autokonfiguration(box, args.port, args.an, args.aus, args.anwenden)
+    ow = args.ow_gpios
+    if ow is None and "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", ""):
+        from oh_klassen import KLASSEN
+        ow = KLASSEN["ESP32"]["ow_gpios"]      # Professional: zwei 1-Wire-Busse
+    autokonfiguration(box, args.port, args.an, args.aus, args.anwenden, ow_gpios=ow)
 
 
 if __name__ == "__main__":
