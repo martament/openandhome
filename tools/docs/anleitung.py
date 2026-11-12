@@ -25,14 +25,16 @@ from xml.sax.saxutils import escape
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 VORLAGE = os.path.join(ROOT, "docs/2023 openandhome - Bedienungsanleitung - Professional Typ2023-1-Vers 2.docx")
 ZIELE = {
-    "professional": "docs/openandhome - Bedienungsanleitung - Professional.docx",
-    "standalone": "docs/openandhome - Bedienungsanleitung - Standalone.docx",
+    "professional": "docs/2026 openandhome - Bedienungsanleitung - Professional.docx",
+    "standalone": "docs/2026 openandhome - Bedienungsanleitung - Standalone.docx",
 }
 TITEL = {
     "professional": "Bedienungsanleitung Sensorbox Professional",
     "standalone": "Bedienungsanleitung Sensorbox Standalone",
 }
-STAND = "Stand: November 2026"
+STAND = "Stand: 12.11.2026"
+DATUM_ISO = "2026-11-12T12:00:00Z"
+FIRMA = "Ament & Heinrichs OpenandHome GbR"
 SEITE_BREITE = 10432          # A4 minus Raender (737 dxa je Seite)
 NUM_SCHRITTE, NUM_PUNKTE, NUM_SCHRITTE_2 = 1, 2, 13   # 13 wird beim Bauen angelegt (Neustart bei A)
 
@@ -221,7 +223,7 @@ def inhalt_professional():
                    "Wassersensor und Display."])
 
     t.append(ueberschrift("Funktionsbeschreibung"))
-    t.append(absatz("Die Sensorbox misst je nach Ausstattung mit bis zu neun Temperaturfühlern (DS18B20), einem "
+    t.append(absatz("Die Sensorbox misst je nach Ausstattung mit bis zu vier Temperaturfühlern (DS18B20), einem "
                     "Kombifühler für Temperatur und Luftfeuchtigkeit (HTU21D) und einem Wassersensor, der "
                     "eindringendes Wasser meldet oder als Überwachungs- bzw. Türkontakt dient. Die angeschlossenen "
                     "Fühler werden bei der Einrichtung in unserer Werkstatt automatisch erkannt."))
@@ -273,7 +275,7 @@ def inhalt_professional():
         ("Stromversorgung", "Power over Ethernet nach IEEE 802.3af über das Netzwerkkabel"),
         ("Netzwerk", "Ethernet, IP-Adresse per DHCP"),
         ("Software", SOFTWARE),
-        ("Temperaturfühler (je nach Ausstattung bis zu 9)", DS18B20_DATEN),
+        ("Temperaturfühler (je nach Ausstattung bis zu 4)", DS18B20_DATEN),
         ("Kombifühler (je nach Ausstattung)", HTU21D_DATEN),
         ("Wassersensor (je nach Ausstattung)", WASSER_DATEN),
         ("Display (je nach Ausstattung)", "OLED-Display: Messwerte, IP-Adresse und Gerätename"),
@@ -439,6 +441,11 @@ def baue(variante, vorlage, ziel):
                 elif eintrag.filename == "docProps/core.xml":
                     daten = re.sub(rb"<dc:title>[^<]*</dc:title>",
                                    f"<dc:title>{TITEL[variante]}</dc:title>".encode(), daten)
+                    for feld in (rb"dcterms:created", rb"dcterms:modified"):
+                        daten = re.sub(rb"(<" + feld + rb"[^>]*>)[^<]*", rb"\g<1>" + DATUM_ISO.encode(), daten)
+                    daten = re.sub(rb"(<cp:lastModifiedBy>)[^<]*", rb"\g<1>openandhome", daten)
+                elif eintrag.filename == "docProps/app.xml":
+                    daten = re.sub(rb"(<Company>)[^<]*", rb"\g<1>" + escape(FIRMA).encode(), daten)
                 z.writestr(eintrag, daten)
     print("geschrieben:", os.path.relpath(ziel, ROOT))
 
@@ -456,7 +463,7 @@ def main():
     parser = argparse.ArgumentParser(description="Bedienungsanleitung erzeugen")
     parser.add_argument("--variante", choices=sorted(INHALT), required=True)
     parser.add_argument("--vorlage", default=VORLAGE)
-    parser.add_argument("--ziel", help="Standard: docs/openandhome - Bedienungsanleitung - <Variante>.docx")
+    parser.add_argument("--ziel", help="Standard: docs/2026 openandhome - Bedienungsanleitung - <Variante>.docx")
     args = parser.parse_args()
     baue(args.variante, args.vorlage, args.ziel or os.path.join(ROOT, ZIELE[args.variante]))
 
