@@ -87,7 +87,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 ### Professional (ESP32, 4 MB, **mit Ethernet/ETH**)
 
 - **Board: Olimex ESP32-POE — USB und PoE nie gleichzeitig** (keine galvanische Trennung).
-- **Standalone und Professional sind verschiedene Boxen** (Gehäuse, Board, Fühler). Anleitungen, Basis-configs und technische Daten nie zwischen den Klassen übernehmen; die Professional-Anleitung erzeugt [`tools/docs/anleitung_professional.py`](tools/docs/anleitung_professional.py).
+- **Standalone und Professional sind verschiedene Boxen** (Gehäuse, Board, Fühler). Anleitungen, Basis-configs und technische Daten nie zwischen den Klassen übernehmen; Anleitungen erzeugt [`tools/docs/anleitung.py`](tools/docs/anleitung.py) mit `--variante standalone|professional` (box-spezifische Inhalte getrennt).
 - HTU21D (Kombifühler) bleibt in der Basis-config; die Autoerkennung schaltet ihn nur ein, wenn er am I2C-Bus antwortet (0x40).
 - Ethernet per USB: `NetworkImportConfig,3,{"nwpluginID":3,…,"MDC":23,"MDIO":18,"pwr":12,"clock":3}`.
 - Basis: [`configs/espeasy/professional/basis/config.dat`](configs/espeasy/professional/basis/config.dat)
