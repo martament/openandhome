@@ -1,70 +1,72 @@
-# openandhome-Toolbox (Standardwerkzeug)
+# openandhome-Toolbox und OH-Flasher
 
-Mit der Toolbox richten Sie Ihre Sensorbox über das USB-Kabel ein und beheben
-die häufigsten Probleme – für **Standalone**- und **Professional**-Boxen.
-Für den normalen Betrieb Ihrer Sensorbox brauchen Sie die Toolbox nicht.
+Ein Paket mit zwei Programmen für Ihre Sensorbox (**Standalone** und **Professional**):
 
-Lässt sich ein Problem mit der Toolbox nicht lösen, gibt es als Notlösung den
-[OH-Flasher](../oh-flasher/Readme.md). Hilft auch der nicht, senden Sie uns die
-Sensorbox – wir stellen den Auslieferungszustand wieder her.
+- **Toolbox** – das Standardwerkzeug: WLAN, Gerätename, Zeitserver, Sensoren erkennen,
+  Grundkonfiguration, Resets und Diagnose.
+- **OH-Flasher** – Firmware aktualisieren und, als Notlösung, den Sensor komplett neu
+  aufspielen.
+
+Für den normalen Betrieb Ihrer Sensorbox brauchen Sie keines der beiden Programme.
+Hilft beides nicht, senden Sie uns die Sensorbox – wir stellen den Auslieferungszustand wieder her.
 
 FAQ: https://www.openandhome.de/index.php/2019/01/11/faq/
 
+## Download
+
+**https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip**
+
+Das Paket wird bei jeder Änderung automatisch neu gebaut; die Änderungen stehen in den
+Release-Notes unter https://github.com/martament/openandhome/releases. Firmware und
+Grundeinstellungen lädt das Programm beim Start aus dem Internet (immer der freigegebene
+Stand); ohne Internet nimmt es die mitgelieferten Dateien.
+
 ## Vor dem Start
 
-- Verbinden Sie die Sensorbox mit einem USB-Kabel mit Ihrem Rechner.
-- **Sensorbox Professional:** Ziehen Sie **vorher das Netzwerkkabel (PoE)** ab.
-  USB und PoE dürfen nie gleichzeitig angeschlossen sein – die Box ist nicht
-  galvanisch getrennt, angeschlossene Geräte können beschädigt werden. Die Box
-  wird während der Einstellung über USB versorgt. Danach erst USB abziehen,
-  dann das Netzwerkkabel wieder anstecken.
+- ZIP entpacken und die Sensorbox per USB-Kabel mit dem Rechner verbinden.
+- **Sensorbox Professional:** Ziehen Sie **vorher das Netzwerkkabel (PoE)** ab. USB und PoE
+  dürfen nie gleichzeitig angeschlossen sein – die Box ist nicht galvanisch getrennt,
+  angeschlossene Geräte können beschädigt werden. Die Box wird währenddessen über USB versorgt.
+  Danach erst USB abziehen, dann das Netzwerkkabel wieder anstecken.
 
-Die Toolbox erkennt beim Start, ob eine Standalone- oder eine Professional-Box
-angeschlossen ist, und zeigt das in der Kopfzeile an.
+| | Windows | Linux |
+|---|---|---|
+| Toolbox | Doppelklick auf `start_toolbox.bat` | `./toolbox.sh` |
+| OH-Flasher | Doppelklick auf `start_flasher.bat` | `./flasher.sh` |
 
-## Die Funktionen im Überblick
+Unter Linux wird Python 3 benötigt. Meldet das Programm „Kein Sensor gefunden“ oder
+„Permission denied“, fehlen die Rechte für die serielle Schnittstelle:
+`sudo usermod -aG dialout $USER`, danach einmal ab- und wieder anmelden.
+
+## Toolbox (Standardwerkzeug)
+
+Die Toolbox erkennt beim Start, ob eine Standalone- oder Professional-Box angeschlossen ist.
 
 | Taste | Funktion |
 |---|---|
-| 1 | **WLAN-Zugangsdaten setzen** – Name (SSID) und Passwort Ihres WLANs (unsichtbare Eingabe, zur Sicherheit zweimal), optional ein zweites WLAN. Die Toolbox startet den Sensor neu und **prüft, ob er sich verbindet**. Klappt es nicht, zeigt sie die WLANs, die der Sensor sieht, und fragt erneut nach WLAN und Passwort. Bei Erfolg zeigt sie die Adresse des Dashboards. (Professional braucht normalerweise kein WLAN.) |
-| 2 | **Neustart** des Sensors |
-| 3 | **Einstellungen anzeigen** (IP-Adresse, Name, WLAN) |
-| 4 | **Debugger** – Ausgaben des Sensors anzeigen und in `oh-debug.txt` speichern (für unseren Support) |
-| 5 | **WLAN-Daten löschen** – danach öffnet der Sensor wieder sein eigenes WLAN „Sensorbox1“ |
-| 6 | **Reset DHCP** – feste IP-Adresse aufheben (bei Professional auch für das Netzwerkkabel) |
-| 7 | **Admin-Passwort zurücksetzen** (Weboberfläche) |
-| 8 | **WLAN-Zugangspunkt starten** (eigenes WLAN des Sensors) |
-| 9 | **IP-Filter zurücksetzen** – bis zum nächsten Neustart, z. B. wenn die Weboberfläche „IP blocked“ meldet |
-| n | **Zeitserver (NTP) setzen** – z. B. die Adresse Ihres Routers, wenn Ihr Netz kein Internet hat |
-| g | **Gerätenamen ändern** – bei mehreren Sensoren braucht jeder einen eigenen Namen |
+| 1 | **WLAN-Zugangsdaten setzen** – mit Verbindungsprüfung. Klappt die Verbindung nicht, zeigt die Toolbox die WLANs, die der Sensor sieht, und fragt erneut. Bei Erfolg zeigt sie die Adresse des Dashboards. (Professional braucht normalerweise kein WLAN.) |
+| 2 | Neustart |
+| 3 | Einstellungen anzeigen (IP-Adresse, Name, WLAN) |
+| 4 | Debugger – Ausgaben anzeigen und in `oh-debug.txt` speichern (für unseren Support) |
+| 5 | WLAN-Daten löschen – danach öffnet der Sensor wieder sein eigenes WLAN „Sensorbox1“ |
+| 6 | Reset DHCP – feste IP-Adresse aufheben (bei Professional auch für das Netzwerkkabel) |
+| 7 | Admin-Passwort der Weboberfläche zurücksetzen |
+| 8 | WLAN-Zugangspunkt des Sensors starten |
+| 9 | IP-Filter zurücksetzen (bis zum Neustart), z. B. bei der Meldung „IP blocked“ |
+| n | Zeitserver (NTP) setzen – z. B. Ihr Router, wenn Ihr Netz kein Internet hat |
+| g | Gerätenamen ändern – bei mehreren Sensoren braucht jeder einen eigenen Namen |
+| s | **Sensoren neu erkennen** – nach Tausch oder Erweiterung eines Fühlers; Einstellungen bleiben. Erkennt Fühler, Display und Kombifühler, wählt die Fühleradressen und erneuert Anzeige und Dashboard. Nicht erkennbare Sensoren (Wasser-, Abstandssensor) werden abgefragt. |
+| k | **Grundkonfiguration wiederherstellen** – alle Einstellungen auf den Auslieferungszustand, danach Sensoren erkennen. Die Firmware bleibt. |
 
-Bei allen Befehlen wird zusätzlich der FlashWriteCounter des Sensors
-zurückgesetzt; ein voller Zähler kann selbst eine Fehlerursache sein.
+Für **s** und **k** muss der Sensor kurz im WLAN sein (die Toolbox fragt bei Bedarf danach).
+Bei Professional werden diese WLAN-Daten danach wieder gelöscht.
 
-## Download
+## OH-Flasher
 
-https://github.com/martament/openandhome/releases → `ohtoolbox.zip`
+| Taste | Funktion |
+|---|---|
+| 1 | **Firmware aktualisieren** – aktueller freigegebener Stand, Einstellungen bleiben erhalten |
+| 2 | **Sensor neu aufspielen und einrichten** (Notfall) – löscht den Sensor vollständig, spielt die aktuelle Firmware ein und richtet die Grundkonfiguration ein wie Toolbox-Menü **k**. Bei Professional wird zusätzlich der Netzwerkanschluss eingerichtet. |
+| 3 | Debug – Ausgaben des Sensors anzeigen |
 
-Das Archiv enthält eine PowerShell-Datei für Windows und ein Bash-Skript für Linux.
-
-## Start unter Windows
-
-Rechtsklick auf `win_ohtoolbox.ps1` → „Mit PowerShell ausführen“.
-
-Blockiert Windows die Ausführung (Ausführungsrichtlinie), öffnen Sie eine
-PowerShell im Ordner der Datei und starten Sie:
-
-    powershell -ExecutionPolicy Bypass -File .\win_ohtoolbox.ps1
-
-## Start unter Linux
-
-Terminal im Ordner der Datei öffnen und starten:
-
-    bash linux_ohtoolbox.sh
-
-Meldet die Toolbox „Kein Sensor gefunden“ oder „Permission denied“, obwohl der
-Sensor angeschlossen ist, fehlen Ihrem Benutzer die Rechte für die serielle
-Schnittstelle. Fügen Sie ihn der Gruppe `dialout` hinzu und melden Sie sich
-einmal ab und wieder an:
-
-    sudo usermod -aG dialout $USER
+Es kann einige Minuten dauern, bis der Sensor wiederhergestellt ist.

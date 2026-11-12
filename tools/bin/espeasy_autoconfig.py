@@ -135,28 +135,30 @@ def dallas_option(html, adresse):
     return None
 
 
-def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None):
+def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None, leise=False):
     """Scannt, zeigt die Aenderungen und schreibt sie bei anwenden=True.
 
     ow_gpios: 1-Wire-Busse, die gescannt werden (Professional: 4 und 2); Standard
     ist der GPIO des ersten DS18B20-Tasks. Fuehler1..N werden in Scan-Reihenfolge
     vergeben und bekommen GPIO und Adresse ihres Busses.
+    leise=True: nur Warnungen ausgeben (Endanwender-Werkzeuge).
     Liefert die Namen der nicht erkennbaren Tasks (HC-SR04, Wassersensor ...)."""
+    ausgabe = (lambda *a, **k: None) if leise else print
     tasks = json.loads(box.get("/json"))["Sensors"]
-    print(f"Box {box.basis}: {len(tasks)} Tasks")
+    ausgabe(f"Box {box.basis}: {len(tasks)} Tasks")
 
     formulare = {t["TaskNumber"]: lies_task(box, t["TaskNumber"]) for t in tasks}
     plugin = {nr: int(f["TDNUM"]) for nr, (_, f) in formulare.items() if f.get("TDNUM", "").isdigit()}
 
     i2c = i2c_scan(port)
-    print("I2C gefunden:", ", ".join(f"0x{a:02x}" for a in sorted(i2c)) or "nichts")
+    ausgabe("I2C gefunden:", ", ".join(f"0x{a:02x}" for a in sorted(i2c)) or "nichts")
     i2c_hinweise(i2c, {a for p in plugin.values() if p in I2C_PLUGINS for a in I2C_PLUGINS[p]})
     ds_tasks = sorted(nr for nr, p in plugin.items() if p == PLUGIN_DS18B20)
     fuehler = []
     if ds_tasks:
         for gpio in ow_gpios or [formulare[ds_tasks[0]][1].get("taskdevicepin1", "-1")]:
             gefunden = ow_scan(port, gpio)
-            print(f"1-Wire an GPIO {gpio}: {len(gefunden)} Fuehler {gefunden}")
+            ausgabe(f"1-Wire an GPIO {gpio}: {len(gefunden)} Fuehler {gefunden}")
             fuehler += [(str(gpio), a) for a in gefunden]
         if len(fuehler) > len(ds_tasks):
             print(f"WARNUNG: {len(fuehler)} Fuehler, aber nur {len(ds_tasks)} DS18B20-Tasks in der config.dat")
@@ -180,7 +182,7 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None):
                 if f.get("taskdevicepin1") != gpio:
                     f["taskdevicepin1"] = gpio
                     if not anwenden:
-                        print(f"  '{name}': GPIO -> {gpio}, Adresse {adresse} (wird beim Anwenden gewaehlt)")
+                        ausgabe(f"  '{name}': GPIO -> {gpio}, Adresse {adresse} (wird beim Anwenden gewaehlt)")
                         neu[nr] = dict(f, TDE="on")
                         continue
                     # Adressliste haengt am gespeicherten GPIO: erst Pin speichern, dann neu lesen
@@ -189,7 +191,8 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None):
                     f = dict(felder_neu)
                 wert = dallas_option(html, adresse)
                 if wert is None:
-                    print(f"WARNUNG: Adresse {adresse} nicht im Auswahlfeld von '{name}' - bitte in der Weboberflaeche waehlen")
+                    if anwenden:   # im Probelauf kann die Auswahlliste noch unvollstaendig sein
+                        print(f"WARNUNG: Adresse {adresse} nicht im Auswahlfeld von '{name}' - bitte in der Weboberflaeche waehlen")
                 else:
                     f["dallas_addr0"] = wert
         elif p in (PLUGIN_SYSINFO, *PLUGINS_OLED) or p is None:
@@ -229,9 +232,9 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None):
         alt, f = formulare[nr][1], neu[nr]
         diff = {k: (alt.get(k), f.get(k)) for k in set(alt) | set(f) if alt.get(k) != f.get(k)}
         status = "AN " if "TDE" in f else "aus"
-        print(f"  [{status}] Task {nr:2} {f.get('TDN', ''):<14} {t['Type']}")
+        ausgabe(f"  [{status}] Task {nr:2} {f.get('TDN', ''):<14} {t['Type']}")
         for k, (a, b) in sorted(diff.items()):
-            print(f"         {k}: {a!r} -> {b!r}")
+            ausgabe(f"         {k}: {a!r} -> {b!r}")
         if diff:
             aenderungen += 1
             if anwenden:
@@ -239,13 +242,13 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None):
                 box.post(f"/devices?index={nr}&page=1", f)
 
     if not aenderungen:
-        print("Keine Aenderungen noetig.")
+        ausgabe("Keine Aenderungen noetig.")
     elif anwenden:
-        print(f"{aenderungen} Task(s) geschrieben.")
+        ausgabe(f"{aenderungen} Task(s) geschrieben.")
     else:
-        print(f"{aenderungen} Task(s) wuerden geaendert - mit --anwenden schreiben.")
+        ausgabe(f"{aenderungen} Task(s) wuerden geaendert - mit --anwenden schreiben.")
     if nicht_erkennbar:
-        print("Nicht erkennbar (per --an/--aus waehlen):", ", ".join(nicht_erkennbar))
+        ausgabe("Nicht erkennbar (per --an/--aus waehlen):", ", ".join(nicht_erkennbar))
     return nicht_erkennbar
 
 

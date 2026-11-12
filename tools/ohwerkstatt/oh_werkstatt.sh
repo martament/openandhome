@@ -1,7 +1,7 @@
 #!/bin/bash
 # Openandhome Werkstatt-Tool (nur Linux, nur intern - nicht an Kunden ausliefern).
 # Kundenfunktionen (WLAN setzen, Reset Wifi, AP-Mode ...) bleiben in
-# tools/ohtoolbox/bin/linux_ohtoolbox.sh. Ablauf siehe plans/espeasy-fertig-images.md, Abschnitt 6.
+# tools/ohtoolbox (Toolbox + OH-Flasher). Ablauf siehe plans/espeasy-fertig-images.md, Abschnitt 6.
 
 # --- KONFIGURATION ---
 BAUD=115200
@@ -171,9 +171,10 @@ syslog() {
 kundenpaket() {
     echo -e "\n\e[36m--- Kundenpaket für den Windows-Flasher ---\e[0m"
     echo "Box (ESP8266, im WLAN) -> Basis-config.dat, Sensorbox1, Auto Select, Dashboard (alle Sensoren)"
-    echo "-> Task-Liste lesen -> tools/oh-flasher/manifest.json"
+    echo "Manifest aus tools/bin/oh_klassen.py erzeugen und ohtoolbox.zip bauen (keine Box nötig)"
     read -p "Weiter? (j/n) [n]: " ok
-    [[ "$ok" =~ ^[jJyY]$ ]] && testbox kundenpaket || weiter
+    [[ "$ok" =~ ^[jJyY]$ ]] && python3 "$BIN/oh_klassen.py" && python3 "$REPO/tools/ohtoolbox/paket_bauen.py"
+    weiter
 }
 
 check_config() {
@@ -214,12 +215,12 @@ while true; do
     echo "7) 1-Wire-Scan DS18B20"
     echo "8) Syslog an/aus/Status"
     echo "9) config.dat / Backup-Tar prüfen"
-    echo "k) Kundenpaket für den Windows-Flasher erzeugen"
-    echo "f) Windows-Flasher hier testen (lokale Dateien)"
+    echo "k) Manifest erzeugen und ohtoolbox.zip bauen"
+    echo "f) OH-Flasher testen (lokale Dateien)"
+    echo "t) Toolbox testen (lokale Dateien)"
     echo "i) Fertig-Images laden (Branch devel)"
     echo "m) Serieller Monitor"
     echo "------------------------------------"
-    echo "WLAN setzen: tools/ohtoolbox/bin/linux_ohtoolbox.sh (Punkt 1)"
     echo "q) Beenden"
     echo ""
 
@@ -235,7 +236,8 @@ while true; do
         8) syslog ;;
         9) check_config ;;
         k|K) kundenpaket ;;
-        f|F) find_port && python3 "$REPO/tools/oh-flasher/bin/oh_flasher.py" --port "$PORT" --quelle lokal; weiter ;;
+        f|F) find_port && "$REPO/tools/ohtoolbox/flasher.sh" --port "$PORT" --quelle lokal; weiter ;;
+        t|T) find_port && "$REPO/tools/ohtoolbox/toolbox.sh" --port "$PORT" --quelle lokal ;;
         i|I) download_images ;;
         m|M) monitor ;;
         q|Q) exit 0 ;;

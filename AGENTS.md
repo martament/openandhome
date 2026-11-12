@@ -33,12 +33,15 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
    werden für beide per Web-Upload gesetzt (Werkstatt-Tool bzw. Flasher).
 3. **Werkstatt (intern, Linux):** [`tools/ohwerkstatt/`](tools/ohwerkstatt/README.md) — Aufsetzen,
    24h-Test, Testende, Kundenpaket. Flashen per `esptool`.
-4. **Endanwender:** [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) ist das **Standardwerkzeug**
-   (Linux/Windows, USB: WLAN mit Prüfung, Name, NTP, Resets, Debug).
-   [`tools/oh-flasher/`](tools/oh-flasher/Readme.md) ist nur die **Notlösung** (portables Python +
-   esptool: Sensoren neu erkennen, neu aufsetzen, Firmware); er lädt Firmware, Basis-config und
-   Regeln laut [`manifest.json`](tools/oh-flasher/manifest.json) aus dem Repo (Branch `master`).
-   Funktionen für Kunden gehören in die Toolbox; was die Weboberfläche braucht (Autoerkennung), in den Flasher.
+4. **Endanwender:** ein Paket [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) (portables Python,
+   Windows/Linux) mit **Toolbox** (Standard: WLAN, Name, NTP, Sensoren erkennen, Grundkonfiguration,
+   Resets, Debug) und **OH-Flasher** (Firmware-Update, Neu-Aufspielen als Notfall). Beide nutzen
+   dieselben Module wie die Werkstatt. **Eine Quelle:** [`tools/bin/oh_klassen.py`](tools/bin/oh_klassen.py)
+   (Images, Basis-configs, Regeln, Hardware je Klasse); daraus wird
+   [`manifest.json`](tools/ohtoolbox/manifest.json) erzeugt (`python3 tools/bin/oh_klassen.py`).
+   Nach jeder Änderung an Images/Basis-configs Manifest neu erzeugen und committen - die CI
+   ([`.github/workflows/ohtoolbox.yml`](.github/workflows/ohtoolbox.yml)) prüft das und baut auf
+   `master` automatisch ein Release `ohtoolbox-JJJJ.MM.TT-N` mit Release-Notes.
 5. **Keine Firmware-Binaries als Text bearbeiten**, keine `.bin`-Dateien
    committen, die nicht aus einem Download stammen (Herleitung/Provenienz in
    README oder readme.txt des Ordners dokumentieren).
@@ -75,8 +78,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 | [`configs/espeasy/standalone/`](configs/espeasy/standalone/) | **Standalone (ESP8266 4M1M)**: collection_A-Image + `readme_image.txt`, Varianten-Ordner (alt) |
 | [`configs/espeasy/standalone/basis/config.dat`](configs/espeasy/standalone/basis/config.dat) | **Basis-config.dat** mit allen Tasks (Autoerkennung schaltet passende ein) |
 | [`configs/espeasy/standalone/resources/`](configs/espeasy/standalone/resources/) | Dashboard-Bausteine für beide Klassen: `header.txt`, `footer.txt`, Icons, CSS |
-| [`tools/oh-flasher/`](tools/oh-flasher/Readme.md) | Windows-Flasher für Endkunden |
-| [`tools/ohtoolbox/`](tools/ohtoolbox/bin/linux_ohtoolbox.sh) | Toolbox für Endkunden (WLAN, Settings, Debug) |
+| [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) | Endanwender-Paket: Toolbox (Standard) und OH-Flasher (Update/Notfall) |
 | [`tools/ohwerkstatt/`](tools/ohwerkstatt/README.md) | Werkstatt-Tool (intern, Linux): Aufsetzen, 24h-Test, Testende |
 | [`tools/bin/`](tools/bin/) | Python-Helfer: Download, Autoerkennung, Syslog, config.dat-Prüfung, Testablauf |
 | [`docs/`](docs/) | PDF-Bedienungsanleitungen |
@@ -150,9 +152,7 @@ Helfer:
   Standardweg USB (`/dev/ttyUSB*`, Benutzer braucht Gruppe `dialout`).
   Namen: im Test `Testbox<Unit>`, bei Auslieferung `Sensorbox1`/Unit 0.
   Web-Zugriff: „Allow IP range" 192.168.0.0–192.168.255.255 (liegt in `security.dat`).
-- [`tools/ohtoolbox/bin/linux_ohtoolbox.sh`](tools/ohtoolbox/bin/linux_ohtoolbox.sh) — **für Endkunden**
-  (WLAN setzen, Settings lesen, Debug-Log, Reboot). Nur Funktionen aufnehmen,
-  die Kunden brauchen; Werkstatt-Funktionen gehören in `ohwerkstatt`.
+- [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) — **für Endkunden** (Toolbox und OH-Flasher, siehe Regel 4).
 - [`tools/bin/espeasy_configcheck.py`](tools/bin/espeasy_configcheck.py) — prüft `config.dat`/Backup-Tars
   (Syslog aus? `security.dat` nur Defaults?) vor jedem Commit.
 

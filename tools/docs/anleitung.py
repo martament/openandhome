@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baut die Bedienungsanleitungen aus der Word-Vorlage 2023.1.
+"""Baut die Bedienungsanleitungen aus der Word-Vorlage tools/docs/vorlage.docx.
 
 Je eine Anleitung fuer alle Professional- und fuer alle Standalone-Boxen: keine
 Angaben zu einzelnen Ausstattungen (Fuehleranzahl, Zusatzsensoren) oder Firmware-Versionen.
@@ -23,7 +23,8 @@ import zipfile
 from xml.sax.saxutils import escape
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-VORLAGE = os.path.join(ROOT, "docs/2023 openandhome - Bedienungsanleitung - Professional Typ2023-1-Vers 2.docx")
+# Vorlage: Formatvorlagen, Kopf-/Fusszeile, Logo, Nummerierung (urspruenglich aus der Anleitung 2023.1)
+VORLAGE = os.path.join(ROOT, "tools/docs/vorlage.docx")
 ZIELE = {
     "professional": "docs/2026 openandhome - Bedienungsanleitung - Professional.docx",
     "standalone": "docs/2026 openandhome - Bedienungsanleitung - Standalone.docx",
@@ -265,7 +266,7 @@ def inhalt_professional():
     t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://<IP-Adresse>/advanced"),
                     " im Feld „NTP Hostname“ ein und speichern mit „Submit“."))
     t.append(absatz("Alternativ setzen Sie den Zeitserver mit der openandhome-Toolbox (Menüpunkt „Zeitserver (NTP) "
-                    "setzen“; Download unter https://github.com/martament/openandhome, Ordner tools/ohtoolbox). "
+                    "setzen“; Download unter https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip). "
                     "Die Toolbox verbindet sich über den USB-Anschluss im Inneren der Sensorbox."))
     t.append(absatz(fett("Achtung: "), "Ziehen Sie vorher unbedingt das PoE-Netzwerkkabel ab. USB und PoE dürfen "
                     "nie gleichzeitig angeschlossen sein – der Messumformer ist nicht galvanisch getrennt, "
@@ -385,7 +386,7 @@ def inhalt_standalone():
     t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://sensorbox1/advanced"),
                     " im Feld „NTP Hostname“ ein und speichern mit „Submit“ – oder mit der openandhome-Toolbox "
                     "über das USB-Kabel (Menüpunkt „Zeitserver (NTP) setzen“; Download unter "
-                    "https://github.com/martament/openandhome, Ordner tools/ohtoolbox)."))
+                    "https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip)."))
     abrufen(t, mit_zabbix=False)
 
     t.append(ueberschrift("Ihre Sensorbox mit WLAN"))
@@ -445,7 +446,7 @@ def baue(variante, vorlage, ziel):
         x = alt.read("word/document.xml").decode("utf-8")
         kopf, rest = x.split("<w:body>", 1)
         titel = re.match(r"\s*(<w:p[ >].*?</w:p>)", rest, re.S).group(1)
-        titel = titel.replace("Bedienungsanleitung Sensor 2023.1", TITEL[variante])
+        titel = re.sub(r"Bedienungsanleitung Sensor[^<]*", TITEL[variante], titel, count=1)
         sect = re.search(r"<w:sectPr.*?</w:sectPr>", rest, re.S).group(0)
         neu = kopf + "<w:body>" + titel + INHALT[variante]() + sect + "</w:body></w:document>"
         with zipfile.ZipFile(ziel, "w", zipfile.ZIP_DEFLATED) as z:
@@ -475,6 +476,8 @@ def zweite_schrittliste(numbering):
     """Legt numId 13 an: gleiche Formatierung wie numId 1 (A), B), ...), beginnt aber wieder bei A."""
     abstrakt = re.search(rf'<w:num w:numId="{NUM_SCHRITTE}"[^>]*>.*?<w:abstractNumId w:val="(\d+)"/>',
                          numbering, re.S).group(1)
+    if f'w:numId="{NUM_SCHRITTE_2}"' in numbering:
+        return numbering          # Vorlage hat die Liste schon
     neu = (f'<w:num w:numId="{NUM_SCHRITTE_2}"><w:abstractNumId w:val="{abstrakt}"/>'
            f'<w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride></w:num>')
     return numbering.replace("</w:numbering>", neu + "</w:numbering>")

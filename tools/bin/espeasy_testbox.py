@@ -40,48 +40,18 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from espeasy_autoconfig import PLUGIN_DS18B20, PLUGIN_SYSINFO, PLUGINS_OLED, autokonfiguration, oeffne  # noqa: E402
 from espeasy_configcheck import lese_settings  # noqa: E402
 from espeasy_syslog import Box, FormParser, setze_syslog  # noqa: E402
+from oh_klassen import DASHBOARD_DATEIEN, KLASSEN, manifest_schreiben  # noqa: E402
+from oh_klassen import RESSOURCEN as _RESSOURCEN  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+RESSOURCEN = os.path.join(ROOT, _RESSOURCEN)
 ESPTOOL_PFAD = os.path.join(ROOT, "tools/oh-flasher/bin/pythonportable/Lib/site-packages")
-RESSOURCEN = os.path.join(ROOT, "configs/espeasy/standalone/resources")
-DASHBOARD_DATEIEN = ["temperature.png", "temperature1.png", "humidity.png", "distance.png",
-                     "openandhome_32.png", "openandhome.css"]
 PROTOKOLLE = os.path.expanduser("~/openandhome-testprotokolle")
 # Erlaubter Web-Zugriff (Config -> Client IP filtering: Allow IP range)
 ZUGRIFF_VON, ZUGRIFF_BIS = "192.168.0.0", "192.168.255.255"
 # Name bei Auslieferung (wie bisher); im Test heisst die Box Testbox<Unit>
 AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT = "Sensorbox1", "0"
 BACKUPS = os.path.expanduser("~/openandhome-backups")
-
-KLASSEN = {
-    "ESP8266": {
-        "name": "standalone",
-        "image": "configs/espeasy/standalone/ESP_Easy_mega_*_climate_B_ESP8266_4M1M.bin",
-        "flash": ["-fs", "4MB", "0x0"],
-        "basis": "configs/espeasy/standalone/basis/config.dat",
-        "wlan": True,
-        # climate_B hat kein AM2320-Plugin (P051) -> bei erkanntem AM2320 collection_H
-        "am2320": {
-            "image": "configs/espeasy/standalone/ESP_Easy_mega_*_collection_H_ESP8266_4M1M.bin",
-            "basis": "configs/espeasy/standalone/basis_am2320/config.dat",
-        },
-    },
-    "ESP32": {
-        "name": "professional",
-        "image": "configs/espeasy/professional/ESP_Easy_mega_*_collection_A_ESP32_4M316k.factory.bin",
-        "flash": ["0x0"],
-        "basis": "configs/espeasy/professional/basis/config.dat",
-        # Werkstatt laeuft per WLAN am USB (USB und PoE nie gleichzeitig, Olimex ESP32-POE
-        # ist nicht galvanisch getrennt); beim Kunden Ethernet
-        "wlan": True,
-        "wlan_reset": True,
-        # Olimex ESP32-POE: LAN8720 (0), MDC 23, MDIO 18, Power 12, 50 MHz APLL invertiert GPIO17 (3)
-        "ethernet": '{"nwpluginID":3,"enabled":"true","route_prio":200,"Index":0,"phytype":0,'
-                    '"phyaddr":0,"MDC":23,"MDIO":18,"pwr":12,"clock":3}',
-        "ow_gpios": [4, 2],
-        "zabbix_controller": 2,
-    },
-}
 
 # Plausibilitaet je Messwertname: (min, max, verdaechtige Werte)
 GRENZEN = {
@@ -645,76 +615,8 @@ def beenden(args):
 
 
 def kundenpaket(args):
-    """Erzeugt das Manifest fuer den Windows-Flasher (Plan 12, nur ESP8266).
-
-    Kein Dateisystem-Abzug von der Box: SPIFFS behaelt ueberschriebene Bloecke,
-    ein Abzug enthielte alte WLAN-Daten. Das Manifest verweist auf Firmware,
-    Basis-config.dat und Dashboard-Dateien im Repo; die Task-Liste fuer die
-    Erkennung wird aus der Basis-config.dat auf der Box gelesen."""
-    port = args.port
-    schritt("1/3 Box pruefen")
-    chip, mac = chip_info(port)
-    if chip != "ESP8266":
-        sys.exit("FEHLER: Kundenpaket nur fuer Standalone (ESP8266).")
-    # chip_id setzt den Chip zurueck - auf den Neustart warten
-    box = http_bereit(port, warte_ip(port, 60))
-
-    schritt("2/3 Basis-config.dat laden, Task-Liste lesen")
-    quelle = KLASSEN[chip]["am2320"] if args.am2320 else KLASSEN[chip]
-    bild = sorted(glob.glob(os.path.join(ROOT, quelle["image"])))[-1]
-    image_aktuell = json.loads(box.get("/json"))["System"].get("Binary Filename", "")
-    if os.path.basename(bild).removesuffix(".bin") != image_aktuell:
-        sys.exit(f"FEHLER: Box laeuft mit {image_aktuell}, fuer diese Variante muss {os.path.basename(bild)} drauf sein.")
-    basis = os.path.join(ROOT, quelle["basis"])
-    lade_hoch(box, basis, "config.dat")
-    sende(port, "Reboot")
-    time.sleep(10)
-    box = http_bereit(port, warte_ip(port))
-    from espeasy_autoconfig import I2C_PLUGINS, lies_task
-    tasks, gpio = [], None
-    for t in json.loads(box.get("/json"))["Sensors"]:
-        nr = t["TaskNumber"]
-        _, felder = lies_task(box, nr)
-        plugin = int(felder.get("TDNUM", "0") or 0)
-        eintrag = {"nr": nr, "name": t["TaskName"], "typ": t["Type"]}
-        if plugin == PLUGIN_SYSINFO:
-            continue
-        if plugin == PLUGIN_DS18B20:
-            eintrag["art"] = "ds18b20"
-            gpio = int(felder.get("taskdevicepin1", "0")) if gpio is None else gpio
-        elif plugin in I2C_PLUGINS:
-            eintrag.update(art="i2c", adressen=sorted(I2C_PLUGINS[plugin]))
-        else:
-            eintrag["art"] = "frage"
-        tasks.append(eintrag)
-        print(f"  Task {nr:2} {t['TaskName']:<14} {eintrag['art']}")
-
-    schritt("3/3 Manifest")
-    relativ = lambda p: os.path.relpath(p, ROOT).replace(os.sep, "/")
-    eintrag = lambda p: {"pfad": relativ(p), "sha256": sha256(p)}
-    pfad = os.path.join(ROOT, "tools/oh-flasher/manifest.json")
-    teil = {"firmware": eintrag(bild), "basis_config": eintrag(basis), "onewire_gpio": gpio or 0, "tasks": tasks}
-    regeln = os.path.join(os.path.dirname(basis), "rules1.txt")
-    if os.path.exists(regeln):
-        teil["regeln"] = eintrag(regeln)
-    manifest = {}
-    if os.path.exists(pfad):
-        with open(pfad, encoding="utf-8") as f:
-            manifest = json.load(f)
-    if args.am2320:
-        manifest["am2320"] = teil
-    else:
-        manifest.update(teil)
-    manifest.update({
-        "version": 1,
-        "erzeugt": f"{datetime.datetime.now():%Y-%m-%d %H:%M}",
-        "ressourcen": [eintrag(os.path.join(RESSOURCEN, d)) for d in ["header.txt", "footer.txt", *DASHBOARD_DATEIEN]],
-    })
-    with open(pfad, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2, ensure_ascii=False)
-        f.write("\n")
-    print(f"  {relativ(pfad)}")
-    print("\nKundenpaket fertig. Pruefen und auf devel committen (manifest.json).")
+    """Manifest fuer Toolbox/Flasher aus den Box-Klassen erzeugen (keine Box noetig)."""
+    print("geschrieben:", os.path.relpath(manifest_schreiben(), ROOT))
 
 
 def sha256(pfad):

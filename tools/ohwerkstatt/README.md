@@ -23,8 +23,9 @@ Device-Einstellungen, Zugriffsbereich und Dashboard gehen über HTTP.
 | 7 | 1-Wire-Scan (`OWScan,<GPIO>`) |
 | 8 | Syslog an/aus/Status |
 | 9 | `config.dat` / Backup-Tar prüfen |
-| k | Kundenpaket: `tools/oh-flasher/manifest.json` aus der Box erzeugen (Firmware, Basis-`config.dat`, Dashboard-Dateien, Task-Liste) |
-| f | Windows-Flasher (`oh_flasher.py`) hier mit lokalen Dateien testen |
+| k | Manifest aus [`oh_klassen.py`](../bin/oh_klassen.py) erzeugen und `ohtoolbox.zip` bauen (keine Box nötig) |
+| t | Toolbox (Kundensicht) mit lokalen Dateien starten |
+| f | OH-Flasher (Kundensicht) mit lokalen Dateien starten |
 | i | Fertig-Images laden (nur Branch `devel`) |
 | m | Serieller Monitor |
 
@@ -44,7 +45,8 @@ Die Python-Helfer lassen sich auch einzeln aufrufen:
 [`espeasy_configcheck.py`](../bin/espeasy_configcheck.py),
 [`espeasy_download.py`](../bin/espeasy_download.py).
 
-Kunden-ZIP bauen: `python3 tools/oh-flasher/paket_bauen.py` → `tools/oh-flasher/dist/oh-flasher.zip`.
+Kunden-ZIP: baut die CI auf `master` automatisch (Release mit Release-Notes); lokal
+`python3 tools/ohtoolbox/paket_bauen.py` → `tools/ohtoolbox/dist/ohtoolbox.zip`.
 
 
 ## Professional (Olimex ESP32-POE)

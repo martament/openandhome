@@ -1,0 +1,61 @@
+# Baut ohtoolbox.zip (Toolbox + OH-Flasher) und veroeffentlicht bei Aenderungen auf master
+# ein neues Release ohtoolbox-JJJJ.MM.TT-N mit automatisch erzeugten Release-Notes.
+# Download immer: https://github.com/martament/openandhome/releases/latest/download/ohtoolbox.zip
+# devel: nur pruefen, ob tools/ohtoolbox/manifest.json zu den Dateien passt.
+name: ohtoolbox
+
+on:
+  push:
+    branches: [master, devel]
+    paths: ["tools/**", "configs/espeasy/**", ".github/workflows/ohtoolbox.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  paket:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # Tags und Historie fuer die Release-Notes
+
+      - name: Manifest pruefen
+        run: python3 tools/ohtoolbox/paket_bauen.py --nur-pruefen
+
+      - name: ohtoolbox.zip bauen
+        if: github.ref == 'refs/heads/master'
+        run: python3 tools/ohtoolbox/paket_bauen.py
+
+      - name: Release mit Release-Notes erstellen
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          STAND=$(python3 -c "import json; print(json.load(open('tools/ohtoolbox/manifest.json'))['stand'])")
+          VORHER=$(git tag --list 'ohtoolbox-*' --sort=-creatordate | head -n 1)
+          DATUM=$(date +%Y.%m.%d)
+          N=$(( $(git tag --list "ohtoolbox-$DATUM-*" | wc -l) + 1 ))
+          TAG="ohtoolbox-$DATUM-$N"
+          {
+            echo "## openandhome-Toolbox und OH-Flasher"
+            echo
+            echo "Firmware-Stand: **$STAND** (ESPEasy)"
+            echo
+            echo "Download: \`ohtoolbox.zip\` unten - entpacken, dann \`start_toolbox.bat\` (Windows) bzw. \`toolbox.sh\` (Linux)."
+            echo
+            if [ -n "$VORHER" ]; then
+              echo "### Änderungen seit $VORHER"
+              BEREICH="$VORHER..HEAD"
+            else
+              echo "### Änderungen"
+              BEREICH="HEAD~30..HEAD"
+            fi
+            echo
+            git log "$BEREICH" --no-merges --pretty='- %s (%h)' -- tools configs/espeasy | grep -v 'Co-Authored-By' || echo "- keine Änderungen an Werkzeugen oder Konfiguration"
+          } > release-notes.md
+          cat release-notes.md
+          gh release create "$TAG" tools/ohtoolbox/dist/ohtoolbox.zip --title "openandhome-Toolbox $DATUM-$N" \
+            --notes-file release-notes.md --target "$GITHUB_SHA" --latest

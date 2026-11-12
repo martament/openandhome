@@ -837,3 +837,24 @@ Flasher-Screenshots `images/oh-flasher/`. Verweise auf diese Pfade in den
 Abschnitten oben sind Historie; die Inhalte liegen in der Git-Historie.
 Endanwender: ohtoolbox = Standard, OH-Flasher = Notlösung (beide Klassen).
 
+## 16. Endanwender-Paket vereinfacht (2026-11-12)
+
+- **Eine Quelle:** [`tools/bin/oh_klassen.py`](../tools/bin/oh_klassen.py) (Images, Basis-configs,
+  Regeln, Hardware je Klasse) fuer Werkstatt, Toolbox und Flasher; das Manifest
+  [`tools/ohtoolbox/manifest.json`](../tools/ohtoolbox/manifest.json) wird daraus erzeugt
+  (Stand = Firmware-Tag, deterministisch). Kein Kundenpaket-Schritt an einer Box mehr.
+- **Ein Paket** [`tools/ohtoolbox/`](../tools/ohtoolbox/README.md): portables Python, Starter fuer
+  Toolbox und OH-Flasher (Windows `.bat`, Linux `.sh`). Gemeinsame Ablaeufe in
+  [`tools/bin/oh_kunde.py`](../tools/bin/oh_kunde.py). Die PowerShell-/Bash-Toolbox und
+  `tools/oh-flasher/` entfallen.
+- **Toolbox:** WLAN mit Pruefung, Name, NTP, Resets, Debug, **Sensoren neu erkennen**,
+  **Grundkonfiguration wiederherstellen**. **Flasher:** **Firmware-Update** (Einstellungen bleiben;
+  Professional: App nach 0x10000 + otadata loeschen, NVS/Ethernet bleiben - noch am Geraet zu
+  testen) und **Neu aufspielen** (danach Grundkonfiguration wie Toolbox).
+- **CI** [`.github/workflows/ohtoolbox.yml`](../.github/workflows/ohtoolbox.yml): devel prueft das
+  Manifest; master baut `ohtoolbox.zip` und erstellt Release `ohtoolbox-JJJJ.MM.TT-N` mit
+  Release-Notes (Firmware-Stand + Commit-Titel seit dem letzten Release). Download:
+  `releases/latest/download/ohtoolbox.zip`. Das alte Release V2.4 (PowerShell-Toolbox) bleibt
+  bestehen; einen `oh-flasher.zip`-Download gab es nie.
+- Anleitungs-Vorlage liegt jetzt in [`tools/docs/vorlage.docx`](../tools/docs/vorlage.docx).
+
