@@ -202,6 +202,9 @@ def grundkonfiguration(port, quelle, k, chip, temporaer=None):
     if temporaer is None:
         temporaer = ins_netz(port, chip)
     box = http_bereit(port, warte_ip(port))
+    # Zugriff dauerhaft erlauben: ClearAccessBlock gilt nur bis die Box ihre Einstellungen neu laedt
+    # (passiert beim config.dat-Upload) - danach waere der Regel-Upload gesperrt
+    setze_zugriff(box)
     lade_hoch(box, quelle.datei(k["basis_config"]), "config.dat")
     if "regeln" in k:
         # Zeitserver-Rueckfall auf Router / 192.168.178.1

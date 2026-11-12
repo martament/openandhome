@@ -512,6 +512,8 @@ def aufsetzen(args):
         einstellungen = lese_settings(f.read())
     if einstellungen["Syslog_IP"] != "0.0.0.0" or einstellungen["SyslogLevel"]:
         print("WARNUNG: In der Basis-config.dat ist Syslog aktiv - fuer Stable neu sichern.")
+    # Zugriff dauerhaft erlauben: ClearAccessBlock gilt nur bis zum Neuladen der Einstellungen
+    setze_zugriff(box)
     lade_hoch(box, basis, "config.dat")
     regeln = os.path.join(os.path.dirname(basis), "rules1.txt")
     if os.path.exists(regeln):

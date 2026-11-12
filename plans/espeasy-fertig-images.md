@@ -849,12 +849,16 @@ Endanwender: ohtoolbox = Standard, OH-Flasher = Notlösung (beide Klassen).
   `tools/oh-flasher/` entfallen.
 - **Toolbox:** WLAN mit Pruefung, Name, NTP, Resets, Debug, **Sensoren neu erkennen**,
   **Grundkonfiguration wiederherstellen**. **Flasher:** **Firmware-Update** (Einstellungen bleiben;
-  Professional: App nach 0x10000 + otadata loeschen, NVS/Ethernet bleiben - noch am Geraet zu
-  testen) und **Neu aufspielen** (danach Grundkonfiguration wie Toolbox).
+  Professional: App nach 0x10000 + otadata loeschen, NVS/Ethernet bleiben - **getestet 2026-11-12**:
+  Name, Ethernet, WLAN, Sensoren erhalten) und **Neu aufspielen** (danach Grundkonfiguration wie Toolbox).
 - **CI** [`.github/workflows/ohtoolbox.yml`](../.github/workflows/ohtoolbox.yml): devel prueft das
   Manifest; master baut `ohtoolbox.zip` und erstellt Release `ohtoolbox-JJJJ.MM.TT-N` mit
   Release-Notes (Firmware-Stand + Commit-Titel seit dem letzten Release). Download:
   `releases/latest/download/ohtoolbox.zip`. Das alte Release V2.4 (PowerShell-Toolbox) bleibt
   bestehen; einen `oh-flasher.zip`-Download gab es nie.
 - Anleitungs-Vorlage liegt jetzt in [`tools/docs/vorlage.docx`](../tools/docs/vorlage.docx).
-
+- **Neu aufspielen Professional getestet (2026-11-12):** erase, factory.bin, Ethernet per USB, WLAN
+  voruebergehend, Grundkonfiguration + Regeln, 3 Fuehler + Display erkannt, WLAN geloescht, Name
+  Sensorbox1. Befund: Nach ClearAccessBlock sperrt die Box wieder, sobald der config.dat-Upload die
+  Einstellungen neu laedt -> Zugriffsbereich wird jetzt **vor** den Uploads dauerhaft gesetzt
+  (Toolbox/Flasher und Werkstatt).
