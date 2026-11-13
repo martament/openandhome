@@ -14,7 +14,7 @@ Device-Einstellungen, Zugriffsbereich und Dashboard gehen über HTTP.
 
 | Punkt | Funktion |
 |---|---|
-| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Flashen (Image der Klasse laut [`oh_klassen.py`](../bin/oh_klassen.py)) → Professional: Ethernet per USB → WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`: Zeile 1 SSID, Zeile 2 Passwort, `chmod 600`; fehlt die Datei, wird gefragt) → Web-Zugriff 192.168.0.0–192.168.255.255 → Basis-`config.dat` + `rules1.txt` (bei AM2320 automatisch collection_H/`basis_am2320`) → Testname `Testbox<Unit>` → Sensoren erkennen → Zabbix-Abfrage (Professional) → Dashboard → Werte- und Dashboard-Prüfung → Syslog an |
+| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Flashen (Image der Klasse laut [`oh_klassen.py`](../bin/oh_klassen.py)) → Professional: Ethernet per USB → WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`: Zeile 1 SSID, Zeile 2 Passwort, `chmod 600`; fehlt die Datei, wird gefragt) → Web-Zugriff 192.168.0.0–192.168.255.255 → Basis-`config.dat` + `rules1.txt` (bei AM2320 automatisch collection_H/`basis_am2320`) → Testname `Sensorbox<Unit>` (Vorgabe) → Sensoren erkennen → Zabbix-Abfrage (Professional) → Dashboard → Werte- und Dashboard-Prüfung → Syslog an |
 | 2 | Test prüfen: Messwerte plausibel? Dashboard vollständig ersetzt? |
 | 3 | **Test beenden:** Abschlussprüfung → Syslog aus → Name `Sensorbox1`/Unit 0 → Zugriffsbereich → Neustart, prüfen ob Syslog wirklich aus ist → WLAN löschen wie `esp_resetap` (immer, ohne Nachfrage), Neustart und prüfen, ob der AP startet (Boot-Log per USB oder WLAN-Scan per `nmcli`) |
 | 4 | Sensoren erkennen (I2C, DS18B20), Tasks einschalten, OLED-Zeilen setzen |

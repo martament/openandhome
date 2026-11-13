@@ -41,6 +41,8 @@ I2C_PLUGINS = {
 PLUGINS_OLED = {36, 23}
 EINHEITEN = {"temperatur": "C", "luftfeuchtigkeit": "%", "distance": "cm", "druck": "hPa"}
 OLED_ZEILEN = 12
+P036_SCROLL_SOFORT = "32"   # OLED Framed 'Scroll': 1 Very Slow ... 32 Instant
+P036_ZEIT_HHMM = "1"   # OLED Framed 'Header Time format': 0 HH:MM:SS, 1 HH:MM (24h)
 
 
 # --- USB ---
@@ -224,6 +226,13 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None, l
         if plugin.get(nr) in PLUGINS_OLED and "TDE" in f:
             for i in range(1, OLED_ZEILEN + 1):
                 f[f"pc_arg{i}"] = f"{i}: {werte[i - 1]}" if i <= len(werte) else ""
+            if "scroll" in f:
+                # Seitenwechsel ohne Rein-/Rausscrollen: Scrollen war instabil
+                f["scroll"] = P036_SCROLL_SOFORT
+            f.pop("ScrollLines", None)      # lange Zeilen nicht scrollen (Checkbox aus)
+            if "timeFmt" in f:
+                # Uhrzeit oben links HH:MM statt HH:MM:SS (Feld fehlt in ESP8266-Images mit LIMIT_BUILD_SIZE)
+                f["timeFmt"] = P036_ZEIT_HHMM
 
     # Aenderungen anzeigen und schreiben
     aenderungen = 0

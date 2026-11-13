@@ -50,7 +50,7 @@ ESPTOOL_PFAD = os.path.join(ROOT, "tools/ohtoolbox/bin/pythonportable/Lib/site-p
 PROTOKOLLE = os.path.expanduser("~/openandhome-testprotokolle")
 # Erlaubter Web-Zugriff (Config -> Client IP filtering: Allow IP range)
 ZUGRIFF_VON, ZUGRIFF_BIS = "192.168.0.0", "192.168.255.255"
-# Name bei Auslieferung (wie bisher); im Test heisst die Box Testbox<Unit>
+# Name bei Auslieferung (wie bisher); im Test heisst die Box Sensorbox<Unit> (Vorgabe)
 AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT = "Sensorbox1", "0"
 BACKUPS = os.path.expanduser("~/openandhome-backups")
 # Werkstatt-WLAN: Zeile 1 SSID, Zeile 2 Passwort (chmod 600, nie ins Repo); fehlt sie, wird gefragt
@@ -541,7 +541,7 @@ def aufsetzen(args):
 
     schritt("5/9 Testname, Unit und Web-Zugriff")
     unit = frage("Unit-Nummer (eindeutig je Testbox)", "1")
-    name = frage("Name im Test", f"Testbox{unit}")
+    name = frage("Name im Test", f"Sensorbox{unit}")
     setze_name(port, box, name, unit)
     setze_zugriff(box)
 

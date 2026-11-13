@@ -139,7 +139,7 @@ Mit [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/README.md):
 
 1. **Menü 1 – aufsetzen:** Chip erkennen, flashen (Sicherung vorher optional über Menü b), bei
    Professional Ethernet per USB, WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`, sonst Abfrage), Zugriffsbereich, Basis-config + Regeln,
-   Testname `Testbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an.
+   Testname `Sensorbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an.
 2. **Menü 2 – prüfen** (jederzeit, auch ohne USB per IP): Messwerte plausibel, Dashboard vollständig.
 3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus (nach Neustart geprüft), Name `Sensorbox1`/Unit 0,
    WLAN immer löschen (ohne Nachfrage) und prüfen, ob nach dem Neustart der AP startet. Protokoll unter `~/openandhome-testprotokolle/`.
@@ -148,7 +148,7 @@ Helfer:
 - [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/oh_werkstatt.sh) — **intern, nur Linux**:
   Box aufsetzen + 24h-Test starten, Test prüfen, Test beenden, Einzelschritte.
   Standardweg USB (`/dev/ttyUSB*`, Benutzer braucht Gruppe `dialout`).
-  Namen: im Test `Testbox<Unit>`, bei Auslieferung `Sensorbox1`/Unit 0.
+  Namen: im Test `Sensorbox<Unit>`, bei Auslieferung `Sensorbox1`/Unit 0.
   Web-Zugriff: „Allow IP range" 192.168.0.0–192.168.255.255 (liegt in `security.dat`).
 - [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) — **für Endkunden** (Toolbox und OH-Flasher, siehe Regel 4).
 - [`tools/bin/espeasy_configcheck.py`](tools/bin/espeasy_configcheck.py) — prüft `config.dat`/Backup-Tars
