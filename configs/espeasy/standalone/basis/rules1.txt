@@ -1,22 +1,52 @@
-// openandhome: Zeitserver-Rueckfall, falls der eingetragene NTP-Server keine Zeit liefert
-// (z. B. Netz ohne Internet). Stufe 1 nach 90 s: eigener Router (Gateway),
-// Stufe 2 nach weiteren 90 s: 192.168.178.1 (Standard der FRITZ!Box).
-// Nur bis zum naechsten Neustart, es wird nichts gespeichert.
+// openandhome: Zeit primaer aus dem lokalen Netz, Internet nur als letzter Ausweg.
+// Ab Werk ist NTP aus (UseNTP 0). 30 s nach dem Start wird der eigene Router
+// (Gateway) als Zeitserver eingetragen und NTP eingeschaltet. Kommt 90 s lang
+// keine Zeit, wird abwechselnd 192.168.178.1 (FRITZ!Box) und wieder der Router
+// versucht, bis einer antwortet - dieser Server bleibt dann bis zum Neustart.
+// Antwortet 15 min lang keiner, wird de.pool.ntp.org (Internet) genutzt.
+// Nichts wird gespeichert. [var#1] = 1: Zeit empfangen, [var#2] = 1: FRITZ!Box aktiv.
+// Eigener Zeitserver: NTPHost + UseNTP 1 setzen und Rules ausschalten (Toolbox n).
 On System#Boot do
-  TimerSet,1,90
+  TimerSet,1,30
 endon
 
 On Rules#Timer=1 do
-  if %unixtime% < 1700000000
-    LogEntry,NTP-Rueckfall-Gateway
-    NTPHost,%gateway%
+  LogEntry,NTP-lokal-Gateway
+  Let,1,0
+  Let,2,0
+  NTPHost,%gateway%
+  UseNTP,1
+  TimerSet,2,90
+  TimerSet,3,900
+endon
+
+On Time#Initialized do
+  Let,1,1
+endon
+
+On Time#Set do
+  Let,1,1
+endon
+
+On Rules#Timer=2 do
+  if [var#1]=0
+    if [var#2]=0
+      LogEntry,NTP-lokal-192.168.178.1
+      NTPHost,192.168.178.1
+      Let,2,1
+    else
+      LogEntry,NTP-lokal-Gateway
+      NTPHost,%gateway%
+      Let,2,0
+    endif
     TimerSet,2,90
   endif
 endon
 
-On Rules#Timer=2 do
-  if %unixtime% < 1700000000
-    LogEntry,NTP-Rueckfall-192.168.178.1
-    NTPHost,192.168.178.1
+On Rules#Timer=3 do
+  if [var#1]=0
+    LogEntry,NTP-Internet-de.pool.ntp.org
+    TimerSet,2,0
+    NTPHost,de.pool.ntp.org
   endif
 endon

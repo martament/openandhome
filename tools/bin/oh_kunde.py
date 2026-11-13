@@ -207,10 +207,11 @@ def grundkonfiguration(port, quelle, k, chip, temporaer=None):
     setze_zugriff(box)
     lade_hoch(box, quelle.datei(k["basis_config"]), "config.dat")
     if "regeln" in k:
-        # Zeitserver-Rueckfall auf Router / 192.168.178.1
+        # Zeit nur lokal: Regeln schalten NTP mit Router / 192.168.178.1 ein
         lade_hoch(box, quelle.datei(k["regeln"], "regeln"), "rules1.txt")
     sende(port, "Reboot")
     time.sleep(10)
+    sende(port, "UseNTP,0", "Save")     # ab Werk kein Zeitserver im Internet
     box = sensoren_einrichten(port, k, ressourcen)
     abschluss(port, chip, box, temporaer)
 

@@ -54,7 +54,7 @@ Die Toolbox erkennt beim Start, ob eine Standalone- oder Professional-Box angesc
 | 7 | Admin-Passwort der Weboberfläche zurücksetzen |
 | 8 | WLAN-Zugangspunkt des Sensors starten |
 | 9 | IP-Filter zurücksetzen (bis zum Neustart), z. B. bei der Meldung „IP blocked“ |
-| n | Zeitserver (NTP) setzen – z. B. Ihr Router, wenn Ihr Netz kein Internet hat |
+| n | Zeitserver (NTP) setzen – Standard ist Ihr Router, Internet erst nach 15 min ohne Antwort; eigener Server z. B. `de.pool.ntp.org` (schaltet die Regeln mit der Router-Logik ab), `auto` = zurück zum Standard |
 | g | Gerätenamen ändern – der Name der Sensorbox (z. B. Keller statt Sensorbox1); bei mehreren Sensoren braucht jeder einen eigenen Namen |
 | s | **Sensoren neu erkennen** – nach Tausch, Erweiterung oder Umbenennen eines Fühlers; Einstellungen bleiben. Erkennt Fühler, Display und Kombifühler, wählt die Fühleradressen und erneuert Anzeige und Dashboard. Nicht erkennbare Sensoren (Wasser-, Abstandssensor) werden abgefragt. |
 | k | **Grundkonfiguration wiederherstellen** – alle Einstellungen auf den Auslieferungszustand, danach Sensoren erkennen. Die Firmware bleibt. |

@@ -47,7 +47,7 @@
       },
       "regeln": {
         "pfad": "configs/espeasy/standalone/basis/rules1.txt",
-        "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+        "sha256": "63f2c0fdb0b80dfc00003417fddd4bb3e0214fa7740149431512e81ae1b9da33"
       },
       "name": "standalone",
       "flash": [
@@ -71,7 +71,7 @@
         },
         "regeln": {
           "pfad": "configs/espeasy/standalone/basis_am2320/rules1.txt",
-          "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+          "sha256": "63f2c0fdb0b80dfc00003417fddd4bb3e0214fa7740149431512e81ae1b9da33"
         }
       }
     },
@@ -86,7 +86,7 @@
       },
       "regeln": {
         "pfad": "configs/espeasy/professional/basis/rules1.txt",
-        "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+        "sha256": "63f2c0fdb0b80dfc00003417fddd4bb3e0214fa7740149431512e81ae1b9da33"
       },
       "name": "professional",
       "flash": [

@@ -54,13 +54,18 @@ def name(port):
 
 def ntp(port):
     print("\n--- Zeitserver (NTP) setzen ---")
-    print("Standard ist de.pool.ntp.org (Internet). Ohne Internet z. B. die Adresse Ihres Routers")
-    print("(FRITZ!Box: 192.168.178.1) eintragen.")
-    server = input("NTP-Server (leer = Abbruch): ").strip()
+    print("Standard (auto): Die Sensorbox holt die Uhrzeit aus Ihrem Netz, von Ihrem Router (bzw.")
+    print("192.168.178.1); erst nach 15 Minuten ohne Antwort aus dem Internet. Hier koennen Sie einen eigenen Zeitserver")
+    print("eintragen, z. B. de.pool.ntp.org (Internet) - oder mit 'auto' zum Standard zurueck.")
+    server = input("NTP-Server oder auto (leer = Abbruch): ").strip()
+    if server.lower() == "auto":
+        befehle(port, "Zeitserver auf Standard (Router) setzen", "UseNTP,0", "Rules,1")
+        return
     if not re.fullmatch(r"[A-Za-z0-9.-]+", server):
         print("Abgebrochen.")
         return
-    befehle(port, "Zeitserver setzen", f"NTPHost,{server}")
+    # Regeln aus: sie enthalten nur die Router-Zeitlogik und wuerden den Server sonst ueberschreiben
+    befehle(port, "Zeitserver setzen", f"NTPHost,{server}", "UseNTP,1", "Rules,0")
 
 
 def einstellungen(port):

@@ -25,6 +25,7 @@ from html.parser import HTMLParser
 
 TEST_SYSLOG_IP = "192.168.9.4"
 LEVEL_INFO = "2"
+SYSLOG_PORT = "514"
 
 
 class FormParser(HTMLParser):
@@ -121,7 +122,7 @@ def lies_formular(html):
 
 
 def zeige(felder, level_feld):
-    print(f"Syslog-IP:    {felder['syslogip'] or '(leer)'}")
+    print(f"Syslog-IP:    {felder['syslogip'] or '(leer)'}, UDP-Port {felder.get('syslogport', '?')}")
     print(f"Syslog-Level: {felder[level_feld]} (Feld '{level_feld}')")
 
 
@@ -145,6 +146,7 @@ def setze_syslog(box, aktion, ip=TEST_SYSLOG_IP, level=LEVEL_INFO):
         return
 
     felder["syslogip"] = ip if aktion == "an" else "0.0.0.0"
+    felder["syslogport"] = SYSLOG_PORT      # Basis-config hatte 5140, der Server lauscht auf 514
     felder[level_feld] = level if aktion == "an" else "0"
     felder["edit"] = "1"
     print(f"\nSende: Syslog-IP {felder['syslogip']}, Level {felder[level_feld]} ...")
@@ -153,9 +155,10 @@ def setze_syslog(box, aktion, ip=TEST_SYSLOG_IP, level=LEVEL_INFO):
     neu, _ = lies_formular(box.get("/advanced"))
     zeige(neu, level_feld)
     soll_ip = {"an": ip, "aus": "0.0.0.0"}[aktion]
-    if neu["syslogip"] not in (soll_ip, "" if soll_ip == "0.0.0.0" else soll_ip) or neu[level_feld] != felder[level_feld]:
+    if (neu["syslogip"] not in (soll_ip, "" if soll_ip == "0.0.0.0" else soll_ip) or neu[level_feld] != felder[level_feld]
+            or neu.get("syslogport", SYSLOG_PORT) != SYSLOG_PORT):
         sys.exit("FEHLER: Box hat die Werte nicht uebernommen.")
-    geaendert = [n for n in felder if n not in ("syslogip", level_feld, "edit") and neu.get(n) != felder[n]]
+    geaendert = [n for n in felder if n not in ("syslogip", "syslogport", level_feld, "edit") and neu.get(n) != felder[n]]
     if geaendert:
         print(f"WARNUNG: weitere Felder haben sich geaendert: {geaendert}")
     print("OK - gespeichert.")

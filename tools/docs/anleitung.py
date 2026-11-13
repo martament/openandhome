@@ -281,11 +281,14 @@ def inhalt_professional():
     hinweis_ip_bereich(t)
 
     t.append(ueberschrift("Uhrzeit (Zeitserver)"))
-    t.append(absatz("Die Sensorbox holt die Uhrzeit ab Werk aus dem Internet (de.pool.ntp.org). Ist Ihr Netz ohne "
-                    "Internet, nutzt sie nach etwa 1,5 Minuten automatisch Ihren Router als Zeitserver und versucht "
-                    "danach 192.168.178.1 (Standard der FRITZ!Box)."))
-    t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://<IP-Adresse>/advanced"),
-                    " im Feld „NTP Hostname“ ein und speichern mit „Submit“."))
+    t.append(absatz("Die Sensorbox holt die Uhrzeit ab Werk aus Ihrem eigenen Netz: etwa eine halbe Minute nach "
+                    "dem Start von Ihrem Router, sonst von 192.168.178.1 (Standard der FRITZ!Box). Erst wenn beide "
+                    "15 Minuten lang nicht antworten, fragt sie im Internet nach (de.pool.ntp.org). Damit sie ohne "
+                    "Internet auskommt, muss Ihr Router als Zeitserver arbeiten (FRITZ!Box: "
+                    "„Heimnetz > Netzwerk > Netzwerkeinstellungen > Zeitsynchronisation“)."))
+    t.append(absatz("Einen eigenen Zeitserver (z. B. de.pool.ntp.org im Internet) tragen Sie unter ",
+                    fett("http://<IP-Adresse>/advanced"), " im Feld „NTP Hostname“ ein, setzen den Haken bei "
+                    "„Use NTP“, entfernen den Haken bei „Rules“ und speichern mit „Submit“."))
     t.append(absatz("Alternativ setzen Sie den Zeitserver mit der openandhome-Toolbox (Menüpunkt „Zeitserver (NTP) "
                     "setzen“; Download unter https://github.com/martament/openandhome/releases/latest). "
                     "Die Toolbox verbindet sich über den USB-Anschluss im Inneren der Sensorbox."))
@@ -408,11 +411,14 @@ def inhalt_standalone():
     t.append(absatz(fett("Wichtig: "), "Hat die Sensorbox schon einmal WLAN-Zugangsdaten erhalten, versucht sie "
                     "ständig, dieses WLAN zu erreichen. Löschen Sie dann die Zugangsdaten (siehe Fehlerbeschreibung)."))
     t.append(ueberschrift("Uhrzeit (Zeitserver)"))
-    t.append(absatz("Die Sensorbox holt die Uhrzeit ab Werk aus dem Internet (de.pool.ntp.org). Klappt das nicht, "
-                    "nutzt sie nach etwa 1,5 Minuten automatisch Ihren Router als Zeitserver und versucht danach "
-                    "192.168.178.1 (Standard der FRITZ!Box)."))
-    t.append(absatz("Einen eigenen Zeitserver tragen Sie unter ", fett("http://sensorbox1/advanced"),
-                    " im Feld „NTP Hostname“ ein und speichern mit „Submit“ – oder mit der openandhome-Toolbox "
+    t.append(absatz("Die Sensorbox holt die Uhrzeit ab Werk aus Ihrem eigenen Netz: etwa eine halbe Minute nach "
+                    "dem Start von Ihrem Router, sonst von 192.168.178.1 (Standard der FRITZ!Box). Erst wenn beide "
+                    "15 Minuten lang nicht antworten, fragt sie im Internet nach (de.pool.ntp.org). Damit sie ohne "
+                    "Internet auskommt, muss Ihr Router als Zeitserver arbeiten (FRITZ!Box: "
+                    "„Heimnetz > Netzwerk > Netzwerkeinstellungen > Zeitsynchronisation“)."))
+    t.append(absatz("Einen eigenen Zeitserver (z. B. de.pool.ntp.org im Internet) tragen Sie unter ",
+                    fett("http://sensorbox1/advanced"), " im Feld „NTP Hostname“ ein, setzen den Haken bei "
+                    "„Use NTP“, entfernen den Haken bei „Rules“ und speichern mit „Submit“ – oder mit der openandhome-Toolbox "
                     "über das USB-Kabel (Menüpunkt „Zeitserver (NTP) setzen“; Download unter "
                     "https://github.com/martament/openandhome/releases/latest)."))
     abrufen(t, mit_zabbix=False)

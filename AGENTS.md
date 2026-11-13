@@ -59,7 +59,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
    WLAN steht in ESPEasy in `security.dat` und wird per Befehl gesetzt/gelöscht
    (`WifiSSID`/`WifiKey`/`Save`/`reboot`). Die Syslog-IP steht in `config.dat`,
    bleibt dort im Stable leer und wird im Test per HTTP an `/advanced` gesetzt
-   (ESPEasy hat kein Syslog-Kommando). Test-Syslog-IP: `192.168.9.4`.
+   (ESPEasy hat kein Syslog-Kommando). Test-Syslog-IP: `192.168.9.4`, UDP-Port **514** (die Basis-configs hatten 5140; `setze_syslog` setzt 514).
 8. **Keine `security.dat` committen** (auch nicht in Backup-Tars), außer sie
    enthält nachweislich nur Defaults (`ssid`/`wpakey`/`configesp`).
 9. **24h-Testverfahren:** Testboxen laufen ca. 24 Stunden mit Syslog-Logging
@@ -97,7 +97,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 - Basis: [`configs/espeasy/professional/basis/config.dat`](configs/espeasy/professional/basis/config.dat)
   (alle Sensoren, MQTT + Zabbix aus). Zabbix ist Sonderanfertigung (optional).
 - 1-Wire an GPIO 4 und 2, Wassersensor GPIO 34, I2C 13/16.
-- Zeitserver (Professional **und** Standalone, auch AM2320-Basis): `de.pool.ntp.org`; `basis/rules1.txt` fällt ohne Zeit nach 90 s auf das Gateway, nach weiteren 90 s auf 192.168.178.1 zurück (nur zur Laufzeit). Werkstatt und Kunden-Flasher (Manifest-Eintrag `regeln`) laden `rules1.txt` mit der Basis hoch; Endanwender ändern den NTP-Server über die Weboberfläche (`/advanced`) oder die ohtoolbox (Menü n).
+- Zeitserver (Professional **und** Standalone, auch AM2320-Basis): **primär lokal, Internet erst nach 15 min.** Ab Werk `UseNTP,0` (Werkstatt/Toolbox senden es nach dem Basis-Upload und beim Testende); `basis/rules1.txt` setzt 30 s nach dem Start immer das Gateway als NTP-Server und schaltet NTP ein; kommt keine Zeit (`Time#Set`/`Time#Initialized` setzen `[var#1]`), wechselt sie alle 90 s zwischen 192.168.178.1 und Gateway, bis einer antwortet, und behält ihn bis zum Neustart; nach 15 min ohne Zeit `de.pool.ntp.org` (nur zur Laufzeit, nichts gespeichert). Eigener Server: Toolbox n (`NTPHost`, `UseNTP,1`, `Rules,0` – die Regeln enthalten nur die Zeitlogik), `auto` stellt zurück (`UseNTP,0`, `Rules,1`). Werkstatt und Kunden-Flasher (Manifest-Eintrag `regeln`) laden `rules1.txt` mit der Basis hoch; Endanwender ändern den NTP-Server über die Weboberfläche (`/advanced`, mit „Use NTP“) oder die ohtoolbox (Menü n).
 
 - Image: `ESP_Easy_mega_*_collection_A_ESP32_4M316k.factory.bin` (Neu-Aufspielen @0x0) und
   `…_4M316k.bin` (Update: App @0x10000 + otadata 0xE000/0x2000 löschen; NVS/Ethernet bleiben).

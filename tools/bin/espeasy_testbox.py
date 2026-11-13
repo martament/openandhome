@@ -54,6 +54,8 @@ ZUGRIFF_VON, ZUGRIFF_BIS = "192.168.0.0", "192.168.255.255"
 AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT = "Sensorbox1", "0"
 BACKUPS = os.path.expanduser("~/openandhome-backups")
 # Werkstatt-WLAN: Zeile 1 SSID, Zeile 2 Passwort (chmod 600, nie ins Repo); fehlt sie, wird gefragt
+# Ab Werk kein Zeitserver (kein Internet); rules1.txt schaltet NTP ueber Gateway/192.168.178.1 ein
+NTP_AUS = ("UseNTP,0", "Save")
 WLAN_DATEI = os.path.expanduser("~/.config/openandhome/wlan.txt")
 
 # Plausibilitaet je Messwertname: (min, max, verdaechtige Werte)
@@ -244,14 +246,55 @@ def setze_zugriff(box, von=ZUGRIFF_VON, bis=ZUGRIFF_BIS):
     """Erlaubt Web-Zugriffe dauerhaft aus dem IP-Bereich (Config-Seite, liegt in security.dat).
 
     Noetig, weil ein 'Save' nach ClearAccessBlock sonst 'Allow All' festschreibt
-    und eine frisch geflashte Box nur das eigene Subnetz erlaubt."""
+    und eine frisch geflashte Box nur das eigene Subnetz erlaubt. Schaltet ausserdem
+    'Append Unit Number to hostname' aus: Hostname/AP heissen wie der Name (Sensorbox1,
+    nicht Sensorbox1_1)."""
     felder = dict(lies_formular_config(box))
     felder.update({"ipblocklevel": "2", "iprangelow": von, "iprangehigh": bis})
+    felder.pop("appendunittohostname", None)     # Checkbox aus = Feld fehlt
     box.post("/config", felder)
     neu = lies_formular_config(box)
     if neu.get("ipblocklevel") != "2" or neu.get("iprangelow") != von or neu.get("iprangehigh") != bis:
         sys.exit(f"FEHLER: IP-Zugriff nicht gesetzt ({neu.get('ipblocklevel')}, {neu.get('iprangelow')}-{neu.get('iprangehigh')})")
-    print(f"Web-Zugriff erlaubt fuer {von} - {bis}")
+    if "appendunittohostname" in neu:
+        print("\033[33mWARNUNG: 'Append Unit Number to hostname' noch an\033[0m")
+    print(f"Web-Zugriff erlaubt fuer {von} - {bis}, Hostname ohne Unit-Nummer")
+    setze_ap_setup(box)
+
+
+AP_SEITE = "/network?index=2"          # Netzwerk-Interface 2 = WiFi-AP
+AP_SETUP_FELD = "force_/setup_in_ap-mode"
+
+
+def setze_ap_setup(box):
+    """'Force /setup in AP-Mode' einschalten: wer sich mit dem AP verbindet, landet auf /setup.
+    Die Basis-configs haben es aus. Images ohne diese Seite werden uebersprungen."""
+    try:
+        seite = box.get(AP_SEITE)
+    except urllib.error.HTTPError:
+        return
+    if AP_SETUP_FELD not in seite:
+        return
+    parser = FormParser()
+    parser.feed(seite)
+    if AP_SETUP_FELD in parser.felder:
+        return
+    felder = dict(parser.felder, **{AP_SETUP_FELD: "on"})
+    try:
+        box.post(AP_SEITE, felder)
+    except OSError:
+        pass        # Speichern startet das Netzwerk neu, die Antwort reisst ab
+    neu = FormParser()
+    for _ in range(30):
+        try:
+            neu.feed(box.get(AP_SEITE))
+            break
+        except OSError:
+            time.sleep(3)
+    if AP_SETUP_FELD in neu.felder:
+        print("Force /setup in AP-Mode eingeschaltet")
+    else:
+        print("\033[33mWARNUNG: 'Force /setup in AP-Mode' nicht uebernommen\033[0m")
 
 
 def lies_formular_config(box):
@@ -532,11 +575,12 @@ def aufsetzen(args):
     lade_hoch(box, basis, "config.dat")
     regeln = os.path.join(os.path.dirname(basis), "rules1.txt")
     if os.path.exists(regeln):
-        # z. B. Professional: NTP-Rueckfall auf Gateway / 192.168.178.1
+        # Zeit nur lokal: Regeln schalten NTP mit Gateway / 192.168.178.1 ein
         lade_hoch(box, regeln, "rules1.txt")
     sende(port, "Reboot")
     time.sleep(10)
     box = http_bereit(port, warte_ip(port))
+    sende(port, *NTP_AUS)
     ip = box.basis.removeprefix("http://")
 
     schritt("5/9 Testname, Unit und Web-Zugriff")
@@ -606,6 +650,7 @@ def beenden(args):
     setze_syslog(box, "aus")
 
     schritt(f"Auslieferungsname {AUSLIEFERUNG_NAME}, Web-Zugriff")
+    kommando(port, box, NTP_AUS[0])     # Auslieferung: NTP aus, die Regeln nutzen den Router
     setze_name(port, box, AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT)
     setze_zugriff(box)
 
