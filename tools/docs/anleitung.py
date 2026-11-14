@@ -381,7 +381,8 @@ def inhalt_standalone():
                      "Die Sensorbox öffnet nach kurzer Zeit ein eigenes WLAN mit dem Namen ", fett("„Sensorbox1“"), "."))
     t.append(schritt("Verbinden Sie sich mit diesem WLAN. Das Passwort lautet: ", fett("configesp")))
     t.append(schritt("Erscheint eine Meldung wie „Keine Internetverbindung“, behalten Sie die Verbindung trotzdem bei."))
-    t.append(schritt("Öffnen Sie im Browser die Adresse ", fett("http://192.168.4.1/setup"), "."))
+    t.append(schritt("Meist öffnet Ihr Gerät die WLAN-Auswahl der Sensorbox von selbst. Sonst öffnen Sie im Browser "
+                     "die Adresse ", fett("http://192.168.4.1/setup"), "."))
     t.append(schritt("Wählen Sie Ihr WLAN aus der Liste oder tragen Sie den Namen ein, geben Sie das Passwort Ihres "
                      "WLANs ein und speichern Sie mit „Connect“."))
     t.append(schritt("Die Sensorbox verbindet sich mit Ihrem WLAN. Verbinden Sie Ihr Smartphone oder Ihren Laptop "
@@ -407,7 +408,13 @@ def inhalt_standalone():
     t.append(schritt("Verbinden Sie Ihr Smartphone mit dem WLAN ", fett("„Sensorbox1“"), " (Passwort ",
                      fett("configesp"), ").", liste=NUM_SCHRITTE_2))
     t.append(schritt("Bestätigen Sie, dass Sie das WLAN ohne Internetzugang verwenden möchten.", liste=NUM_SCHRITTE_2))
-    t.append(schritt("Öffnen Sie im Browser ", fett("http://192.168.4.1/openandhome.esp"), ".", liste=NUM_SCHRITTE_2))
+    t.append(schritt("Öffnet sich die WLAN-Auswahl der Sensorbox, schließen Sie diese – Sie brauchen sie nur, wenn "
+                     "die Sensorbox in Ihr WLAN soll.", liste=NUM_SCHRITTE_2))
+    t.append(schritt("Öffnen Sie im Browser direkt die Adresse ", fett("http://192.168.4.1/openandhome.esp"),
+                     ". Dort sehen Sie die Messwerte. Speichern Sie die Adresse als Lesezeichen.", liste=NUM_SCHRITTE_2))
+    t.append(absatz("Hintergrund: Wer sich mit dem WLAN „Sensorbox1“ verbindet, bekommt als Startseite die "
+                    "WLAN-Auswahl angezeigt, damit die Sensorbox schnell ins eigene WLAN gebracht werden kann. Die "
+                    "Messwerte stehen unabhängig davon jederzeit unter ", fett("http://192.168.4.1/openandhome.esp"), "."))
     t.append(absatz(fett("Wichtig: "), "Hat die Sensorbox schon einmal WLAN-Zugangsdaten erhalten, versucht sie "
                     "ständig, dieses WLAN zu erreichen. Löschen Sie dann die Zugangsdaten (siehe Fehlerbeschreibung)."))
     t.append(ueberschrift("Uhrzeit (Zeitserver)"))
