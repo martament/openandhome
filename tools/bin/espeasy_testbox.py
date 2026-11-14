@@ -410,6 +410,64 @@ def aktive_messwerte(box, alle=False):
     return werte
 
 
+# --- Testlog-Regel (Ersatz fuer Syslog im 24h-Test) ---
+TESTLOG_DATEI = "rules2.txt"       # rules1.txt bleibt die Zeitserver-Regel
+TESTLOG_INTERVALL = 300            # Lebenszeichen alle 5 Minuten
+TESTLOG_JE_ZEILE = 4               # Messwerte je UDP-Paket (Zeilenlaenge)
+
+
+def testlog_regel(box, syslog_ip, port=514):
+    """Regeltext: beim Start Startgrund, dann alle 5 min Uptime, Speicher, WLAN und alle
+    aktiven Messwerte per SendToUDP an den Syslog-Server (Format wie ESPEasy-Syslog:
+    '<Name>_EspEasy: ...'). Timer 8, Variablen 3 (Start) und 4 (WLAN-Abbrueche);
+    rules1.txt nutzt Timer 1-3 und Variablen 1-2."""
+    senden = f"SendToUDP,{syslog_ip},{port},<14>%sysname%_EspEasy: TESTLOG"
+    werte = [f"{t}#{w}=[{t}#{w}]" for t, w, _, _ in aktive_messwerte(box)]
+    zeilen = [f"  {senden} up=%uptime% heap=%sysheap% rssi=%rssi% wlan_abbrueche=[var#4]"]
+    for i in range(0, len(werte), TESTLOG_JE_ZEILE):
+        zeilen.append(f"  {senden} " + " ".join(werte[i:i + TESTLOG_JE_ZEILE]))
+    return "\n".join([
+        "// openandhome Testlog - nur im 24h-Test, wird bei Testende geloescht (Werkstatt Menue 3)",
+        "On System#Boot do", "  Let,3,1", "  TimerSet,8,20", "endon", "",
+        "On WiFi#Disconnected do", "  Let,4,[var#4]+1", "endon", "",
+        "On Rules#Timer=8 do",
+        "  if [var#3]=1",
+        f"    SendToUDP,{syslog_ip},{port},<13>%sysname%_EspEasy: TESTLOG START boot=%bootcause% "
+        "image=%sysbuild_filename%",
+        "    Let,3,0",
+        "  endif",
+        *zeilen,
+        f"  TimerSet,8,{TESTLOG_INTERVALL}",
+        "endon", ""])
+
+
+def testlog_an(port, box, syslog_ip):
+    """Testlog-Regel hochladen und sofort starten (ohne Neustart)."""
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
+        f.write(testlog_regel(box, syslog_ip))
+    try:
+        lade_hoch(box, f.name, TESTLOG_DATEI)
+    finally:
+        os.unlink(f.name)
+    kommando(port, box, "Let,3,1", "Let,4,0", "TimerSet,8,5")
+    print(f"Testlog-Regel ({TESTLOG_DATEI}) an {syslog_ip}:514 - Lebenszeichen alle {TESTLOG_INTERVALL // 60} min")
+
+
+def testlog_aus(port, box):
+    """Testlog-Regel stoppen und loeschen; True, wenn die Datei weg ist."""
+    kommando(port, box, "TimerSet,8,0")
+    try:
+        box.get(f"/filelist?delete={TESTLOG_DATEI}")
+    except urllib.error.HTTPError:
+        pass
+    try:
+        box.get("/" + TESTLOG_DATEI)
+    except urllib.error.HTTPError:
+        return True
+    return False
+
+
 # --- Dashboard ---
 def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
     """alle=True: Zeilen fuer alle Sensor-Tasks (Kundenpaket ohne Netzwerk)."""
@@ -607,8 +665,11 @@ def aufsetzen(args):
     if not ok and not ja("Pruefung mit Fehlern. Test trotzdem starten?", False):
         sys.exit("Abgebrochen - Box laeuft ohne Syslog.")
 
-    schritt("9/9 Syslog an, Test laeuft")
+    schritt("9/9 Syslog + Testlog-Regel an, Test laeuft")
     setze_syslog(box, "an", args.syslog_ip)
+    # Syslog sendet mit mega-20260720 nichts (ESP8266 und ESP32 getestet) - die Regel
+    # schickt Startgrund, Uptime, Speicher, WLAN und Messwerte per UDP an denselben Server
+    testlog_an(port, box, args.syslog_ip)
     start = datetime.datetime.now()
     protokoll = Protokoll(os.path.join(PROTOKOLLE, f"{name}_{start:%Y%m%d-%H%M}.txt"))
     info = json.loads(box.get("/json"))["System"]
@@ -646,8 +707,13 @@ def beenden(args):
                 vorzeitig = True
                 print("\033[33mWARNUNG: weniger als 24 h - Test zaehlt nicht als bestanden.\033[0m")
 
-    schritt("Syslog aus")
+    schritt("Syslog und Testlog-Regel aus")
     setze_syslog(box, "aus")
+    zeile = (f"OK      Testlog-Regel ({TESTLOG_DATEI}) geloescht" if testlog_aus(port, box)
+             else f"FEHLER  Testlog-Regel ({TESTLOG_DATEI}) noch auf der Box")
+    ok = ok and zeile.startswith("OK")
+    bericht.append(zeile)
+    melde(zeile)
 
     schritt(f"Auslieferungsname {AUSLIEFERUNG_NAME}, Web-Zugriff")
     kommando(port, box, NTP_AUS[0])     # Auslieferung: NTP aus, die Regeln nutzen den Router

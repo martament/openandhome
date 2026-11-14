@@ -139,9 +139,9 @@ Mit [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/README.md):
 
 1. **Menü 1 – aufsetzen:** Chip erkennen, flashen (Sicherung vorher optional über Menü b), bei
    Professional Ethernet per USB, WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`, sonst Abfrage), Zugriffsbereich, Basis-config + Regeln,
-   Testname `Sensorbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an.
+   Testname `Sensorbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an und Testlog-Regel `rules2.txt` (Ersatz, weil Syslog in `mega-20260720` auf ESP8266 und ESP32 nichts sendet; `SendToUDP` an 192.168.9.4:514: Startgrund, alle 5 min Uptime/Speicher/WLAN/Messwerte; Timer 8, Variablen 3–4). Nur im Test, nie in der Auslieferung.
 2. **Menü 2 – prüfen** (jederzeit, auch ohne USB per IP): Messwerte plausibel, Dashboard vollständig.
-3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus (nach Neustart geprüft), Name `Sensorbox1`/Unit 0,
+3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus (nach Neustart geprüft), Testlog-Regel gelöscht (geprüft), Name `Sensorbox1`/Unit 0,
    WLAN immer löschen (ohne Nachfrage) und prüfen, ob nach dem Neustart der AP startet. Protokoll unter `~/openandhome-testprotokolle/`.
 
 Helfer:
