@@ -419,8 +419,9 @@ TESTLOG_JE_ZEILE = 4               # Messwerte je UDP-Paket (Zeilenlaenge)
 def testlog_regel(box, syslog_ip, port=514):
     """Regeltext: beim Start Startgrund, dann alle 5 min Uptime, Speicher, WLAN und alle
     aktiven Messwerte per SendToUDP an den Syslog-Server (Format wie ESPEasy-Syslog:
-    '<Name>_EspEasy: ...'). Timer 8, Variablen 3 (Start) und 4 (WLAN-Abbrueche);
-    rules1.txt nutzt Timer 1-3 und Variablen 1-2."""
+    '<Name>_EspEasy: ...'). Timer 8, Variablen 3 (Start), 4 (WLAN-Abbrueche) und
+    5 (gestartet); rules1.txt nutzt Timer 1-3 und Variablen 1-2. Events aus rules1.txt
+    (System#Boot, Rules#Timer=1-3, Time#...) duerfen hier nicht vorkommen."""
     senden = f"SendToUDP,{syslog_ip},{port},<14>%sysname%_EspEasy: TESTLOG"
     werte = [f"{t}#{w}=[{t}#{w}]" for t, w, _, _ in aktive_messwerte(box)]
     zeilen = [f"  {senden} up=%uptime% heap=%sysheap% rssi=%rssi% wlan_abbrueche=[var#4]"]
@@ -428,7 +429,12 @@ def testlog_regel(box, syslog_ip, port=514):
         zeilen.append(f"  {senden} " + " ".join(werte[i:i + TESTLOG_JE_ZEILE]))
     return "\n".join([
         "// openandhome Testlog - nur im 24h-Test, wird bei Testende geloescht (Werkstatt Menue 3)",
-        "On System#Boot do", "  Let,3,1", "  TimerSet,8,20", "endon", "",
+        # Kein "On System#Boot": ESPEasy fuehrt ein Event nur im ersten passenden Block aus,
+        # und System#Boot steht schon in rules1.txt (Zeitlogik). Start daher beim ersten
+        # Netz-Connect nach dem Boot (Variable 5 = schon gestartet).
+        *[z for netz in ("WiFi", "ETH") for z in (
+            f"On {netz}#Connected do", "  if [var#5]=0", "    Let,5,1", "    Let,3,1",
+            "    TimerSet,8,10", "  endif", "endon", "")],
         "On WiFi#Disconnected do", "  Let,4,[var#4]+1", "endon", "",
         "On Rules#Timer=8 do",
         "  if [var#3]=1",
@@ -450,7 +456,7 @@ def testlog_an(port, box, syslog_ip):
         lade_hoch(box, f.name, TESTLOG_DATEI)
     finally:
         os.unlink(f.name)
-    kommando(port, box, "Let,3,1", "Let,4,0", "TimerSet,8,5")
+    kommando(port, box, "Let,3,1", "Let,4,0", "Let,5,1", "TimerSet,8,5")
     print(f"Testlog-Regel ({TESTLOG_DATEI}) an {syslog_ip}:514 - Lebenszeichen alle {TESTLOG_INTERVALL // 60} min")
 
 
