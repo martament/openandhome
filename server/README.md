@@ -4,8 +4,8 @@ Richtet einen openandhome-Server auf einem **Raspberry Pi 4 Model B** ein. Er em
 Messwerte (MQTT) und Logs (Syslog) der Sensorboxen und zeigt sie in Grafana an.
 Ein Server je Kunde. Plan und Entscheidungen: [`../plans/server-ansible.md`](../plans/server-ansible.md).
 
-**Stand:** Phase 1 (Image + SD-Karte) und Phase 2 (Installation, `site.yml`) sind umgesetzt.
-Der Funktionstest (`test.yml`) folgt.
+**Stand:** Phase 1 (Image + SD-Karte), Phase 2 (Installation, `site.yml`) und Phase 3
+(Funktionstest, `test.yml`) sind umgesetzt. Offen: `oh_config` (`openandhome.txt`, T8).
 
 **SD-Karte:** mindestens 16 GB, empfohlen 32 GB, **Klasse A1 oder A2**. Das System mit allen
 Diensten belegt ca. 6,2 GB; Grafana und InfluxDB schreiben ständig in kleinen Blöcken.
@@ -57,13 +57,24 @@ Sicherheitsupdates), `timesync` (chrony, NTP-Server fürs LAN), `mosquitto`, `in
 `telegraf`, `grafana` (Benutzer `admin`, `editor`, `viewer`). Dienstkonfiguration aus
 [`stack/`](stack/README.md).
 
-Zugangsdaten ansehen (bis das Übergabeprotokoll aus `test.yml` kommt):
+Grafana: `http://openandhome-server1.local:3000` (Benutzer `admin`, `editor`, `viewer`).
+
+## Phase 3: Funktionstest, Protokoll, Übergabeblatt
 
 ```bash
-ansible server -b -m command -a 'cat /etc/openandhome/credentials.yml'
+ansible-playbook test.yml                                   # alle Prüfungen (ca. 5 min)
+ansible-playbook test.yml -e server_test_echte_box=Sensorbox1   # zusätzlich T10 mit echter Box
 ```
 
-Grafana: `http://openandhome-server1.local:3000`
+Prüft T1–T11 aus dem Plan (Dienste nach Neustart, MQTT, Zugriffsschutz, Syslog, Grafana-Rechte,
+Dashboards, NTP, zweiter Lauf ohne Änderungen, echte Box) und entfernt die Testdaten. Ergebnis
+unter `~/openandhome-serverprotokolle/<Datum>_<MAC>/`: `protokoll.txt` und `uebergabeblatt.txt`
+(Zugangsdaten für den Kunden – ausdrucken, nicht ins Repo). Freigabe nach `master` nur mit
+bestandenem Test. Details: [`roles/server_test`](roles/server_test/README.md).
+
+Sensorboxen an den Server senden lassen: ohtoolbox Menü **v** bzw.
+`python3 ../tools/bin/oh_server.py verbinden --server openandhome-server1`
+(siehe [`../tools/ohtoolbox/README.md`](../tools/ohtoolbox/README.md)).
 
 ## Aufbau
 
@@ -78,6 +89,7 @@ Grafana: `http://openandhome-server1.local:3000`
 | [`site.yml`](site.yml) | Phase 2 |
 | [`stack/`](stack/README.md) | Mosquitto-, Telegraf-, Grafana-Konfiguration und Dashboards (eine Quelle für Pi und Docker) |
 | `roles/credentials`, `base`, `timesync`, `mosquitto`, `influxdb`, `telegraf`, `grafana` | Installation |
+| [`test.yml`](test.yml), [`roles/server_test`](roles/server_test/README.md) | Phase 3 |
 
 ## Stolperfallen
 

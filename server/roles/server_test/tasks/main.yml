@@ -1,0 +1,440 @@
+---
+# Jeder Test haengt sein Ergebnis an server_test_ergebnisse an (nr, titel, ok, pflicht, info).
+# Fehlgeschlagene Pflichttests brechen erst am Ende ab - nach Protokoll und Aufraeumen.
+
+- name: Testdaten vorbereiten
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: []
+    server_test_marke: "{{ now(fmt='%H%M%S') }}"
+    server_test_wert: "{{ (now(fmt='%S') | int) / 10 + 20 }}"
+    server_test_start: "{{ now(fmt='%Y-%m-%d %H:%M:%S') }}"
+
+- name: Influx-Abfrage (v1, Benutzer grafana) vorbereiten
+  ansible.builtin.set_fact:
+    server_test_q: "{{ server_test_influx }}/query?u=grafana&p={{ credentials_values.influx_grafana | urlencode }}"
+  no_log: true
+
+# --- Kopfdaten fuers Protokoll ---------------------------------------------------
+
+- name: Herkunft des Images lesen
+  ansible.builtin.slurp:
+    src: /boot/firmware/openandhome-build.txt
+  register: server_test_build
+  failed_when: false
+
+- name: Paketversionen lesen
+  ansible.builtin.command: dpkg-query -W -f='${Package} ${Version}\n' mosquitto influxdb2 telegraf grafana chrony
+  register: server_test_pakete
+  changed_when: false
+  failed_when: false
+
+- name: Geraet lesen
+  ansible.builtin.shell: tr -d '\0' < /proc/device-tree/model
+  register: server_test_modell
+  changed_when: false
+  failed_when: false
+
+# --- T1: Dienste, auch nach Neustart -----------------------------------------------
+
+- name: T1 | Neustart
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+  when: server_test_neustart | bool
+
+- name: T1 | Warten bis InfluxDB und Grafana bereit sind
+  ansible.builtin.uri:
+    url: "{{ item }}"
+  loop:
+    - "{{ server_test_influx }}/health"
+    - "{{ server_test_grafana }}/api/health"
+  register: server_test_bereit
+  until: server_test_bereit.status == 200
+  retries: 60
+  delay: 5
+  failed_when: false
+
+- name: T1 | Dienste bei systemd abfragen
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+  loop: "{{ server_test_dienste }}"
+  register: server_test_t1
+  check_mode: true
+  failed_when: false
+
+- name: T1 | Ergebnis
+  vars:
+    server_test_inaktiv: >-
+      {{ server_test_t1.results | rejectattr('status.ActiveState', 'defined')
+         | map(attribute='item') | list
+         + server_test_t1.results | selectattr('status.ActiveState', 'defined')
+         | rejectattr('status.ActiveState', 'equalto', 'active') | map(attribute='item') | list }}
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T1', 'pflicht': true,
+      'titel': 'Alle Dienste aktiv' ~ (' nach Neustart' if server_test_neustart | bool else ''),
+      'ok': server_test_inaktiv | length == 0,
+      'info': ('nicht aktiv: ' ~ server_test_inaktiv | join(', ')) if server_test_inaktiv else 'alle aktiv'}] }}"
+
+# --- T2: Messwert per MQTT -> InfluxDB ---------------------------------------------
+
+- name: T2 | Messwert als Sensorbox senden
+  ansible.builtin.command:
+    argv: [mosquitto_pub, -h, 127.0.0.1, -u, sensorbox, -P, "{{ credentials_values.mqtt_sensorbox }}",
+           -t, "openandhome/{{ server_test_box }}/T2/Temperatur", -m, "{{ server_test_wert }}"]
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: T2 | Messwert in der InfluxDB?
+  ansible.builtin.uri:
+    url: "{{ server_test_q }}&db=openandhome&q={{ server_test_abfrage | urlencode }}"
+  vars:
+    server_test_abfrage: >-
+      SELECT last("value") FROM "openandhome" WHERE "sensorbox" = '{{ server_test_box }}'
+      AND "device" = 'T2' AND "valuename" = 'Temperatur'
+  register: server_test_t2
+  until: (server_test_t2.json.results[0].series | default([])) | length > 0
+  retries: 10
+  delay: 3
+  failed_when: false
+  no_log: true
+
+- name: T2 | Ergebnis
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T2', 'pflicht': true,
+      'titel': 'Messwert per MQTT kommt mit Tags sensorbox/device/valuename in der InfluxDB an',
+      'ok': (server_test_t2.json.results[0].series[0]['values'][0][1] | default(-1) | float) == (server_test_wert | float),
+      'info': 'gesendet ' ~ server_test_wert ~ ', gelesen '
+              ~ (server_test_t2.json.results[0].series[0]['values'][0][1] | default('nichts'))}] }}"
+
+# --- T3: Zugriffsschutz MQTT --------------------------------------------------------
+
+- name: T3 | Ohne Anmeldung senden (muss abgelehnt werden)
+  ansible.builtin.command: mosquitto_pub -h 127.0.0.1 -t openandhome/{{ server_test_box }}/T3/Temperatur -m 1
+  register: server_test_t3_anonym
+  changed_when: false
+  failed_when: false
+
+- name: T3 | Als telegraf senden (ACL nur lesen, darf nicht ankommen)
+  ansible.builtin.command:
+    argv: [mosquitto_pub, -h, 127.0.0.1, -u, telegraf, -P, "{{ credentials_values.mqtt_telegraf }}",
+           -t, "openandhome/{{ server_test_box }}/T3acl/Temperatur", -m, "99"]
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: T3 | Warten (Telegraf schreibt alle 10 s)
+  ansible.builtin.wait_for:
+    timeout: 15
+
+- name: T3 | Wert von telegraf in der InfluxDB?
+  ansible.builtin.uri:
+    url: "{{ server_test_q }}&db=openandhome&q={{ server_test_abfrage | urlencode }}"
+  vars:
+    server_test_abfrage: SELECT count("value") FROM "openandhome" WHERE "device" = 'T3acl'
+  register: server_test_t3_acl
+  failed_when: false
+  no_log: true
+
+- name: T3 | Ergebnis
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T3', 'pflicht': true,
+      'titel': 'MQTT ohne Anmeldung abgelehnt, Benutzer telegraf darf nicht senden',
+      'ok': server_test_t3_anonym.rc != 0 and (server_test_t3_acl.json.results[0].series | default([])) | length == 0,
+      'info': 'anonym rc=' ~ server_test_t3_anonym.rc ~ ', telegraf-Wert '
+              ~ ('gespeichert (FEHLER)' if (server_test_t3_acl.json.results[0].series | default([])) else 'verworfen')}] }}"
+
+# --- T4: Syslog ---------------------------------------------------------------------
+
+- name: T4 | Syslog-Meldung im ESPEasy-Format senden
+  ansible.builtin.shell: >-
+    printf '%s' '<14>{{ server_test_box }}_EspEasy: T4 Funktionstest {{ server_test_marke }}' > /dev/udp/127.0.0.1/{{ oh_port_syslog }}
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+
+- name: T4 | Meldung in sensorbox_logs?
+  ansible.builtin.uri:
+    url: "{{ server_test_q }}&db=sensorbox_logs&q={{ server_test_abfrage | urlencode }}"
+  vars:
+    server_test_abfrage: >-
+      SELECT "message", "severity" FROM "syslog" WHERE "sensorbox" = '{{ server_test_box }}'
+      AND "message" =~ /{{ server_test_marke }}/
+  register: server_test_t4
+  until: (server_test_t4.json.results[0].series | default([])) | length > 0
+  retries: 10
+  delay: 3
+  failed_when: false
+  no_log: true
+
+- name: T4 | Ergebnis
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T4', 'pflicht': true,
+      'titel': 'Syslog (ESPEasy-Format) mit Boxname, Schweregrad und Text gespeichert',
+      'ok': (server_test_t4.json.results[0].series | default([])) | length > 0,
+      'info': (server_test_t4.json.results[0].series[0]['values'][0][1:] | default(['nichts'])) | join(' / ')}] }}"
+
+# --- T5: Grafana-Rechte -------------------------------------------------------------
+
+- name: T5 | Ohne Anmeldung
+  ansible.builtin.uri:
+    url: "{{ server_test_grafana }}/api/search"
+    status_code: [200, 401, 403]
+  register: server_test_t5_anonym
+  failed_when: false
+
+- name: T5 | Dashboard anlegen als viewer und editor
+  ansible.builtin.uri:
+    url: "{{ server_test_grafana }}/api/dashboards/db"
+    method: POST
+    url_username: "{{ item }}"
+    url_password: "{{ credentials_values['grafana_' ~ item] }}"
+    force_basic_auth: true
+    body_format: json
+    body: { dashboard: { uid: oh-funktionstest, title: "Funktionstest {{ server_test_marke }}" }, overwrite: true }
+    status_code: [200, 401, 403]
+  loop: [viewer, editor]
+  register: server_test_t5_speichern
+  failed_when: false
+  no_log: true
+
+- name: T5 | Test-Dashboard loeschen
+  ansible.builtin.uri:
+    url: "{{ server_test_grafana }}/api/dashboards/uid/oh-funktionstest"
+    method: DELETE
+    url_username: admin
+    url_password: "{{ credentials_values.grafana_admin }}"
+    force_basic_auth: true
+    status_code: [200, 404]
+  failed_when: false
+  no_log: true
+
+- name: T5 | Ergebnis
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T5', 'pflicht': true,
+      'titel': 'Grafana: ohne Anmeldung gesperrt, viewer darf nicht speichern, editor darf',
+      'ok': server_test_t5_anonym.status == 401 and server_test_t5_speichern.results[0].status == 403
+            and server_test_t5_speichern.results[1].status == 200,
+      'info': 'anonym ' ~ server_test_t5_anonym.status ~ ', viewer ' ~ server_test_t5_speichern.results[0].status
+              ~ ', editor ' ~ server_test_t5_speichern.results[1].status}] }}"
+
+# --- T6: Dashboards und Datenquelle aus Sicht des viewers ------------------------------
+
+- name: T6 | Dashboards des viewers
+  ansible.builtin.uri:
+    url: "{{ server_test_grafana }}/api/search?type=dash-db&folderUIDs=openandhome"
+    url_username: viewer
+    url_password: "{{ credentials_values.grafana_viewer }}"
+    force_basic_auth: true
+  register: server_test_t6_dash
+  failed_when: false
+  no_log: true
+
+- name: T6 | Messwert ueber die Grafana-Datenquelle
+  ansible.builtin.uri:
+    url: "{{ server_test_grafana }}/api/datasources/proxy/uid/oh-messwerte/query?db=openandhome&q={{ server_test_abfrage | urlencode }}"
+    url_username: viewer
+    url_password: "{{ credentials_values.grafana_viewer }}"
+    force_basic_auth: true
+  vars:
+    server_test_abfrage: SELECT last("value") FROM "openandhome" WHERE "sensorbox" = '{{ server_test_box }}' AND "device" = 'T2'
+  register: server_test_t6_ds
+  failed_when: false
+  no_log: true
+
+- name: T6 | Ergebnis
+  vars:
+    server_test_t6_dashboards: "{{ server_test_t6_dash.json if server_test_t6_dash.json is defined and server_test_t6_dash.json is not mapping else [] }}"
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T6', 'pflicht': true,
+      'titel': 'viewer sieht die 4 Dashboards, Datenquelle liefert den Messwert',
+      'ok': server_test_t6_dashboards | map(attribute='uid') | select('match', '^oh-') | list | length == 4
+            and (server_test_t6_ds.json.results[0].series | default([])) | length > 0,
+      'info': (server_test_t6_dashboards | map(attribute='title') | join(', ')) or 'keine Dashboards'}] }}"
+
+# --- T7: Zeit -----------------------------------------------------------------------
+
+- name: T7 | NTP-Anfrage an den Server (wie eine Sensorbox)
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -c
+      - |
+        import socket, struct, time
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.settimeout(5)
+        s.sendto(b"\x1b" + 47 * b"\0", ("{{ ansible_facts['default_ipv4']['address'] }}", 123))
+        d, _ = s.recvfrom(48)
+        print(d[1], round(abs(struct.unpack("!I", d[40:44])[0] - 2208988800 - time.time()), 1))
+  register: server_test_t7
+  changed_when: false
+  failed_when: false
+
+- name: T7 | RTC vorhanden?
+  ansible.builtin.stat:
+    path: /dev/rtc0
+  register: server_test_rtc
+
+- name: T7 | Ergebnis
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [
+      {'nr': 'T7', 'pflicht': true, 'titel': 'Server beantwortet NTP-Anfragen aus dem LAN',
+       'ok': server_test_t7.rc == 0 and (server_test_t7.stdout.split() | first | default(0) | int) in range(1, 16),
+       'info': ('Stratum ' ~ server_test_t7.stdout.split()[0] ~ ', Abweichung ' ~ server_test_t7.stdout.split()[1] ~ ' s')
+               if server_test_t7.rc == 0 else server_test_t7.stderr | default('keine Antwort')},
+      {'nr': 'T7b', 'pflicht': false, 'titel': 'Echtzeituhr (DS3231)', 'ok': server_test_rtc.stat.exists,
+       'info': 'vorhanden' if server_test_rtc.stat.exists else 'nicht bestueckt - ohne Internet keine Zeit fuer die Boxen'}] }}"
+
+# --- T8: openandhome.txt ------------------------------------------------------------
+
+- name: T8 | Ergebnis (Rolle oh_config folgt)
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T8', 'pflicht': false, 'ok': none,
+      'titel': 'openandhome.txt wird angewendet', 'info': 'uebersprungen - Rolle oh_config noch nicht umgesetzt'}] }}"
+
+# --- T9: zweiter Lauf ohne Aenderungen ----------------------------------------------
+
+- name: T9 | site.yml erneut ausfuehren (erwartet changed=0)
+  ansible.builtin.command:
+    cmd: >-
+      ansible-playbook site.yml --limit {{ inventory_hostname }}
+      {{ ('-e oh_server_address=' ~ oh_server_address) if oh_server_address is defined else '' }}
+    chdir: "{{ playbook_dir }}"
+  environment:
+    ANSIBLE_FORCE_COLOR: "0"
+  register: server_test_t9
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  failed_when: false
+  when: server_test_idempotenz | bool
+
+- name: T9 | Ergebnis
+  vars:
+    server_test_recap: "{{ server_test_t9.stdout_lines | default([]) | select('match', '^' ~ inventory_hostname ~ '\\s+:') | first | default('') }}"
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T9', 'pflicht': server_test_idempotenz | bool,
+      'titel': 'Zweiter Lauf von site.yml ohne Aenderungen',
+      'ok': (server_test_recap is search('changed=0') and server_test_recap is search('failed=0'))
+            if server_test_idempotenz | bool else none,
+      'info': (server_test_recap | regex_replace('\\s+', ' ')) if server_test_idempotenz | bool else 'uebersprungen'}] }}"
+
+# --- T10: echte Sensorbox -------------------------------------------------------------
+
+- name: T10 | Werte der echten Box in den letzten 15 Minuten?
+  ansible.builtin.uri:
+    url: "{{ server_test_q }}&db=openandhome&q={{ server_test_abfrage | urlencode }}"
+  vars:
+    server_test_abfrage: >-
+      SELECT count("value") FROM "openandhome" WHERE "sensorbox" = '{{ server_test_echte_box }}'
+      AND time > now() - 15m GROUP BY "device"
+  register: server_test_t10
+  failed_when: false
+  no_log: true
+  when: server_test_echte_box | length > 0
+
+- name: T10 | Ergebnis
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T10', 'pflicht': server_test_echte_box | length > 0,
+      'titel': 'Echte Sensorbox ' ~ server_test_echte_box ~ ' sendet an den Server',
+      'ok': ((server_test_t10.json.results[0].series | default([])) | length > 0) if server_test_echte_box else none,
+      'info': ((server_test_t10.json.results[0].series | default([])) | map(attribute='tags.device') | join(', ')
+               or 'keine Werte in 15 min') if server_test_echte_box else 'uebersprungen (-e server_test_echte_box=<Name>)'}] }}"
+
+# --- SD-Karte (Hinweis) ---------------------------------------------------------------
+
+- name: SD-Karte | Ergebnis
+  vars:
+    server_test_root: "{{ ansible_facts['mounts'] | selectattr('mount', 'equalto', '/') | first }}"
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'K', 'pflicht': false,
+      'titel': 'SD-Karte mindestens ' ~ oh_min_disk_gb ~ ' GB (Empfehlung 32-GB-Karte)',
+      'ok': server_test_root.size_total >= oh_min_disk_gb * 1e9,
+      'info': ((server_test_root.size_total / 1e9) | round(1)) ~ ' GB, frei ' ~ ((server_test_root.size_available / 1e9) | round(1)) ~ ' GB'}] }}"
+
+# --- T11: Testdaten entfernen -----------------------------------------------------------
+
+- name: T11 | Testdaten loeschen (InfluxDB)
+  ansible.builtin.uri:
+    url: "{{ server_test_influx }}/api/v2/delete?org={{ oh_influx_org }}&bucket={{ item }}"
+    method: POST
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+    body_format: json
+    body: { start: "1970-01-01T00:00:00Z", stop: "2100-01-01T00:00:00Z", predicate: 'sensorbox="{{ server_test_box }}"' }
+    status_code: 204
+  loop: [openandhome, sensorbox_logs]
+  register: server_test_t11
+  failed_when: false
+  no_log: true
+
+- name: T11 | Gespeicherten MQTT-Status der Testbox loeschen
+  ansible.builtin.command:
+    argv: [mosquitto_pub, -h, 127.0.0.1, -u, sensorbox, -P, "{{ credentials_values.mqtt_sensorbox }}",
+           -r, -n, -t, "openandhome/{{ server_test_box }}/status/LWT"]
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: T11 | Noch Testdaten vorhanden?
+  ansible.builtin.uri:
+    url: "{{ server_test_q }}&db=openandhome&q={{ server_test_abfrage | urlencode }}"
+  vars:
+    server_test_abfrage: SHOW TAG VALUES FROM "openandhome" WITH KEY = "sensorbox" WHERE "sensorbox" = '{{ server_test_box }}'
+  register: server_test_t11_rest
+  failed_when: false
+  no_log: true
+
+- name: T11 | Ergebnis
+  ansible.builtin.set_fact:
+    server_test_ergebnisse: "{{ server_test_ergebnisse + [{'nr': 'T11', 'pflicht': true,
+      'titel': 'Testdaten (' ~ server_test_box ~ ') entfernt',
+      'ok': server_test_t11.results | map(attribute='status') | list == [204, 204]
+            and (server_test_t11_rest.json.results[0].series | default([])) | length == 0,
+      'info': 'InfluxDB ' ~ (server_test_t11.results | map(attribute='status') | join('/'))}] }}"
+
+# --- Protokoll und Uebergabeblatt ---------------------------------------------------------
+
+- name: Protokoll | Ordner
+  ansible.builtin.set_fact:
+    server_test_ordner: >-
+      {{ server_test_protokolle }}/{{ now(fmt='%Y-%m-%d_%H%M') }}_{{ ansible_facts['default_ipv4']['macaddress'] | replace(':', '') }}
+    server_test_bestanden: >-
+      {{ server_test_ergebnisse | selectattr('pflicht') | rejectattr('ok') | list | length == 0 }}
+
+- name: Protokoll | Ordner anlegen
+  ansible.builtin.file:
+    path: "{{ server_test_ordner }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: false
+
+- name: Protokoll | Dateien schreiben
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ server_test_ordner }}/{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: protokoll.txt.j2, dest: protokoll.txt, mode: "0644" }
+    - { src: uebergabeblatt.txt.j2, dest: uebergabeblatt.txt, mode: "0600" }
+  loop_control: { label: "{{ item.dest }}" }
+  delegate_to: localhost
+  become: false
+  no_log: true
+
+- name: Ergebnis
+  ansible.builtin.debug:
+    msg: |-
+      Funktionstest {{ 'BESTANDEN' if server_test_bestanden else 'NICHT BESTANDEN' }}
+      {% for e in server_test_ergebnisse %}
+      {{ '%-4s' | format(e.nr) }} {{ 'OK    ' if e.ok else ('--    ' if e.ok is none else ('FEHLER' if e.pflicht else 'HINWEIS')) }} {{ e.titel }}: {{ e.info }}
+      {% endfor %}
+      Protokoll:      {{ server_test_ordner }}/protokoll.txt
+      Uebergabeblatt: {{ server_test_ordner }}/uebergabeblatt.txt
+
+- name: Pflichttests bestanden
+  ansible.builtin.assert:
+    that: server_test_bestanden | bool
+    fail_msg: >-
+      Nicht bestanden: {{ server_test_ergebnisse | selectattr('pflicht') | rejectattr('ok')
+      | map(attribute='nr') | join(', ') }} - Details im Protokoll {{ server_test_ordner }}/protokoll.txt
+    quiet: true

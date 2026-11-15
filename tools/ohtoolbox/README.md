@@ -58,6 +58,24 @@ Die Toolbox erkennt beim Start, ob eine Standalone- oder Professional-Box angesc
 | g | Gerätenamen ändern – der Name der Sensorbox (z. B. Keller statt Sensorbox1); bei mehreren Sensoren braucht jeder einen eigenen Namen |
 | s | **Sensoren neu erkennen** – nach Tausch, Erweiterung oder Umbenennen eines Fühlers; Einstellungen bleiben. Erkennt Fühler, Display und Kombifühler, wählt die Fühleradressen und erneuert Anzeige und Dashboard. Nicht erkennbare Sensoren (Wasser-, Abstandssensor) werden abgefragt. |
 | k | **Grundkonfiguration wiederherstellen** – alle Einstellungen auf den Auslieferungszustand, danach Sensoren erkennen. Die Firmware bleibt. |
+| v | **Sensorboxen im Netzwerk an den openandhome-Server senden** – siehe unten. Ohne Box am USB startet die Toolbox direkt hier. |
+
+### Sensorboxen an den openandhome-Server senden
+
+Für Kunden mit openandhome-Server. Die Toolbox sucht alle Sensorboxen im eigenen Netz
+(weitere Netze, z. B. `192.168.2.0/24`, lassen sich angeben) und stellt die ausgewählten
+Boxen automatisch um:
+
+- MQTT-Controller 1 an den Server (Benutzer `sensorbox`, Passwort vom Übergabeblatt),
+- „Send to Controller 1“ bei allen aktiven Sensoren,
+- Syslog an den Server.
+
+Danach prüft sie, ob sich jede Box beim Server meldet. Zuerst wird der Servername
+eingetragen; kennt das Netz der Box den Namen nicht, die IP-Adresse (dann im Router eine
+feste IP für den Server einrichten). **t** trennt Boxen wieder vom Server. Am Ende zeigt die
+Toolbox, wie dieselben Einstellungen von Hand in der Weboberfläche einer Box gemacht werden.
+
+Auch ohne Toolbox-Menü: `python3 tools/bin/oh_server.py suchen|verbinden|trennen|hinweis`.
 
 ### Fühler umbenennen
 

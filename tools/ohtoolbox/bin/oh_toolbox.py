@@ -3,6 +3,8 @@
 
 Arbeitet ueber das USB-Kabel: WLAN, Name, Zeitserver, Resets, Diagnose sowie
 Grundkonfiguration und Sensorerkennung (dafuer kurz per WLAN im Netz).
+Ohne Box am USB (oder Menue v): Sensorboxen im Netzwerk suchen und an einen
+openandhome-Server senden lassen (oh_server.py).
 Start: start_toolbox.bat (Windows) bzw. toolbox.sh (Linux).
 """
 
@@ -18,6 +20,7 @@ PAKET = os.path.dirname(HIER)
 sys.path[:0] = [os.path.join(HIER, "lib"), os.path.join(PAKET, "..", "bin")]
 
 import oh_kunde as k  # noqa: E402
+import oh_server  # noqa: E402
 from espeasy_autoconfig import oeffne  # noqa: E402
 from espeasy_testbox import sende, usb_ip, wlan_verbinden  # noqa: E402
 
@@ -129,7 +132,13 @@ def main():
     args = parser.parse_args()
     if os.name == "nt":
         os.system("")      # ANSI-Farben in der Windows-Konsole
-    port = args.port or k.finde_port()
+    try:
+        port = args.port or k.finde_port()
+    except SystemExit:
+        # Ohne Box am USB: Sensorboxen im Netzwerk an einen openandhome-Server senden
+        print("Keine Sensorbox am USB - weiter mit den Sensorboxen im Netzwerk.")
+        oh_server.menue()
+        return
     quelle = k.Quelle(args.quelle, PAKET)
 
     print("Erkenne Sensorbox ...")
@@ -155,6 +164,7 @@ def main():
         "g": ("Geraetename aendern", lambda: name(port)),
         "s": ("Sensoren neu erkennen (Einstellungen bleiben)", lambda: sensoren(port, quelle, chip)),
         "k": ("Grundkonfiguration wiederherstellen", lambda: grundkonfiguration(port, quelle, chip)),
+        "v": ("Sensorboxen im Netzwerk an openandhome-Server senden", oh_server.menue),
     }
     while True:
         print("\n" + "=" * 60)

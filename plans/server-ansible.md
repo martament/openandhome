@@ -182,7 +182,7 @@ Automatisch, Ergebnis als Protokoll unter `~/openandhome-serverprotokolle/<Datum
 |---|---|
 | T1 | Alle Dienste aktiv, auch **nach einem Neustart** (Test startet den Pi neu) |
 | T2 | Simulierte Sensorbox: `mosquitto_pub -u sensorbox` auf `openandhome/Testbox/Fuehler1/Temperature` → Wert per InfluxQL mit Tags `sensorbox=Testbox`, `device=Fuehler1`, `valuename=Temperature` lesbar |
-| T3 | Anonymes MQTT abgelehnt; Benutzer `sensorbox` darf nicht lesen |
+| T3 | Anonymes MQTT abgelehnt; Benutzer `telegraf` darf nicht senden (`sensorbox` braucht Lesen für ESPEasy-Befehle) |
 | T4 | Syslog: UDP-Meldung im ESPEasy-Format (`<14>Testbox_EspEasy: …`) → im Bucket `sensorbox_logs` |
 | T5 | Grafana: `viewer` sieht Dashboards und Daten, Speichern ergibt 403; `editor` darf speichern; ohne Anmeldung kein Zugriff |
 | T6 | Dashboard-Abfrage über die Grafana-API liefert die Testwerte (Datenquelle funktioniert) |
@@ -452,6 +452,12 @@ leert Passwortfelder und schreibt `letzte_anwendung=<Datum> OK/FEHLER: …` zur�
 ---
 
 ## 9. Umsetzungsreihenfolge
+
+**Stand 2026-11-15:** Schritte 1–3 umgesetzt und auf dem Pi 4 getestet (`image.yml`, `site.yml`,
+`test.yml`). Aus Schritt 5 ist „Boxen im Netz suchen und an den Server senden/trennen“ fertig
+(`tools/bin/oh_server.py`, Toolbox-Menü **v**, ohne Box am USB direkt); die volle Menüstruktur
+aus 6.0 folgt. Offen: Schritt 4 (`oh_config`), Betriebsarten b und c.
+
 
 1. `server/`-Grundgerüst, `image_download`, `image_customize`, `sd_write` → Pi 4 startet und ist per SSH erreichbar (P1 klären).
 2. `base`, `timesync`, `mosquitto`, `influxdb`, `telegraf`, `grafana` mit `server/stack/`.
