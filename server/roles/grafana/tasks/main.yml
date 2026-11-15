@@ -96,10 +96,12 @@
 
 - name: Admin-Passwort setzen
   ansible.builtin.command:
-    cmd: grafana cli --homepath /usr/share/grafana --config /etc/grafana/grafana.ini admin reset-admin-password --password-from-stdin
+    cmd: >-
+      runuser -u grafana -- grafana cli --homepath /usr/share/grafana --config /etc/grafana/grafana.ini
+      admin reset-admin-password --password-from-stdin
+    # grafana cli bricht ab, wenn das Arbeitsverzeichnis fuer "grafana" nicht lesbar ist
+    chdir: /usr/share/grafana
     stdin: "{{ credentials_values.grafana_admin }}"
-  become: true
-  become_user: grafana
   when: grafana_admin_check.status == 401
   changed_when: true
   no_log: true

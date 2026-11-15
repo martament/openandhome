@@ -58,3 +58,11 @@ Maßgeblich ist [`../plans/server-ansible.md`](../plans/server-ansible.md); Proj
   `openandhome/%sysname%/#` für Befehle).
 - Ansible auf dem Pi braucht etwas freien Platz in `~/.ansible/tmp`; bei voller Karte
   scheitert jeder Lauf mit „Failed to create temporary directory“.
+- `grafana cli` bricht mit `panic: error getting work directory: stat .: permission denied`
+  ab, wenn das Arbeitsverzeichnis für `grafana` nicht lesbar ist → immer mit
+  `chdir: /usr/share/grafana` und `runuser -u grafana` aufrufen (auch später in `oh_config`).
+- Die Kartenmessung schwankt auf dem fertigen Server stark (leere Karte 149/s, mit laufenden
+  Diensten 24–29/s). Harte Grenze daher nur vor der ersten Installation, danach Hinweis.
+- Erster vollständiger Lauf auf 64-GB-Karte (Pi 4, 2026-11-15): `failed=0`, zweiter Lauf
+  `changed=0`; Grafana-Rollen, Rechte (viewer 403 / editor 200 beim Speichern), Datenquellen,
+  MQTT, Syslog und Admin-Rücksetzen per `site.yml` geprüft. Belegung 6,5 GB.

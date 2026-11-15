@@ -3,9 +3,9 @@
 - name: SD-Karte gross genug
   ansible.builtin.assert:
     that:
-      - (ansible_mounts | selectattr('mount', 'equalto', '/') | first).size_total >= oh_min_disk_hard_gb * 1e9
+      - (ansible_facts['mounts'] | selectattr('mount', 'equalto', '/') | first).size_total >= oh_min_disk_hard_gb * 1e9
     fail_msg: >-
-      Das Dateisystem hat nur {{ ((ansible_mounts | selectattr('mount', 'equalto', '/') | first).size_total / 1e9) | round(1) }} GB.
+      Das Dateisystem hat nur {{ ((ansible_facts['mounts'] | selectattr('mount', 'equalto', '/') | first).size_total / 1e9) | round(1) }} GB.
       Mindestens eine 16-GB-Karte verwenden (empfohlen: 32 GB, Klasse A1/A2).
     quiet: true
 
@@ -24,7 +24,22 @@
   changed_when: false
   check_mode: false
 
+# Harte Grenze nur vor der ersten Installation: auf dem fertigen Server schreiben
+# InfluxDB/Telegraf/Grafana staendig mit, die Messung schwankt dann stark (149 -> 24).
+- name: Bereits installiert?
+  ansible.builtin.stat:
+    path: /usr/share/grafana
+  register: base_installed
+
+- name: Schreibleistung (Hinweis auf fertigem Server)
+  ansible.builtin.debug:
+    msg: >-
+      SD-Karte: {{ base_card_iops.stdout }} synchrone Schreibvorgaenge/s bei laufenden Diensten
+      {{ '- niedrig, Karte pruefen' if base_card_iops.stdout | int < oh_min_card_iops else '' }}
+  when: base_installed.stat.exists
+
 - name: SD-Karte schnell genug
+  when: not base_installed.stat.exists
   ansible.builtin.assert:
     that:
       - base_card_iops.stdout | int >= oh_min_card_iops

@@ -28,8 +28,11 @@
       {{ ((sd_write_lsblk.stdout | from_json).blockdevices[0].children | default([]))
          | map(attribute='mountpoints') | flatten | select | list
          + ((sd_write_lsblk.stdout | from_json).blockdevices[0].mountpoints | select | list) }}
+    # Nur tatsaechlich eingehaengte Partitionen (umount-Meldungen sind sprachabhaengig)
     sd_write_partitions: >-
-      {{ ((sd_write_lsblk.stdout | from_json).blockdevices[0].children | default([])) | map(attribute='path') | list }}
+      {{ ((sd_write_lsblk.stdout | from_json).blockdevices[0].children | default([]))
+         | selectattr('mountpoints', 'ne', [none]) | selectattr('mountpoints', 'ne', [])
+         | map(attribute='path') | list }}
 
 - name: Geraet ist eine wechselbare Karte, kein Systemlaufwerk
   ansible.builtin.assert:
@@ -72,9 +75,7 @@
     - name: Partitionen aushaengen
       ansible.builtin.command: "umount {{ item | quote }}"
       loop: "{{ sd_write_partitions }}"
-      register: sd_write_umount
-      changed_when: sd_write_umount.rc == 0
-      failed_when: sd_write_umount.rc != 0 and 'not mounted' not in sd_write_umount.stderr
+      changed_when: true
 
     - name: Image schreiben (dauert einige Minuten)
       ansible.builtin.command: >-
