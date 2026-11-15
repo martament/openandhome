@@ -1,0 +1,27 @@
+# openandhome Server-Einstellungen
+#
+# Leere Felder bleiben unveraendert. Passwortfelder werden nach dem Anwenden
+# automatisch geleert. Die Datei wird beim Start des Servers angewendet;
+# das Ergebnis steht danach unten in "letzte_anwendung".
+# (Wird ab der Rolle oh_config ausgewertet - siehe plans/server-ansible.md, 6.6)
+
+# E-Mail-Benachrichtigung (Grafana-Alarme)
+smtp_host=
+smtp_port=587
+smtp_user=
+smtp_passwort=
+smtp_absender=
+alarm_empfaenger=
+
+# Grafana-Passwoerter
+# Admin-Passwort vergessen? Hier ein neues eintragen und den Server starten.
+# Hinweis: Unser Support hilft dabei nur mit der Neukonfiguration des Servers
+# (alle Messwerte, Dashboards und Einstellungen gehen verloren).
+grafana_admin_passwort=
+grafana_editor_passwort=
+grafana_viewer_passwort=
+
+# Aufbewahrung der Messwerte in Tagen (leer = Standard)
+aufbewahrung_tage=
+
+letzte_anwendung=

@@ -147,7 +147,7 @@ zeigt die Syslog-Meldungen je Box.
    (Weiterleitung auf das aktuelle Release) + zugehörige `.sha256`; Prüfsumme prüfen;
    Cache in `~/.cache/openandhome/raspios/`. Release-Name und SHA256 werden gemerkt
    (für das Protokoll).
-2. **Anpassen** (Loop-Device, Boot- und Root-Partition einhängen):
+2. **Anpassen** (ohne Einhängen, per mtools direkt in der Boot-Partition der Image-Datei):
    - cloud-init (`user-data`, `network-config`, `meta-data` auf der Boot-Partition):
      Hostname `openandhome-server1`, Benutzer `ohadmin` mit Werkstatt-SSH-Key, ohne Passwort-Login,
      Locale `de_DE.UTF-8`, Zeitzone `Europe/Berlin`, Tastatur `de`, Ethernet per DHCP.
@@ -436,7 +436,7 @@ leert Passwortfelder und schreibt `letzte_anwendung=<Datum> OK/FEHLER: …` zur�
 
 | # | Punkt |
 |---|---|
-| P1 | Nutzt das aktuelle Raspberry Pi OS Lite arm64 cloud-init auf der Boot-Partition? (beim ersten Download prüfen; sonst Rückfall `userconf.txt`) |
+| P1 | **Erledigt** (2026-10-06-raspios-trixie-arm64-lite): cloud-init 25.2, NoCloud aus `/boot/firmware`, Modul `rpi:` für I2C. SSH über die leere Datei `ssh` (`sshswitch.service`). Anpassung braucht kein Loop-Mount und kein root (mtools auf der FAT-Partition); nur das SD-Schreiben braucht sudo |
 | P2 | Controller 1 in den Basis-configs = C005 mit `openandhome/%sysname%/…`? |
 | P3 | **Entschieden:** Wir gehen davon aus, dass bald ein ESPEasy-Release mit funktionierendem Syslog kommt (`mega-20260720` sendet keins). Keine eigene Log-Regel als Produktfunktion; die Testlog-Regel bleibt nur im Test. Server und Konfigprogramm setzen die normale Syslog-Einstellung (`/advanced`). Bis zum neuen Image kommen beim Kunden nur Metriken an – der Funktionstest prüft Syslog serverseitig (T4) |
 | P4 | Pi 3 B v1.2: Funktionstest einmal probehalber; bei RAM-Problemen Unterstützung streichen (E2) |

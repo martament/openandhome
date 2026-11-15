@@ -1,0 +1,26 @@
+---
+# werkstatt: der Linux-PC, auf dem das Image gebaut und die SD-Karte geschrieben wird.
+# server:    der openandhome-Server (Raspberry Pi 4 B) im Werkstatt-Netz, per DHCP.
+#            Erreichbar per mDNS (avahi im Image); abweichend: -e oh_server_address=<IP>
+all:
+  children:
+    werkstatt:
+      hosts:
+        localhost:
+          ansible_connection: local
+          ansible_python_interpreter: "{{ ansible_playbook_python }}"
+          # sudo-rs (Standard ab Ubuntu 25.10) verpackt die Passwortabfrage als
+          # "[sudo: <prompt>] Password:" - Ansible erkennt sie nicht (Timeout).
+          # Klassisches sudo (sudo.ws) verwenden, wenn vorhanden.
+          ansible_become_exe: "{{ 'sudo.ws' if lookup('ansible.builtin.pipe', 'command -v sudo.ws || true') else 'sudo' }}"
+    server:
+      hosts:
+        openandhome-server1:
+          ansible_host: "{{ oh_server_address | default(oh_hostname ~ '.local') }}"
+          ansible_user: "{{ oh_admin_user }}"
+          ansible_become: true
+          # Jeder neue Server hat neue Host-Keys unter demselben Namen. Eigene
+          # known_hosts-Datei, die sd_write vor jedem neuen Server bereinigt.
+          ansible_ssh_common_args: >-
+            -o UserKnownHostsFile={{ oh_known_hosts }}
+            -o StrictHostKeyChecking=accept-new

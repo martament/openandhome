@@ -1,0 +1,14 @@
+---
+# Ausgabe: <build>/<release>/openandhome-server_<release>.img
+image_customize_build_dir: "{{ oh_cache_dir }}/build/{{ image_download_release }}"
+image_customize_image: "{{ image_customize_build_dir }}/openandhome-server_{{ image_download_release }}.img"
+
+# Zusaetze fuer config.txt (Abschnitt [all]): DS3231-RTC, nur Ethernet
+image_customize_config_txt:
+  - dtparam=i2c_arm=on
+  - dtoverlay=i2c-rtc,ds3231
+  - dtoverlay=disable-wifi
+  - dtoverlay=disable-bt
+
+# Gruppen des Admin-Benutzers (wie der Standardbenutzer pi, ohne Desktop-Gruppen)
+image_customize_admin_groups: [adm, dialout, sudo, users, video, gpio, i2c, netdev, systemd-journal]

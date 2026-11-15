@@ -1,0 +1,22 @@
+---
+# Phase 1: aktuelles Raspberry Pi OS Lite (arm64) laden, fuer openandhome anpassen
+# und - nur mit -e sd_device=/dev/sdX - auf eine SD-Karte schreiben.
+#
+#   ansible-playbook image.yml                          # nur Image bauen
+#   ansible-playbook image.yml -K -e sd_device=/dev/sdX  # bauen und schreiben (sudo)
+- name: Server-Image erzeugen
+  hosts: werkstatt
+  gather_facts: false
+  roles:
+    - { role: image_download, tags: [download] }
+    - { role: image_customize, tags: [customize] }
+    - { role: sd_write, tags: [sd], when: sd_device is defined }
+  post_tasks:
+    - name: Ergebnis
+      ansible.builtin.debug:
+        msg: >-
+          Image {{ image_customize_image | default('-') }} ({{ image_download_release | default('-') }}).
+          {{ 'Auf ' ~ sd_device ~ ' geschrieben. Karte in den Pi stecken, starten, nach ca. 2 min:
+          ansible server -m ping'
+          if sd_device is defined else 'Zum Schreiben: ansible-playbook image.yml -K -e sd_device=/dev/sdX' }}
+      tags: [always]

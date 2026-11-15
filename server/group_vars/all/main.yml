@@ -1,0 +1,21 @@
+---
+# Gemeinsame Werte fuer alle Phasen (Image, Installation, Test).
+# Keine Passwoerter hier - die kommen je Server zufaellig erzeugt (Phase 2).
+
+# Hostname des Servers (beim Kunden gleich, ein Server je Kunde)
+oh_hostname: openandhome-server1
+
+# Admin-Benutzer auf dem Server (nur SSH-Key, kein Passwort-Login)
+oh_admin_user: ohadmin
+
+# Oeffentliche SSH-Keys der Werkstatt, die in das Image kommen
+oh_admin_ssh_pubkeys:
+  - "~/.ssh/id_ed25519.pub"
+
+oh_timezone: Europe/Berlin
+oh_locale: de_DE.UTF-8
+oh_keyboard_layout: de
+
+# Arbeitsverzeichnisse auf dem Werkstatt-PC (nicht im Repo)
+oh_cache_dir: "{{ lookup('env', 'HOME') }}/.cache/openandhome"
+oh_known_hosts: "{{ oh_cache_dir }}/known_hosts_server"
