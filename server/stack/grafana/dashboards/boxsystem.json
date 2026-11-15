@@ -99,7 +99,7 @@
     {
       "type": "timeseries",
       "title": "WLAN-Signal",
-      "description": "",
+      "description": "Standalone sendet 100 + dBm, wird hier in dBm umgerechnet.",
       "datasource": {
         "type": "influxdb",
         "uid": "oh-messwerte"
@@ -118,7 +118,18 @@
           },
           "refId": "A",
           "rawQuery": true,
-          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'rssi' AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'rssi' AND \"value\" <= 0 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "B",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") - 100 FROM \"openandhome\" WHERE \"valuename\" = 'rssi' AND \"value\" > 0 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
           "resultFormat": "time_series",
           "alias": "$tag_sensorbox"
         }
@@ -153,7 +164,7 @@
     {
       "type": "timeseries",
       "title": "Freier Speicher",
-      "description": "",
+      "description": "Standalone sendet KB, wird hier in Bytes umgerechnet.",
       "datasource": {
         "type": "influxdb",
         "uid": "oh-messwerte"
@@ -172,14 +183,25 @@
           },
           "refId": "A",
           "rawQuery": true,
-          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'freeheap' AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'freeheap' AND \"value\" >= 1024 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "B",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") * 1024 FROM \"openandhome\" WHERE \"valuename\" = 'freeheap' AND \"value\" < 1024 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
           "resultFormat": "time_series",
           "alias": "$tag_sensorbox"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "decbytes",
+          "unit": "bytes",
           "custom": {
             "lineWidth": 2,
             "spanNulls": 3600000,

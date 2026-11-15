@@ -71,6 +71,10 @@ Maßgeblich ist [`../plans/server-ansible.md`](../plans/server-ansible.md); Proj
 
 - Wertnamen der Basis-configs: `Temperatur`, `Luftfeuchtigkeit`, `Distance` (HCSR04), `State`,
   `uptime`, `freeheap`, `rssi`, `load` – Dashboards erkennen zusätzlich die englischen Namen.
+- **Einheiten unterscheiden sich je Klasse:** Professional sendet `freeheap` in Bytes und `rssi` in dBm,
+  Standalone (auch alte Kundenboxen) `freeheap` in KB (`%value%/1024`) und `rssi` als `100+%value%`.
+  Das Dashboard „Sensorboxen – System“ rechnet um (`UMRECHNUNG` in `dashboards.py`: zwei Abfragen
+  je Wert, getrennt nach Wertebereich `< 1024` bzw. `> 0`). Die Box-configs bleiben unverändert.
 - **Optionale Panels ausblenden geht nur im v2-Format** (dynamische Dashboards,
   `dashboardNewLayouts` ist in Grafana 13 an): `AutoGridLayout` + `conditionalRendering`
   (`ConditionalRenderingData`). Im klassischen Raster gibt es das nicht; `repeat` über eine

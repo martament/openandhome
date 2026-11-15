@@ -155,14 +155,33 @@ def als_v2(d, bedingt=(), spalten=1):
     }
 
 
+# Die Basis-configs liefern freeheap/rssi unterschiedlich (Task System, P026):
+#   Professional (ESP32): Bytes (> 50000) und dBm (negativ)
+#   Standalone (ESP8266): KB ("%value%/1024", < 100) und 100 + dBm ("100+%value%", positiv)
+# Je Wert zwei Abfragen nach Wertebereich, damit alle Boxen in einer Einheit erscheinen.
+UMRECHNUNG = {  # Wertname: ((Bedingung, Rechnung) je Format)
+    "freeheap": (('"value" >= 1024', ""), ('"value" < 1024', " * 1024")),
+    "rssi": (('"value" <= 0', ""), ('"value" > 0', " - 100")),
+}
+
+
+def umgerechnet(name, alias):
+    ziele = []
+    for ref, (bedingung, rechnung) in zip("AB", UMRECHNUNG[name]):
+        q = (f'SELECT mean("value"){rechnung} FROM "openandhome" WHERE "valuename" = \'{name}\' '
+             f'AND {bedingung} AND {BOX} AND $timeFilter GROUP BY time($__interval), "sensorbox" fill(null)')
+        ziele.append(ziel(DS_WERTE, q, alias, ref=ref))
+    return ziele
+
+
 def boxsystem():
     v = variable("sensorbox", "Sensorbox", DS_WERTE, 'SHOW TAG VALUES FROM "openandhome" WITH KEY = "sensorbox"')
     alias = "$tag_sensorbox"
     panels = [
-        zeitreihe("WLAN-Signal", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" = \'rssi\'', '"sensorbox"'), alias)],
-                  "dBm", (0, 0, 12, 8)),
-        zeitreihe("Freier Speicher", DS_WERTE,
-                  [ziel(DS_WERTE, wert('"valuename" = \'freeheap\'', '"sensorbox"'), alias)], "decbytes", (12, 0, 12, 8)),
+        zeitreihe("WLAN-Signal", DS_WERTE, umgerechnet("rssi", alias), "dBm", (0, 0, 12, 8),
+                  beschreibung="Standalone sendet 100 + dBm, wird hier in dBm umgerechnet."),
+        zeitreihe("Freier Speicher", DS_WERTE, umgerechnet("freeheap", alias), "bytes", (12, 0, 12, 8),
+                  beschreibung="Standalone sendet KB, wird hier in Bytes umgerechnet."),
         zeitreihe("Laufzeit seit Neustart", DS_WERTE,
                   [ziel(DS_WERTE, wert('"valuename" =~ /^[Uu]ptime$/', '"sensorbox"'), alias)], "m", (0, 8, 12, 8)),
         zeitreihe("Auslastung", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" = \'load\'', '"sensorbox"'), alias)],
