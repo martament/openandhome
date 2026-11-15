@@ -19,3 +19,34 @@ oh_keyboard_layout: de
 # Arbeitsverzeichnisse auf dem Werkstatt-PC (nicht im Repo)
 oh_cache_dir: "{{ lookup('env', 'HOME') }}/.cache/openandhome"
 oh_known_hosts: "{{ oh_cache_dir }}/known_hosts_server"
+
+# --- Phase 2: Installation ---------------------------------------------------
+
+# Eine Quelle der Dienst-Konfiguration fuer Pi (apt) und Docker (Plan E10)
+oh_stack_dir: "{{ playbook_dir }}/stack"
+
+# Ablage auf dem Server (Zugangsdaten, Umgebungsdateien), nur root
+oh_server_etc: /etc/openandhome
+
+# InfluxDB: Organisation und Buckets (Name = InfluxQL-Datenbank) mit Aufbewahrung
+oh_influx_org: openandhome
+oh_influx_buckets:
+  - { name: openandhome, retention_days: 730 }     # Messwerte der Sensorboxen
+  - { name: sensorbox_logs, retention_days: 30 }   # Syslog der Sensorboxen
+  - { name: system, retention_days: 30 }           # Metriken des Servers
+
+# Ports (Firewall und Dienste)
+oh_port_mqtt: 1883
+oh_port_grafana: 3000
+oh_port_syslog: 514
+
+# Netze, aus denen der Server erreichbar ist (nur private Netze)
+oh_allowed_nets_v4: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16]
+oh_allowed_nets_v6: ["fe80::/10", "fc00::/7"]
+
+# SD-Karte: darunter bricht site.yml ab (16-GB-Karte) bzw. warnt der Test (32-GB-Karte)
+oh_min_disk_hard_gb: 14
+oh_min_disk_gb: 28
+
+# Mindestens so viele synchrone 4-KB-Schreibvorgaenge pro Sekunde (A1-Karten: >= 500)
+oh_min_card_iops: 100

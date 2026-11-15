@@ -1,0 +1,15 @@
+---
+# Phase 2: openandhome-Server installieren (per SSH auf den Pi)
+#
+#   ansible-playbook site.yml                    # alles
+#   ansible-playbook site.yml --tags grafana     # nur eine Rolle
+- name: Server openandhome installieren
+  hosts: server
+  roles:
+    - { role: credentials, tags: [always] }
+    - { role: base, tags: [base] }
+    - { role: timesync, tags: [timesync] }
+    - { role: mosquitto, tags: [mosquitto] }
+    - { role: influxdb, tags: [influxdb] }
+    - { role: telegraf, tags: [telegraf] }
+    - { role: grafana, tags: [grafana] }

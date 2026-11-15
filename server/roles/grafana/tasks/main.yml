@@ -1,0 +1,192 @@
+---
+- name: Grafana installieren
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+
+- name: Umgebungsdatei (Einstellungen per GF_*, Zugang zur InfluxDB)
+  ansible.builtin.copy:
+    content: |
+      GF_SERVER_HTTP_PORT={{ oh_port_grafana }}
+      GF_SERVER_DOMAIN={{ oh_hostname }}
+      GF_AUTH_ANONYMOUS_ENABLED=false
+      GF_USERS_ALLOW_SIGN_UP=false
+      GF_USERS_DEFAULT_LANGUAGE=de-DE
+      GF_ANALYTICS_REPORTING_ENABLED=false
+      GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES=false
+      GF_NEWS_NEWS_FEED_ENABLED=false
+      GF_SECURITY_DISABLE_GRAVATAR=true
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH={{ grafana_dashboard_dir }}/messwerte.json
+      OH_INFLUX_URL=http://127.0.0.1:8086
+      OH_INFLUX_GRAFANA_PASSWORD={{ credentials_values.influx_grafana }}
+    dest: "{{ oh_server_etc }}/grafana.env"
+    owner: root
+    group: grafana
+    mode: "0640"
+  no_log: true
+  notify: Grafana neu starten
+
+- name: Drop-in-Ordner
+  ansible.builtin.file:
+    path: /etc/systemd/system/grafana-server.service.d
+    state: directory
+    mode: "0755"
+
+- name: Systemd-Drop-in (Umgebung)
+  ansible.builtin.copy:
+    content: |
+      [Service]
+      EnvironmentFile={{ oh_server_etc }}/grafana.env
+    dest: /etc/systemd/system/grafana-server.service.d/openandhome.conf
+    mode: "0644"
+  notify: Grafana neu starten
+
+- name: Dashboard-Ordner
+  ansible.builtin.file:
+    path: "{{ grafana_dashboard_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Provisioning und Dashboards (aus stack/)
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: grafana
+    mode: "0644"
+  loop:
+    - { src: "{{ oh_stack_dir }}/grafana/provisioning/datasources/openandhome.yaml", dest: /etc/grafana/provisioning/datasources/ }
+    - { src: "{{ oh_stack_dir }}/grafana/provisioning/dashboards/openandhome.yaml", dest: /etc/grafana/provisioning/dashboards/ }
+    - { src: "{{ oh_stack_dir }}/grafana/dashboards/", dest: "{{ grafana_dashboard_dir }}/" }
+  loop_control: { label: "{{ item.dest }}" }
+  notify: Grafana neu starten
+
+- name: Grafana einschalten
+  ansible.builtin.systemd_service:
+    name: grafana-server
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Ausstehende Neustarts ausfuehren
+  ansible.builtin.meta: flush_handlers
+
+- name: Warten bis bereit
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/health"
+  register: grafana_health
+  until: grafana_health.status == 200
+  retries: 60   # erster Start legt die Datenbank an: auf langsamen Karten mehrere Minuten
+  delay: 5
+  check_mode: false
+
+# --- admin ---------------------------------------------------------------------
+
+- name: Admin-Passwort pruefen
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/user"
+    url_username: admin
+    url_password: "{{ credentials_values.grafana_admin }}"
+    force_basic_auth: true
+    status_code: [200, 401]
+  register: grafana_admin_check
+  check_mode: false
+  no_log: true
+
+- name: Admin-Passwort setzen
+  ansible.builtin.command:
+    cmd: grafana cli --homepath /usr/share/grafana --config /etc/grafana/grafana.ini admin reset-admin-password --password-from-stdin
+    stdin: "{{ credentials_values.grafana_admin }}"
+  become: true
+  become_user: grafana
+  when: grafana_admin_check.status == 401
+  changed_when: true
+  no_log: true
+
+# --- editor, viewer ------------------------------------------------------------
+
+- name: Benutzer suchen
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/users/lookup?loginOrEmail={{ item.login }}"
+    url_username: admin
+    url_password: "{{ credentials_values.grafana_admin }}"
+    force_basic_auth: true
+    status_code: [200, 404]
+  loop: "{{ grafana_users }}"
+  loop_control: { label: "{{ item.login }}" }
+  register: grafana_lookup
+  check_mode: false
+  no_log: true
+
+- name: Fehlende Benutzer anlegen
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/admin/users"
+    method: POST
+    url_username: admin
+    url_password: "{{ credentials_values.grafana_admin }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      login: "{{ item.item.login }}"
+      name: "{{ item.item.name }}"
+      email: "{{ item.item.login }}@{{ oh_hostname }}"
+      password: "{{ credentials_values[item.item.password_key] }}"
+  loop: "{{ grafana_lookup.results }}"
+  loop_control: { label: "{{ item.item.login }}" }
+  when: item.status == 404
+  changed_when: true
+  no_log: true
+
+- name: Benutzer der Organisation lesen
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/org/users"
+    url_username: admin
+    url_password: "{{ credentials_values.grafana_admin }}"
+    force_basic_auth: true
+  register: grafana_org_users
+  check_mode: false
+  no_log: true
+
+- name: Rollen setzen
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/org/users/{{ (grafana_org_users.json | selectattr('login', 'equalto', item.login) | first).userId }}"
+    method: PATCH
+    url_username: admin
+    url_password: "{{ credentials_values.grafana_admin }}"
+    force_basic_auth: true
+    body_format: json
+    body: { role: "{{ item.role }}" }
+  loop: "{{ grafana_users }}"
+  loop_control: { label: "{{ item.login }} → {{ item.role }}" }
+  when: (grafana_org_users.json | selectattr('login', 'equalto', item.login) | first).role != item.role
+  changed_when: true
+  no_log: true
+
+- name: Benutzer-Passwoerter pruefen
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/user"
+    url_username: "{{ item.login }}"
+    url_password: "{{ credentials_values[item.password_key] }}"
+    force_basic_auth: true
+    status_code: [200, 401]
+  loop: "{{ grafana_users }}"
+  loop_control: { label: "{{ item.login }}" }
+  register: grafana_user_check
+  check_mode: false
+  no_log: true
+
+- name: Benutzer-Passwoerter angleichen
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/admin/users/{{ (grafana_org_users.json | selectattr('login', 'equalto', item.item.login) | first).userId }}/password"
+    method: PUT
+    url_username: admin
+    url_password: "{{ credentials_values.grafana_admin }}"
+    force_basic_auth: true
+    body_format: json
+    body: { password: "{{ credentials_values[item.item.password_key] }}" }
+  loop: "{{ grafana_user_check.results }}"
+  loop_control: { label: "{{ item.item.login }}" }
+  when: item.status == 401
+  changed_when: true
+  no_log: true

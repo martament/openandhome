@@ -1,0 +1,217 @@
+---
+- name: InfluxDB 2 installieren
+  ansible.builtin.apt:
+    name: [influxdb2, influxdb2-cli]
+    state: present
+
+- name: Nur lokal lauschen, keine Telemetrie
+  ansible.builtin.lineinfile:
+    path: /etc/influxdb/config.toml
+    regexp: "^{{ item.key }}\\s*="
+    line: "{{ item.key }} = {{ item.value }}"
+  loop:
+    - { key: http-bind-address, value: '"{{ influxdb_bind_address }}"' }
+    - { key: reporting-disabled, value: "true" }
+  notify: InfluxDB neu starten
+
+- name: InfluxDB einschalten
+  ansible.builtin.systemd_service:
+    name: influxdb
+    enabled: true
+    state: started
+
+- name: Ausstehende Neustarts ausfuehren
+  ansible.builtin.meta: flush_handlers
+
+- name: Warten bis bereit
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/health"
+  register: influxdb_health
+  until: influxdb_health.status == 200
+  retries: 30
+  delay: 2
+  check_mode: false
+
+# --- Ersteinrichtung -----------------------------------------------------------
+
+- name: Ersteinrichtung noetig?
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/setup"
+  register: influxdb_setup
+  check_mode: false
+
+- name: Ersteinrichtung (Org, erster Bucket, Admin, Operator-Token)
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/setup"
+    method: POST
+    body_format: json
+    body:
+      username: admin
+      password: "{{ credentials_values.influx_admin }}"
+      org: "{{ oh_influx_org }}"
+      bucket: "{{ oh_influx_buckets[0].name }}"
+      retentionPeriodSeconds: "{{ oh_influx_buckets[0].retention_days * 86400 }}"
+      token: "{{ credentials_values.influx_token }}"
+    status_code: 201
+  when: influxdb_setup.json.allowed
+  changed_when: true
+  no_log: true
+
+- name: Organisation ermitteln
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/orgs?org={{ oh_influx_org | urlencode }}"
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+  register: influxdb_org
+  check_mode: false
+  no_log: true
+
+- name: Org-ID merken
+  ansible.builtin.set_fact:
+    influxdb_org_id: "{{ influxdb_org.json.orgs[0].id }}"
+
+# --- Buckets und Aufbewahrung --------------------------------------------------
+
+- name: Buckets abfragen
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/buckets?orgID={{ influxdb_org_id }}&name={{ item.name | urlencode }}"
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+    status_code: [200, 404]
+  loop: "{{ oh_influx_buckets }}"
+  loop_control: { label: "{{ item.name }}" }
+  register: influxdb_buckets_existing
+  check_mode: false
+  no_log: true
+
+- name: Fehlende Buckets anlegen
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/buckets"
+    method: POST
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+    body_format: json
+    body:
+      orgID: "{{ influxdb_org_id }}"
+      name: "{{ item.item.name }}"
+      retentionRules: [{ type: expire, everySeconds: "{{ item.item.retention_days * 86400 }}" }]
+    status_code: 201
+  loop: "{{ influxdb_buckets_existing.results }}"
+  loop_control: { label: "{{ item.item.name }}" }
+  when: (item.json.buckets | default([])) | length == 0
+  changed_when: true
+  no_log: true
+
+- name: Aufbewahrung angleichen
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/buckets/{{ item.json.buckets[0].id }}"
+    method: PATCH
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+    body_format: json
+    body:
+      retentionRules: [{ type: expire, everySeconds: "{{ item.item.retention_days * 86400 }}" }]
+  loop: "{{ influxdb_buckets_existing.results }}"
+  loop_control: { label: "{{ item.item.name }}" }
+  when:
+    - (item.json.buckets | default([])) | length > 0
+    - item.json.buckets[0].retentionRules[0].everySeconds | default(0) != item.item.retention_days * 86400
+  changed_when: true
+  no_log: true
+
+- name: Bucket-IDs lesen
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/buckets?orgID={{ influxdb_org_id }}&limit=100"
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+  register: influxdb_buckets
+  check_mode: false
+  no_log: true
+
+- name: Bucket-IDs merken
+  ansible.builtin.set_fact:
+    influxdb_bucket_ids: >-
+      {{ dict(influxdb_buckets.json.buckets | map(attribute='name') | zip(influxdb_buckets.json.buckets | map(attribute='id')))
+         | dict2items | selectattr('key', 'in', oh_influx_buckets | map(attribute='name') | list) | items2dict }}
+
+# --- InfluxQL: Datenbank = Bucket (DBRP) ----------------------------------------
+
+- name: DBRP-Zuordnungen abfragen
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/dbrps?orgID={{ influxdb_org_id }}&db={{ item.key | urlencode }}"
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+  loop: "{{ influxdb_bucket_ids | dict2items }}"
+  loop_control: { label: "{{ item.key }}" }
+  register: influxdb_dbrps
+  check_mode: false
+  no_log: true
+
+- name: Fehlende DBRP-Zuordnungen anlegen
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/api/v2/dbrps"
+    method: POST
+    headers: { Authorization: "Token {{ credentials_values.influx_token }}" }
+    body_format: json
+    body:
+      orgID: "{{ influxdb_org_id }}"
+      bucketID: "{{ item.item.value }}"
+      database: "{{ item.item.key }}"
+      retention_policy: autogen
+      default: true
+    status_code: 201
+  loop: "{{ influxdb_dbrps.results }}"
+  loop_control: { label: "{{ item.item.key }}" }
+  when: (item.json.content | default([])) | length == 0
+  changed_when: true
+  no_log: true
+
+# --- v1-Benutzer fuer Telegraf (schreiben) und Grafana (lesen) -------------------
+
+- name: V1-Benutzer abfragen
+  ansible.builtin.command: influx v1 auth list --json
+  environment:
+    INFLUX_HOST: "{{ influxdb_url }}"
+    INFLUX_TOKEN: "{{ credentials_values.influx_token }}"
+    INFLUX_ORG: "{{ oh_influx_org }}"
+  register: influxdb_v1_auths
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: V1-Benutzer anlegen
+  ansible.builtin.command:
+    argv: >-
+      {{ ['influx', 'v1', 'auth', 'create', '--username', item.user, '--password', item.password, '--org', oh_influx_org]
+         + (influxdb_bucket_ids.values() | map('regex_replace', '^', item.mode ~ '=') | list) }}
+  environment:
+    INFLUX_HOST: "{{ influxdb_url }}"
+    INFLUX_TOKEN: "{{ credentials_values.influx_token }}"
+  loop:
+    - { user: telegraf, password: "{{ credentials_values.influx_telegraf }}", mode: "--write-bucket" }
+    - { user: grafana, password: "{{ credentials_values.influx_grafana }}", mode: "--read-bucket" }
+  loop_control: { label: "{{ item.user }}" }
+  when: item.user not in (influxdb_v1_auths.stdout | from_json | map(attribute='token') | list)
+  changed_when: true
+  no_log: true
+
+- name: V1-Passwoerter pruefen
+  ansible.builtin.uri:
+    url: "{{ influxdb_url }}/query?db={{ oh_influx_buckets[0].name }}&q=SHOW+MEASUREMENTS"
+    url_username: "{{ item.user }}"
+    url_password: "{{ item.password }}"
+    force_basic_auth: true
+    status_code: [200, 401, 403]
+  loop:
+    - { user: telegraf, password: "{{ credentials_values.influx_telegraf }}" }
+    - { user: grafana, password: "{{ credentials_values.influx_grafana }}" }
+  loop_control: { label: "{{ item.user }}" }
+  register: influxdb_v1_check
+  check_mode: false
+  no_log: true
+
+- name: V1-Passwoerter angleichen
+  ansible.builtin.command:
+    argv: [influx, v1, auth, set-password, --username, "{{ item.item.user }}", --password, "{{ item.item.password }}"]
+  environment:
+    INFLUX_HOST: "{{ influxdb_url }}"
+    INFLUX_TOKEN: "{{ credentials_values.influx_token }}"
+  loop: "{{ influxdb_v1_check.results }}"
+  loop_control: { label: "{{ item.item.user }}" }
+  when: item.status == 401
+  changed_when: true
+  no_log: true

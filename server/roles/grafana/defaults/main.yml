@@ -1,0 +1,8 @@
+---
+grafana_url: "http://127.0.0.1:{{ oh_port_grafana }}"
+grafana_dashboard_dir: /etc/grafana/dashboards/openandhome
+
+# Benutzer neben admin (Grafana-Rollen Viewer/Editor, Plan E8)
+grafana_users:
+  - { login: editor, name: openandhome Editor, role: Editor, password_key: grafana_editor }
+  - { login: viewer, name: openandhome Viewer, role: Viewer, password_key: grafana_viewer }

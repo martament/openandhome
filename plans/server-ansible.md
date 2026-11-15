@@ -63,7 +63,7 @@ Heiminstallation (Docker-Stack im privaten Ansible-Repo) gehören **nicht** dazu
 | E4 | **DHCP**; Erreichbarkeit per Hostname `openandhome-server1` (Router-DNS, z. B. FRITZ!Box) und `openandhome-server1.local` (mDNS/avahi). Sensorboxen bekommen vom Konfigprogramm **den Namen, falls er auflösbar ist, sonst die IP** (Abschnitt 6.4) | Vorgabe DHCP; ESPEasy löst kein mDNS auf |
 | E5 | **Ein Server je Kunde.** Zugangsdaten werden **je Server neu erzeugt** und nur im Übergabeprotokoll ausgegeben, nie im Repo | Regel 7 in AGENTS.md sinngemäß |
 | E6 | **Kein Klon/Golden Image.** Jeder Server: aktuelles Image laden → anpassen → installieren → automatischer Funktionstest. Image-Release, SHA256 und Paketversionen landen im Protokoll | Vorgabe |
-| E7 | **InfluxDB 2** mit Bucket `openandhome` + **InfluxQL-Zuordnung (DBRP)** `telegraf/autogen`; Dashboards bleiben InfluxQL | Dashboards laufen ohne Umschreiben weiter |
+| E7 | **InfluxDB 2**, Abfragen per InfluxQL; Datenbank = Bucket (`openandhome`, `sensorbox_logs`, `system`). Die alten Dashboards werden neu erzeugt (`stack/grafana/dashboards.py`), daher keine Zuordnung `telegraf/autogen` | alte Dashboards nutzen in Grafana 13 entfernte Paneltypen |
 | E8 | **Grafana OSS** (Paket `grafana`, nicht `grafana-enterprise`), Benutzer `admin`, `editor` (Rolle Editor), `viewer` (Rolle Viewer), anonymer Zugriff aus | Vorgabe Rollen; Enterprise ohne Lizenz unnötig |
 | E9 | **Logs der Sensorboxen über Telegraf `inputs.syslog`** (UDP 514, RFC 3164) in einen eigenen Influx-Bucket, Anzeige in Grafana (Logs-Panel). Kein Loki auf dem Pi | spart RAM; Grafana zeigt Metriken und Logs |
 | E10 | **Eine Quelle für die Stack-Konfiguration** (Abschnitt 4): dieselben Dateien dienen der apt-Installation (Ansible) und dem Docker-Stack (Konfigprogramm, Betriebsart b) | kein Auseinanderlaufen von Pi- und Docker-Variante |
@@ -440,8 +440,9 @@ leert Passwortfelder und schreibt `letzte_anwendung=<Datum> OK/FEHLER: …` zur�
 | P2 | Controller 1 in den Basis-configs = C005 mit `openandhome/%sysname%/…`? |
 | P3 | **Entschieden:** Wir gehen davon aus, dass bald ein ESPEasy-Release mit funktionierendem Syslog kommt (`mega-20260720` sendet keins). Keine eigene Log-Regel als Produktfunktion; die Testlog-Regel bleibt nur im Test. Server und Konfigprogramm setzen die normale Syslog-Einstellung (`/advanced`). Bis zum neuen Image kommen beim Kunden nur Metriken an – der Funktionstest prüft Syslog serverseitig (T4) |
 | P4 | Pi 3 B v1.2: Funktionstest einmal probehalber; bei RAM-Problemen Unterstützung streichen (E2) |
-| P5 | Werden InfluxDB-2-Pakete für arm64 aus `repos.influxdata.com` weiter als `influxdb2` angeboten? (beim Bau prüfen, Version festhalten) |
-| P6 | Telegraf `inputs.syslog` mit RFC 3164 gegen echte ESPEasy-Meldungen testen (Format `<14>%sysname%_EspEasy: …`) |
+| P5 | **Erledigt** (2026-11-15): arm64-Pakete influxdb2/influxdb2-cli 2.9.1, telegraf 1.40.3 (repos.influxdata.com), grafana 13.3.1 (apt.grafana.com); Schlüssel-Fingerabdrücke in `roles/base/defaults` |
+| P6 | **Erledigt:** `inputs.syslog` verwirft den Text bei ESPEasy-Zeilen ohne Zeitstempel. Ersatz `inputs.socket_listener` + Starlark; getestet mit `<14>Box_EspEasy: …`, `<13>Box EspEasy: …` und Zeilen ohne Format |
+| P7 | **SD-Karte:** mindestens 16 GB, empfohlen 32 GB, Klasse A1/A2. Prüfung in `base` (Größe, ≥ 100 synchrone 4-KB-Schreibvorgänge/s) |
 
 ---
 

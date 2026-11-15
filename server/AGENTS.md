@@ -39,3 +39,22 @@ Maßgeblich ist [`../plans/server-ansible.md`](../plans/server-ansible.md); Proj
 - Das Image legt `/var/swap` (2,1 GB) an, aktiv ist aber nur zram – `base` räumt auf.
 - Erster echter Lauf (2026-11-15): Pi 4 Model B Rev 1.1, 4 GB; Ping per `.local` ok.
   Dort kein DS3231 bestückt (`rtc-ds1307 1-0068: probe … error -5`).
+
+## Befunde Phase 2 (2026-11-15)
+
+- **SD-Karte entscheidet über alles.** Testkarte SA08G (2014, 8 GB): 2 synchrone
+  4-KB-Schreibvorgänge/s, 3,1 MB/s sequentiell → Grafana-Paket 13 min entpacken,
+  Grafana-Migrationen > 10 min, danach Karte voll. Daher Prüfungen in `base`
+  (`oh_min_disk_hard_gb`, `oh_min_card_iops`). Belegung mit allen Diensten ca. 6,2 GB.
+- Grafana 13 kopiert beim Installieren die gebündelten Plugins nach
+  `/var/lib/grafana/plugins-bundled` (ca. 530 MB zusätzlich zu 1,4 GB in `/usr/share/grafana`).
+- apt behält `.deb`-Dateien (ca. 0,7 GB) – `base` schaltet das ab.
+- `inputs.syslog` (auch mit `best_effort`) verwirft bei ESPEasy-Zeilen ohne Zeitstempel
+  (`<PRI>Box EspEasy: Text`) den Text. Ersatz: `inputs.socket_listener` + Starlark
+  (`stack/telegraf/telegraf.conf`), erkennt `Box EspEasy:` und `Box_EspEasy:`.
+- InfluxDB 2 ohne DBRP `telegraf/autogen`: Datenbank = Bucket (`openandhome`,
+  `sensorbox_logs`, `system`), v1-Benutzer `telegraf` (schreiben) und `grafana` (lesen).
+- MQTT-Benutzer `sensorbox` hat `readwrite openandhome/#` (ESPEasy abonniert
+  `openandhome/%sysname%/#` für Befehle).
+- Ansible auf dem Pi braucht etwas freien Platz in `~/.ansible/tmp`; bei voller Karte
+  scheitert jeder Lauf mit „Failed to create temporary directory“.

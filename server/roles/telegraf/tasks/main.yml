@@ -1,0 +1,53 @@
+---
+- name: Telegraf installieren
+  ansible.builtin.apt:
+    name: telegraf
+    state: present
+
+- name: Konfiguration (aus stack/, ohne Passwoerter)
+  ansible.builtin.copy:
+    src: "{{ oh_stack_dir }}/telegraf/telegraf.conf"
+    dest: /etc/telegraf/telegraf.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Telegraf neu starten
+
+- name: Umgebungsdatei mit Zugangsdaten
+  ansible.builtin.copy:
+    content: |
+      OH_HOSTNAME={{ oh_hostname }}
+      OH_MQTT_URL=tcp://127.0.0.1:{{ oh_port_mqtt }}
+      OH_MQTT_TELEGRAF_PASSWORD={{ credentials_values.mqtt_telegraf }}
+      OH_INFLUX_URL=http://127.0.0.1:8086
+      OH_INFLUX_TELEGRAF_PASSWORD={{ credentials_values.influx_telegraf }}
+      OH_SYSLOG_PORT={{ oh_port_syslog }}
+    dest: "{{ oh_server_etc }}/telegraf.env"
+    owner: root
+    group: telegraf
+    mode: "0640"
+  no_log: true
+  notify: Telegraf neu starten
+
+- name: Drop-in-Ordner
+  ansible.builtin.file:
+    path: /etc/systemd/system/telegraf.service.d
+    state: directory
+    mode: "0755"
+
+- name: Systemd-Drop-in (Umgebung, Port 514 ohne root)
+  ansible.builtin.copy:
+    content: |
+      [Service]
+      EnvironmentFile={{ oh_server_etc }}/telegraf.env
+      AmbientCapabilities=CAP_NET_BIND_SERVICE
+    dest: /etc/systemd/system/telegraf.service.d/openandhome.conf
+    mode: "0644"
+  notify: Telegraf neu starten
+
+- name: Telegraf einschalten
+  ansible.builtin.systemd_service:
+    name: telegraf
+    enabled: true
+    state: started
+    daemon_reload: true

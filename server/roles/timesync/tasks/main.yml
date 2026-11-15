@@ -1,0 +1,26 @@
+---
+# chrony statt systemd-timesyncd: der Server ist NTP-Server fuer die Sensorboxen im LAN.
+- name: RTC vorhanden?
+  ansible.builtin.stat:
+    path: /dev/rtc0
+  register: timesync_rtc
+
+# Ohne RTC kennt der Pi nach Stromausfall ohne Internet keine Zeit. fake-hwclock
+# setzt dann wenigstens die zuletzt gespeicherte Zeit.
+- name: Zeitpakete installieren
+  ansible.builtin.apt:
+    name: "{{ ['chrony'] + ([] if timesync_rtc.stat.exists else ['fake-hwclock']) }}"
+    state: present
+
+- name: Chrony-Konfiguration
+  ansible.builtin.template:
+    src: chrony-openandhome.conf.j2
+    dest: /etc/chrony/conf.d/openandhome.conf
+    mode: "0644"
+  notify: Chrony neu starten
+
+- name: Chrony einschalten
+  ansible.builtin.systemd_service:
+    name: chrony
+    enabled: true
+    state: started

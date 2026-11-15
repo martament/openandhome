@@ -4,8 +4,13 @@ Richtet einen openandhome-Server auf einem **Raspberry Pi 4 Model B** ein. Er em
 Messwerte (MQTT) und Logs (Syslog) der Sensorboxen und zeigt sie in Grafana an.
 Ein Server je Kunde. Plan und Entscheidungen: [`../plans/server-ansible.md`](../plans/server-ansible.md).
 
-**Stand:** Phase 1 (Image + SD-Karte) ist umgesetzt. Installation (`site.yml`) und
-Funktionstest (`test.yml`) folgen.
+**Stand:** Phase 1 (Image + SD-Karte) und Phase 2 (Installation, `site.yml`) sind umgesetzt.
+Der Funktionstest (`test.yml`) folgt.
+
+**SD-Karte:** mindestens 16 GB, empfohlen 32 GB, **Klasse A1 oder A2**. Das System mit allen
+Diensten belegt ca. 6,2 GB; Grafana und InfluxDB schreiben ständig in kleinen Blöcken.
+`site.yml` bricht bei zu kleinen (< 14 GB Dateisystem) oder zu langsamen Karten
+(< 100 synchrone 4-KB-Schreibvorgänge/s) mit einer Meldung ab.
 
 ## Voraussetzungen (Werkstatt-PC, Linux)
 
@@ -39,6 +44,27 @@ ansible server -m ping                               # per openandhome-server1.l
 ansible server -m ping -e oh_server_address=<IP>     # falls mDNS nicht geht
 ```
 
+## Phase 2: Server installieren
+
+```bash
+ansible-playbook site.yml                    # alles (erster Lauf ca. 15–20 min)
+ansible-playbook site.yml --tags grafana     # nur eine Rolle
+```
+
+Rollen: `credentials` (Zugangsdaten je Server, zufällig, in `/etc/openandhome/credentials.yml`),
+`base` (Kartenprüfung, Paketquellen mit Schlüsselprüfung, Update, zram, Journal, SSH, Firewall,
+Sicherheitsupdates), `timesync` (chrony, NTP-Server fürs LAN), `mosquitto`, `influxdb`,
+`telegraf`, `grafana` (Benutzer `admin`, `editor`, `viewer`). Dienstkonfiguration aus
+[`stack/`](stack/README.md).
+
+Zugangsdaten ansehen (bis das Übergabeprotokoll aus `test.yml` kommt):
+
+```bash
+ansible server -b -m command -a 'cat /etc/openandhome/credentials.yml'
+```
+
+Grafana: `http://openandhome-server1.local:3000`
+
 ## Aufbau
 
 | Pfad | Inhalt |
@@ -49,6 +75,9 @@ ansible server -m ping -e oh_server_address=<IP>     # falls mDNS nicht geht
 | [`roles/image_download`](roles/image_download/README.md) | aktuelles Image + SHA256 |
 | [`roles/image_customize`](roles/image_customize/README.md) | cloud-init, config.txt, openandhome-Dateien |
 | [`roles/sd_write`](roles/sd_write/README.md) | SD-Karte schreiben mit Schutzprüfungen |
+| [`site.yml`](site.yml) | Phase 2 |
+| [`stack/`](stack/README.md) | Mosquitto-, Telegraf-, Grafana-Konfiguration und Dashboards (eine Quelle für Pi und Docker) |
+| `roles/credentials`, `base`, `timesync`, `mosquitto`, `influxdb`, `telegraf`, `grafana` | Installation |
 
 ## Stolperfallen
 

@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+{% for pool in timesync_pools %}
+pool {{ pool }} iburst
+{% endfor %}
+
+# Sensorboxen im LAN duerfen die Zeit abfragen
+{% for net in oh_allowed_nets_v4 + oh_allowed_nets_v6 %}
+allow {{ net }}
+{% endfor %}
+
+{% if timesync_rtc.stat.exists %}
+# Mit RTC auch ohne Internet Zeit liefern
+local stratum 10 orphan
+{% else %}
+# Keine RTC: ohne Internet keine Zeit ausliefern (sonst falsche Zeit an die Boxen)
+{% endif %}
