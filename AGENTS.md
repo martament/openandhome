@@ -124,6 +124,10 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
   `ApCaptivePortal`, Bit 14): Handy-Captive-Portal zeigt die WLAN-Auswahl, `http://192.168.4.1/openandhome.esp`
   bleibt direkt erreichbar (Dateien werden vor der Umleitung ausgeliefert).
 - Display (P036): 180° gedreht, Seitenwechsel „Instant“ ohne Scrollen (Scrollen führte zu Abstürzen).
+- Task System (P026), in beiden Klassen gleich: `uptime` (Minuten), `freeheap` (Bytes), `rssi` (dBm),
+  `load` (%), ohne Formeln, 0 Nachkommastellen, alle 300 s. Ältere Standalone-Boxen senden noch
+  KB (`%value%/1024`) und `100+%value%`; das Server-Dashboard rechnet sie um
+  (siehe [`server/AGENTS.md`](server/AGENTS.md), dort auch die Offsets für direkte `config.dat`-Änderungen).
 
 ### Serielle Konsole (beide Klassen)
 
