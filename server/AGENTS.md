@@ -71,10 +71,17 @@ Maßgeblich ist [`../plans/server-ansible.md`](../plans/server-ansible.md); Proj
 
 - Wertnamen der Basis-configs: `Temperatur`, `Luftfeuchtigkeit`, `Distance` (HCSR04), `State`,
   `uptime`, `freeheap`, `rssi`, `load` – Dashboards erkennen zusätzlich die englischen Namen.
-- **Einheiten unterscheiden sich je Klasse:** Professional sendet `freeheap` in Bytes und `rssi` in dBm,
-  Standalone (auch alte Kundenboxen) `freeheap` in KB (`%value%/1024`) und `rssi` als `100+%value%`.
-  Das Dashboard „Sensorboxen – System“ rechnet um (`UMRECHNUNG` in `dashboards.py`: zwei Abfragen
-  je Wert, getrennt nach Wertebereich `< 1024` bzw. `> 0`). Die Box-configs bleiben unverändert.
+- **System-Werte beider Klassen gleich** (Basis-configs seit 2026-11-15): `uptime` Minuten,
+  `freeheap` Bytes, `rssi` dBm, `load` %, alle 300 s, 0 Nachkommastellen, keine Formeln.
+  Ältere Standalone-Boxen (Kunden) senden noch `freeheap` in KB (`%value%/1024`) und `rssi` als
+  `100+%value%`; das Dashboard „Sensorboxen – System“ rechnet sie um (`UMRECHNUNG` in
+  `dashboards.py`: zweite Abfrage je Wert für `< 1024` bzw. `> 0`). `rssi` = 0 (Professional über
+  Ethernet, WLAN aus) wird nicht angezeigt.
+- config.dat direkt ändern: Settings-MD5 liegt bei ESP32 an 0xBBC (Struktur 3064 Byte), bei ESP8266
+  an 0x514 (Struktur 1352 Byte); MD5 über die Struktur ohne die 16 MD5-Bytes. Die Firmware prüft sie
+  nur fürs Log. Task-Blöcke (Name, Formeln ab +42, Wertnamen ab +206, je 41 Byte) liegen bei ESP32 ab
+  0x8000, bei ESP8266 ab 0x1000, je Task 2048 Byte weiter, und haben keine Prüfsumme.
+  Stellen vorher an einer Box per `/download` gegenprüfen.
 - **Optionale Panels ausblenden geht nur im v2-Format** (dynamische Dashboards,
   `dashboardNewLayouts` ist in Grafana 13 an): `AutoGridLayout` + `conditionalRendering`
   (`ConditionalRenderingData`). Im klassischen Raster gibt es das nicht; `repeat` über eine

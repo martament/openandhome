@@ -43,7 +43,7 @@
       },
       "basis_config": {
         "pfad": "configs/espeasy/standalone/basis/config.dat",
-        "sha256": "c5df0d90c3580cd4b1271679ae4392de5957d4b83d2017e0c6a7d48b33dd5157"
+        "sha256": "8eb3b0da832ba48b8fb1f2af507fddc58a3e4399d6a53147ba45b311f5e86564"
       },
       "regeln": {
         "pfad": "configs/espeasy/standalone/basis/rules1.txt",
@@ -67,7 +67,7 @@
         },
         "basis_config": {
           "pfad": "configs/espeasy/standalone/basis_am2320/config.dat",
-          "sha256": "786b0dc787568e024dd998d042e578d9bc2e28fc7ba9e41853c1dbc2561105df"
+          "sha256": "0bedd7df1911e6b6213956fec987f99ec88170003698a8b4a2ba078d3da74451"
         },
         "regeln": {
           "pfad": "configs/espeasy/standalone/basis_am2320/rules1.txt",
@@ -82,7 +82,7 @@
       },
       "basis_config": {
         "pfad": "configs/espeasy/professional/basis/config.dat",
-        "sha256": "489438f28e3a947090474516ac98103e71f93d1d4a204322d4bfdfc52904cd8d"
+        "sha256": "b48c91b458496d640033b8a176db110a2d1e292e332ab00c5fc5f72f9be4262b"
       },
       "regeln": {
         "pfad": "configs/espeasy/professional/basis/rules1.txt",

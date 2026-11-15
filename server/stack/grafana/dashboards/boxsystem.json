@@ -99,7 +99,7 @@
     {
       "type": "timeseries",
       "title": "WLAN-Signal",
-      "description": "Standalone sendet 100 + dBm, wird hier in dBm umgerechnet.",
+      "description": "WLAN-Empfang in dBm (-50 sehr gut, -80 schwach). Boxen über Ethernet ohne WLAN erscheinen nicht. Ältere Standalone-Boxen (100 + dBm) werden umgerechnet.",
       "datasource": {
         "type": "influxdb",
         "uid": "oh-messwerte"
@@ -118,7 +118,7 @@
           },
           "refId": "A",
           "rawQuery": true,
-          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'rssi' AND \"value\" <= 0 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'rssi' AND \"value\" < 0 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
           "resultFormat": "time_series",
           "alias": "$tag_sensorbox"
         },
@@ -164,7 +164,7 @@
     {
       "type": "timeseries",
       "title": "Freier Speicher",
-      "description": "Standalone sendet KB, wird hier in Bytes umgerechnet.",
+      "description": "Freier Arbeitsspeicher in Bytes. Ältere Standalone-Boxen (KB) werden umgerechnet.",
       "datasource": {
         "type": "influxdb",
         "uid": "oh-messwerte"
