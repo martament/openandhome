@@ -82,7 +82,7 @@
       },
       "basis_config": {
         "pfad": "configs/espeasy/professional/basis/config.dat",
-        "sha256": "8c24317a233c68083fb52852c77501242212255435e4db9cd974d2b38f28ad6b"
+        "sha256": "489438f28e3a947090474516ac98103e71f93d1d4a204322d4bfdfc52904cd8d"
       },
       "regeln": {
         "pfad": "configs/espeasy/professional/basis/rules1.txt",
