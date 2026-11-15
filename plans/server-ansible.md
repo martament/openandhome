@@ -351,6 +351,10 @@ Servereinstellungen (a, b)                Weitere (a, b, c)
     Benutzer/Passwort, Publish `openandhome/%sysname%/%tskname%/%valname%`,
     Subscribe `openandhome/%sysname%/#` (über `/controllers?index=1`).
   - Syslog-IP und -Port (über `/advanced`, wie `setze_syslog` in `espeasy_testbox.py`).
+  - **Bei jedem aktiven Task mit Messwerten „Send to Controller 1“ setzen** (`TDSD1=on` über
+    `/devices?index=<n>&page=1`), sonst sendet die Box nur ihren LWT-Status (P2).
+  - Server per IP eintragen, wenn der Name im Netz der Box nicht auflösbar ist
+    (`locatecontroller=0`, `controllerip`) – siehe 6.5.
   - Optional NTP-Host = Server (Toolbox-Menü n gibt es schon).
   - Prüfen: Controller verbunden (`/json`), und – wo möglich – Wert kommt beim Ziel an.
 - **Box vom Server lösen:** Controller aus, Syslog leer (Zurück zu Standalone).
@@ -437,7 +441,8 @@ leert Passwortfelder und schreibt `letzte_anwendung=<Datum> OK/FEHLER: …` zur�
 | # | Punkt |
 |---|---|
 | P1 | **Erledigt** (2026-10-06-raspios-trixie-arm64-lite): cloud-init 25.2, NoCloud aus `/boot/firmware`, Modul `rpi:` für I2C. SSH über die leere Datei `ssh` (`sshswitch.service`). Anpassung braucht kein Loop-Mount und kein root (mtools auf der FAT-Partition); nur das SD-Schreiben braucht sudo |
-| P2 | Controller 1 in den Basis-configs = C005 mit `openandhome/%sysname%/…`? |
+| P2 | **Erledigt** (Professional, 2026-11-15): Controller 1 = C005, Host `openandhome-server1`, Port 1883, Publish `openandhome/%sysname%/%tskname%/%valname%`, Subscribe `openandhome/%sysname%/#`, aus. **Bei keinem Task ist „Send to Controller 1“ (`TDSD1`) gesetzt** – ohne das sendet die Box nur ihren LWT-Status |
+| P8 | **Basis-config Professional:** Task System (P026) hat bei Wert 2–4 die Werteart `0` (`TDTV2..4`), daher `freeheap`/`rssi`/`load` = 0. In der Basis-config korrigieren (eigene Aufgabe) |
 | P3 | **Entschieden:** Wir gehen davon aus, dass bald ein ESPEasy-Release mit funktionierendem Syslog kommt (`mega-20260720` sendet keins). Keine eigene Log-Regel als Produktfunktion; die Testlog-Regel bleibt nur im Test. Server und Konfigprogramm setzen die normale Syslog-Einstellung (`/advanced`). Bis zum neuen Image kommen beim Kunden nur Metriken an – der Funktionstest prüft Syslog serverseitig (T4) |
 | P4 | Pi 3 B v1.2: Funktionstest einmal probehalber; bei RAM-Problemen Unterstützung streichen (E2) |
 | P5 | **Erledigt** (2026-11-15): arm64-Pakete influxdb2/influxdb2-cli 2.9.1, telegraf 1.40.3 (repos.influxdata.com), grafana 13.3.1 (apt.grafana.com); Schlüssel-Fingerabdrücke in `roles/base/defaults` |

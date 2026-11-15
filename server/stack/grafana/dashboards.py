@@ -6,6 +6,9 @@ Ausgabe: server/stack/grafana/dashboards/*.json (werden committet und per
 Provisioning nach /etc/grafana/dashboards/openandhome geladen).
 
 Datenmodell (stack/README.md): Measurement "openandhome", Feld "value",
+Wertnamen wie in den Basis-configs: Temperatur, Luftfeuchtigkeit, Distance, State,
+uptime, freeheap, rssi, load (englische ESPEasy-Standardnamen werden mit erkannt).
+
 Tags "sensorbox" (ESPEasy %sysname%), "device" (%tskname%), "valuename" (%valname%).
 """
 import json
@@ -77,21 +80,79 @@ def wert(bedingung, gruppe='"sensorbox", "device"'):
             f'GROUP BY time($__interval), {gruppe} fill(null)')
 
 
+# Optionale Sensoren: Panel nur anzeigen, wenn es Daten hat. Das geht nur mit dem
+# v2-Format (dynamische Dashboards, AutoGrid-Layout, conditionalRendering).
+# repeat ueber eine leere Variable zeigt in Grafana 13 trotzdem ein leeres Panel.
+OPTIONAL = {  # Titel: (Wertnamen, Einheit, Stufen, Min/Max, Hinweis)
+    "Luftfeuchte": ("(Luftfeuchtigkeit|Humidity)", "humidity", False, None, "Kombifühler (HTU21D/AM2320)"),
+    "Abstand": ("(Distance|Abstand)", "suffix: cm", False, None, "Ultraschall-Abstandssensor HC-SR04"),
+    "Wassersensor": ("(State)", "", True, (0, 1), "Wassersensor, 1 = Wasser erkannt (je nach Verdrahtung)"),
+}
+
+HINWEIS_OPTIONAL = ("Luftfeuchte, Abstand und Wassersensor erscheinen nur, wenn eine der gewählten "
+                    "Sensorboxen diesen Messwert im gewählten Zeitraum gesendet hat.")
+
+
 def messwerte():
     v = variable("sensorbox", "Sensorbox", DS_WERTE, 'SHOW TAG VALUES FROM "openandhome" WITH KEY = "sensorbox"')
     alias = "$tag_sensorbox $tag_device"
-    panels = [
-        zeitreihe("Temperatur", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" =~ /^Temperat/'), alias)],
-                  "celsius", (0, 0, 24, 10)),
-        zeitreihe("Luftfeuchte", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" = \'Humidity\''), alias)],
-                  "humidity", (0, 10, 12, 8)),
-        zeitreihe("Abstand", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" = \'Distance\''), alias)],
-                  "suffix: cm", (12, 10, 12, 8)),
-        zeitreihe("Wassersensor", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" = \'State\''), alias)],
-                  "", (0, 18, 24, 6), stufen=True, minmax=(0, 1),
-                  beschreibung="1 = Wasser erkannt (je nach Verdrahtung)"),
-    ]
-    return dashboard("oh-messwerte", "Sensorboxen – Messwerte", panels, [v])
+    panels = [zeitreihe("Temperatur", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" =~ /^Temperat/'), alias)],
+                        "celsius", (0, 0, 24, 10))]
+    for titel, (muster, einheit, stufen, minmax, hinweis) in OPTIONAL.items():
+        panels.append(zeitreihe(titel, DS_WERTE, [ziel(DS_WERTE, wert(f'"valuename" =~ /^{muster}$/'), alias)],
+                                einheit, (0, 0, 24, 8), stufen=stufen, minmax=minmax,
+                                beschreibung=f"{hinweis}. Nur sichtbar, wenn eine gewählte Box diesen Wert sendet."))
+    d = dashboard("oh-messwerte", "Sensorboxen – Messwerte", panels, [v])
+    d["description"] = HINWEIS_OPTIONAL
+    return als_v2(d, bedingt=set(OPTIONAL))
+
+
+def als_v2(d, bedingt=(), spalten=1):
+    """Setzt ein Dashboard (v1-Aufbau dieses Skripts) in das v2-Format um.
+    Panels in `bedingt` werden nur angezeigt, wenn ihre Abfrage Daten liefert."""
+    elemente, items = {}, []
+    for nr, p in enumerate(d["panels"], start=1):
+        name = f"panel-{nr}"
+        abfragen = [{"kind": "PanelQuery", "spec": {
+            "refId": t["refId"], "hidden": False,
+            "query": {"kind": "DataQuery", "group": "influxdb", "version": "v0",
+                      "datasource": {"name": t["datasource"]["uid"]},
+                      "spec": {k: t[k] for k in ("alias", "query", "rawQuery", "resultFormat")}}}}
+            for t in p["targets"]]
+        elemente[name] = {"kind": "Panel", "spec": {
+            "id": nr, "title": p["title"], "description": p.get("description", ""), "links": [],
+            "data": {"kind": "QueryGroup", "spec": {"queries": abfragen, "transformations": [], "queryOptions": {}}},
+            "vizConfig": {"kind": "VizConfig", "group": p["type"], "version": "",
+                          "spec": {"options": p.get("options", {}), "fieldConfig": p.get("fieldConfig", {})}}}}
+        item = {"kind": "AutoGridLayoutItem", "spec": {"element": {"kind": "ElementReference", "name": name}}}
+        if p["title"] in bedingt:
+            item["spec"]["conditionalRendering"] = {"kind": "ConditionalRenderingGroup", "spec": {
+                "visibility": "show", "condition": "and",
+                "items": [{"kind": "ConditionalRenderingData", "spec": {"value": True}}]}}
+        items.append(item)
+    variablen = [{"kind": "QueryVariable", "spec": {
+        "name": v["name"], "label": v.get("label", ""), "current": v["current"],
+        "hide": "dontHide", "refresh": "onTimeRangeChanged", "skipUrlSync": False,
+        "query": {"kind": "DataQuery", "group": "influxdb", "version": "v0",
+                  "datasource": {"name": v["datasource"]["uid"]}, "spec": {"__legacyStringValue": v["query"]}},
+        "regex": "", "sort": "alphabeticalAsc", "definition": v["query"], "options": [],
+        "multi": v["multi"], "includeAll": v["includeAll"], "allowCustomValue": True}}
+        for v in d["templating"]["list"]]
+    return {
+        "apiVersion": "dashboard.grafana.app/v2", "kind": "Dashboard", "metadata": {"name": d["uid"]},
+        "spec": {
+            "title": d["title"], "description": d.get("description", ""), "tags": d["tags"],
+            "editable": True, "cursorSync": "Off", "liveNow": False, "preload": False,
+            "annotations": [], "variables": variablen, "elements": elemente,
+            "links": [dict(l, icon="", tooltip="", targetBlank=False) for l in d["links"]],
+            "timeSettings": {"timezone": "browser", "from": d["time"]["from"], "to": d["time"]["to"],
+                             "autoRefresh": d["refresh"], "hideTimepicker": False, "fiscalYearStartMonth": 0,
+                             "autoRefreshIntervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h"]},
+            "layout": {"kind": "AutoGridLayout", "spec": {
+                "maxColumnCount": spalten, "columnWidthMode": "standard", "rowHeightMode": "standard",
+                "fillScreen": False, "items": items}},
+        },
+    }
 
 
 def boxsystem():
@@ -103,10 +164,24 @@ def boxsystem():
         zeitreihe("Freier Speicher", DS_WERTE,
                   [ziel(DS_WERTE, wert('"valuename" = \'freeheap\'', '"sensorbox"'), alias)], "decbytes", (12, 0, 12, 8)),
         zeitreihe("Laufzeit seit Neustart", DS_WERTE,
-                  [ziel(DS_WERTE, wert('"valuename" = \'Uptime\'', '"sensorbox"'), alias)], "m", (0, 8, 12, 8)),
+                  [ziel(DS_WERTE, wert('"valuename" =~ /^[Uu]ptime$/', '"sensorbox"'), alias)], "m", (0, 8, 12, 8)),
         zeitreihe("Auslastung", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" = \'load\'', '"sensorbox"'), alias)],
                   "percent", (12, 8, 12, 8)),
     ]
+    status_q = ('SELECT last("value") FROM "openandhome_status" WHERE ' + BOX +
+                ' AND $timeFilter GROUP BY time($__interval), "sensorbox" fill(previous)')
+    panels.insert(0, {
+        "type": "state-timeline", "title": "Online-Status", "datasource": DS_WERTE,
+        "description": "Meldung der Box an den MQTT-Broker (LWT): Connected = online",
+        "gridPos": {"x": 0, "y": 0, "w": 24, "h": 5},
+        "targets": [ziel(DS_WERTE, status_q, "$tag_sensorbox")],
+        "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {
+            "Connected": {"text": "online", "color": "green", "index": 0},
+            "Connection Lost": {"text": "offline", "color": "red", "index": 1}}}]}, "overrides": []},
+        "options": {"showValue": "never", "mergeValues": True, "alignValue": "left"},
+    })
+    for p in panels[1:]:
+        p["gridPos"]["y"] += 5
     return dashboard("oh-boxsystem", "Sensorboxen – System", panels, [v], zeit="now-7d")
 
 
@@ -147,6 +222,12 @@ def server():
         zeitreihe("SD-Karte", s, [ziel(s, 'SELECT mean("used") FROM "disk" WHERE "path" = \'/\' AND $timeFilter '
                                          'GROUP BY time($__interval) fill(null)', "belegt")],
                   "bytes", (0, 12, 24, 6)),
+        zeitreihe("Netzlast (eth0)", s, [
+            ziel(s, 'SELECT non_negative_derivative(mean("bytes_recv"), 1s) * 8 FROM "net" '
+                    'WHERE "interface" = \'eth0\' AND $timeFilter GROUP BY time($__interval) fill(null)', "empfangen", "A"),
+            ziel(s, 'SELECT non_negative_derivative(mean("bytes_sent"), 1s) * 8 FROM "net" '
+                    'WHERE "interface" = \'eth0\' AND $timeFilter GROUP BY time($__interval) fill(null)', "gesendet", "B")],
+                  "bps", (0, 18, 24, 8)),
     ]
     return dashboard("oh-server", "openandhome-Server", panels, zeit="now-24h")
 

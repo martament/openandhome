@@ -537,6 +537,71 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "type": "timeseries",
+      "title": "Netzlast (eth0)",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-server"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-server"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT non_negative_derivative(mean(\"bytes_recv\"), 1s) * 8 FROM \"net\" WHERE \"interface\" = 'eth0' AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "resultFormat": "time_series",
+          "alias": "empfangen"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-server"
+          },
+          "refId": "B",
+          "rawQuery": true,
+          "query": "SELECT non_negative_derivative(mean(\"bytes_sent\"), 1s) * 8 FROM \"net\" WHERE \"interface\" = 'eth0' AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "resultFormat": "time_series",
+          "alias": "gesendet"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "lineWidth": 2,
+            "spanNulls": 3600000,
+            "lineInterpolation": "smooth"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     }
   ],
   "links": [

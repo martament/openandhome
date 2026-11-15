@@ -66,3 +66,19 @@ Maßgeblich ist [`../plans/server-ansible.md`](../plans/server-ansible.md); Proj
 - Erster vollständiger Lauf auf 64-GB-Karte (Pi 4, 2026-11-15): `failed=0`, zweiter Lauf
   `changed=0`; Grafana-Rollen, Rechte (viewer 403 / editor 200 beim Speichern), Datenquellen,
   MQTT, Syslog und Admin-Rücksetzen per `site.yml` geprüft. Belegung 6,5 GB.
+
+## Befunde Dashboards und echte Sensorbox (2026-11-15)
+
+- Wertnamen der Basis-configs: `Temperatur`, `Luftfeuchtigkeit`, `Distance` (HCSR04), `State`,
+  `uptime`, `freeheap`, `rssi`, `load` – Dashboards erkennen zusätzlich die englischen Namen.
+- **Optionale Panels ausblenden geht nur im v2-Format** (dynamische Dashboards,
+  `dashboardNewLayouts` ist in Grafana 13 an): `AutoGridLayout` + `conditionalRendering`
+  (`ConditionalRenderingData`). Im klassischen Raster gibt es das nicht; `repeat` über eine
+  leere Variable zeigt in Grafana 13 trotzdem ein leeres Panel. `dashboards.py` erzeugt
+  `messwerte.json` deshalb mit `als_v2()`; die Datei-Provisionierung liest v2 problemlos.
+- ESPEasy sendet LWT auf `openandhome/<Box>/status/LWT` (`Connected`/`Connection Lost`) –
+  passt auf `openandhome/+/+/+`; Telegraf (`auto_float` + Starlark) legt es in
+  `openandhome_status` ab und verwirft Text/NaN in `openandhome`.
+- Prüfung im Browser: `grafana_sicht.py` (headless Chromium per CDP, im Scratchpad dieser
+  Sitzung) – sichtbar ist ein Panel nur mit `getBoundingClientRect().height > 0`, ausgeblendete
+  stehen weiter im DOM.

@@ -15,7 +15,9 @@ aus Umgebungsvariablen (Pi: `/etc/openandhome/*.env` per systemd-Drop-in; Docker
 | `OH_SYSLOG_PORT` | Telegraf | UDP-Port für Syslog der Sensorboxen (514) |
 
 Datenfluss: Sensorbox → MQTT `openandhome/<Box>/<Task>/<Wert>` → Mosquitto → Telegraf
-(Tags `sensorbox`, `device`, `valuename`) → InfluxDB-Bucket `openandhome`.
+(Tags `sensorbox`, `device`, `valuename`) → InfluxDB-Bucket `openandhome`, Measurement
+`openandhome` (nur gültige Zahlen). Online-Status (`openandhome/<Box>/status/LWT`) →
+Measurement `openandhome_status` (Text `Connected`/`Connection Lost`).
 Syslog (UDP, Rohzeile, per Starlark in `severity`, `sensorbox`, `message` zerlegt) → Bucket `sensorbox_logs`. Server-Metriken → Bucket `system`.
 
 Die Dashboards in `grafana/dashboards/` erzeugt `grafana/dashboards.py` – nicht von Hand

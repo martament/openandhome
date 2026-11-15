@@ -42,6 +42,61 @@
   },
   "panels": [
     {
+      "type": "state-timeline",
+      "title": "Online-Status",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-messwerte"
+      },
+      "description": "Meldung der Box an den MQTT-Broker (LWT): Connected = online",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT last(\"value\") FROM \"openandhome_status\" WHERE \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(previous)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "Connected": {
+                  "text": "online",
+                  "color": "green",
+                  "index": 0
+                },
+                "Connection Lost": {
+                  "text": "offline",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "never",
+        "mergeValues": true,
+        "alignValue": "left"
+      }
+    },
+    {
       "type": "timeseries",
       "title": "WLAN-Signal",
       "description": "",
@@ -51,7 +106,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 0,
+        "y": 5,
         "w": 12,
         "h": 8
       },
@@ -105,7 +160,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 0,
+        "y": 5,
         "w": 12,
         "h": 8
       },
@@ -159,7 +214,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 8,
+        "y": 13,
         "w": 12,
         "h": 8
       },
@@ -171,7 +226,7 @@
           },
           "refId": "A",
           "rawQuery": true,
-          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'Uptime' AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" =~ /^[Uu]ptime$/ AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
           "resultFormat": "time_series",
           "alias": "$tag_sensorbox"
         }
@@ -213,7 +268,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 8,
+        "y": 13,
         "w": 12,
         "h": 8
       },
