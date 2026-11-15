@@ -52,6 +52,8 @@ PROTOKOLLE = os.path.expanduser("~/openandhome-testprotokolle")
 ZUGRIFF_VON, ZUGRIFF_BIS = "192.168.0.0", "192.168.255.255"
 # Name bei Auslieferung (wie bisher); im Test heisst die Box Sensorbox<Unit> (Vorgabe)
 AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT = "Sensorbox1", "0"
+AP_IP, AP_PASSWORT = "192.168.4.1", "configesp"    # ESPEasy-Standard fuer den Access Point
+DASHBOARD_DATEI = "openandhome.esp"
 BACKUPS = os.path.expanduser("~/openandhome-backups")
 # Werkstatt-WLAN: Zeile 1 SSID, Zeile 2 Passwort (chmod 600, nie ins Repo); fehlt sie, wird gefragt
 # Ab Werk kein Zeitserver (kein Internet); rules1.txt schaltet NTP ueber Gateway/192.168.178.1 ein
@@ -741,7 +743,7 @@ def beenden(args):
         schritt("WLAN zuruecksetzen")
         kommando(port, box, "WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey", "Save")
         schritt("Neustart, AP pruefen")
-        ap_ok, ap_info = ap_pruefen(port, box, AUSLIEFERUNG_NAME)
+        ap_ok, ap_info, ssid = ap_pruefen(port, box, AUSLIEFERUNG_NAME)
         if ap_ok:
             zeile = f"OK      AP nach Neustart offen ({ap_info})"
         elif chip == "ESP32":
@@ -750,6 +752,12 @@ def beenden(args):
             zeile, ok = f"FEHLER  AP nach Neustart nicht erkannt ({ap_info})", False
         bericht.append(zeile)
         melde(zeile)
+        if ap_ok:
+            schritt("AP wie ein Handy pruefen: WLAN-Auswahl und Dashboard")
+            for zeile in (ap_seiten_automatisch(ssid) if ssid and wlan_adapter() else ap_seiten_handy(ssid)):
+                ok = ok and not zeile.startswith("FEHLER")
+                bericht.append(zeile)
+                melde(zeile)
 
     ergebnis = "NICHT BESTANDEN" if not ok else "VORZEITIG BEENDET" if vorzeitig else "BESTANDEN"
     if protokoll:
@@ -791,21 +799,19 @@ def ap_pruefen(port, box, name, sekunden=60):
 
     Per USB wird das Boot-Log nach 'AP Mode' durchsucht; zusaetzlich (und ohne USB)
     sucht der Werkstatt-PC per nmcli nach einem WLAN, das mit dem Box-Namen beginnt.
-    Liefert (ok, Hinweis)."""
+    Liefert (ok, Hinweis, SSID oder None)."""
+    treffer = []
     if usb_da(port):
         zeilen = sende(port, "Reboot", wartezeit=sekunden // 2)
         treffer = [z for z in zeilen if re.search(r"AP Mode.*(enabled|ssid)", z, re.I)]
-        if treffer:
-            return True, f"Boot-Log: {treffer[-1]}"
+        if treffer and not wlan_adapter():
+            return True, f"Boot-Log: {treffer[-1]}", None
     else:
         kommando(port, box, "Reboot")
         time.sleep(15)
-    log = "kein 'AP Mode' im Boot-Log, " if usb_da(port) else ""
-    if not shutil.which("nmcli"):
-        return False, log + "nmcli fehlt fuer WLAN-Scan"
-    geraete = subprocess.run(["nmcli", "-t", "-f", "TYPE", "dev"], capture_output=True, text=True).stdout
-    if "wifi" not in geraete.split():
-        return False, log + "kein WLAN-Adapter am PC fuer WLAN-Scan"
+    log = "kein 'AP Mode' im Boot-Log, " if usb_da(port) and not treffer else ""
+    if not wlan_adapter():
+        return False, log + "kein WLAN-Adapter am PC (nmcli) fuer WLAN-Scan", None
     ende = time.time() + sekunden
     while time.time() < ende:
         try:
@@ -815,9 +821,93 @@ def ap_pruefen(port, box, name, sekunden=60):
             ausgabe = ""
         for ssid in ausgabe.splitlines():
             if ssid.lower().startswith(name.lower()):
-                return True, f"WLAN '{ssid}' sichtbar"
+                return True, f"WLAN '{ssid}' sichtbar", ssid
         time.sleep(5)
-    return False, log + f"kein WLAN '{name}*' sichtbar"
+    return False, log + f"kein WLAN '{name}*' sichtbar", None
+
+
+def wlan_adapter():
+    """Name des ersten WLAN-Adapters am Werkstatt-PC (nmcli) oder None."""
+    if not shutil.which("nmcli"):
+        return None
+    ausgabe = subprocess.run(["nmcli", "-t", "-f", "TYPE,DEVICE", "dev"], capture_output=True, text=True).stdout
+    for zeile in ausgabe.splitlines():
+        typ, _, geraet = zeile.partition(":")
+        if typ == "wifi":
+            return geraet
+    return None
+
+
+def http_ap(pfad, host=AP_IP, sekunden=10):
+    """GET an die Box im AP (192.168.4.1) mit frei waehlbarem Host-Header; (Status, Location, Text)."""
+    import http.client
+    verbindung = http.client.HTTPConnection(AP_IP, 80, timeout=sekunden)
+    try:
+        verbindung.request("GET", pfad, headers={"Host": host})
+        antwort = verbindung.getresponse()
+        text = antwort.read(20000).decode("utf-8", "replace")
+        return antwort.status, antwort.getheader("Location", ""), text
+    finally:
+        verbindung.close()
+
+
+def ap_seiten_automatisch(ssid):
+    """Werkstatt-PC verbindet sich per nmcli mit dem AP der Box und prueft wie ein Handy:
+    1. Captive-Portal: Anfrage an eine Pruef-Adresse der Handys (Host-Name statt IP)
+       muss auf die WLAN-Auswahl (/setup) fuehren.
+    2. http://192.168.4.1/openandhome.esp muss das Dashboard liefern.
+    Danach wird die Verbindung wieder entfernt. Liefert Liste von Berichtszeilen."""
+    geraet = wlan_adapter()
+    verbindung = "oh-ap-test"
+    subprocess.run(["nmcli", "con", "delete", verbindung], capture_output=True)
+    erg = subprocess.run(["nmcli", "dev", "wifi", "connect", ssid, "password", AP_PASSWORT,
+                          "ifname", geraet, "name", verbindung], capture_output=True, text=True, timeout=60)
+    if erg.returncode != 0:
+        return [f"FEHLER  AP '{ssid}': PC kann sich nicht verbinden ({(erg.stderr or erg.stdout).strip()[:80]})"]
+    zeilen = []
+    try:
+        time.sleep(3)
+        # 1. Captive-Portal wie Android/iOS
+        try:
+            status, ziel, text = http_ap("/generate_204", host="connectivitycheck.gstatic.com")
+            if status in (301, 302, 303, 307) and "/setup" in ziel:
+                zeilen.append(f"OK      AP: Handy-Pruefadresse fuehrt zur WLAN-Auswahl ({ziel})")
+            elif status in (301, 302, 303, 307):
+                zeilen.append(f"FEHLER  AP: Umleitung, aber nicht zur WLAN-Auswahl ({ziel})")
+            else:
+                setup = 'name="ssid"' in text.lower() or "wifi setup" in text.lower()
+                zeilen.append(("OK      AP: WLAN-Auswahl kommt direkt" if setup else
+                               f"FEHLER  AP: keine Umleitung zur WLAN-Auswahl (HTTP {status})"))
+        except OSError as e:
+            zeilen.append(f"FEHLER  AP: Captive-Portal-Pruefung ohne Antwort ({e})")
+        # 2. Dashboard direkt
+        try:
+            status, ziel, text = http_ap("/" + DASHBOARD_DATEI)
+            if status == 200 and "openandhome" in text.lower():
+                zeilen.append(f"OK      AP: http://{AP_IP}/{DASHBOARD_DATEI} erreichbar")
+            else:
+                zeilen.append(f"FEHLER  AP: http://{AP_IP}/{DASHBOARD_DATEI} liefert HTTP {status} {ziel}")
+        except OSError as e:
+            zeilen.append(f"FEHLER  AP: http://{AP_IP}/{DASHBOARD_DATEI} nicht erreichbar ({e})")
+    finally:
+        subprocess.run(["nmcli", "con", "delete", verbindung], capture_output=True)
+    return zeilen
+
+
+def ap_seiten_handy(ssid):
+    """Ohne WLAN-Adapter am PC: Pruefung mit dem Handy, Ergebnis abfragen."""
+    print(f"\n  Bitte mit dem Handy pruefen: WLAN '{ssid or AUSLIEFERUNG_NAME + '...'}' verbinden "
+          f"(Passwort {AP_PASSWORT}).")
+    zeilen = []
+    if ja("  Oeffnet sich die WLAN-Auswahl der Box von selbst?"):
+        zeilen.append("OK      AP: WLAN-Auswahl oeffnet sich am Handy (manuell bestaetigt)")
+    else:
+        zeilen.append("FEHLER  AP: WLAN-Auswahl oeffnet sich am Handy nicht (manuell)")
+    if ja(f"  Zeigt http://{AP_IP}/{DASHBOARD_DATEI} am Handy die Messwerte?"):
+        zeilen.append(f"OK      AP: http://{AP_IP}/{DASHBOARD_DATEI} erreichbar (manuell bestaetigt)")
+    else:
+        zeilen.append(f"FEHLER  AP: http://{AP_IP}/{DASHBOARD_DATEI} nicht erreichbar (manuell)")
+    return zeilen
 
 
 def kundenpaket(args):

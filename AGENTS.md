@@ -152,7 +152,7 @@ Mit [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/README.md):
    Testname `Sensorbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an und Testlog-Regel `rules2.txt` (Ersatz, weil Syslog in `mega-20260720` auf ESP8266 und ESP32 nichts sendet; `SendToUDP` an 192.168.9.4:514: Startgrund, alle 5 min Uptime/Speicher/WLAN/Messwerte; Timer 8, Variablen 3–5; Start bei `WiFi#Connected`/`ETH#Connected`, weil ESPEasy `System#Boot` nur in `rules1.txt` ausführt). Nur im Test, nie in der Auslieferung.
 2. **Menü 2 – prüfen** (jederzeit, auch ohne USB per IP): Messwerte plausibel, Dashboard vollständig.
 3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus (nach Neustart geprüft), Testlog-Regel gelöscht (geprüft), Name `Sensorbox1`/Unit 0,
-   WLAN immer löschen (ohne Nachfrage) und prüfen, ob nach dem Neustart der AP startet. Protokoll unter `~/openandhome-testprotokolle/`.
+   WLAN immer löschen (ohne Nachfrage) und prüfen, ob nach dem Neustart der AP startet und wie ein Handy funktioniert: Captive-Portal führt zur WLAN-Auswahl (`/setup`) und `http://192.168.4.1/openandhome.esp` liefert das Dashboard – automatisch per `nmcli`, wenn der Werkstatt-PC einen WLAN-Adapter hat, sonst mit dem Handy prüfen und bestätigen. Protokoll unter `~/openandhome-testprotokolle/`.
 
 Helfer:
 - [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/oh_werkstatt.sh) — **intern, nur Linux**:
