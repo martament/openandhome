@@ -4,11 +4,11 @@
   "ressourcen": [
     {
       "pfad": "configs/espeasy/standalone/resources/header.txt",
-      "sha256": "d956bf6a684197c2d16dfca91feea69ef6189af5358863716b281ffd985f5ee1"
+      "sha256": "03b6793c0526db05991f4191effa30772953e19c374794391a23c1ba6744926d"
     },
     {
       "pfad": "configs/espeasy/standalone/resources/footer.txt",
-      "sha256": "29ee11f6bf5690da8baddd59b4379ed7aa0024d4376268ed537220740b2563f1"
+      "sha256": "5d47ce4c17e9a285dea542e3f13437fca885aaf27ea079edb15e14858e395388"
     },
     {
       "pfad": "configs/espeasy/standalone/resources/temperature.png",
@@ -24,15 +24,15 @@
     },
     {
       "pfad": "configs/espeasy/standalone/resources/distance.png",
-      "sha256": "1962111c8ac46bf70b855cd4abfb5f2f43255fca1a87dad31f9a580c2d76db88"
+      "sha256": "2a6b801e6d8cac70a1dc89bd7b71a1047aa315623c3e75c60c28aad3dadc442a"
     },
     {
-      "pfad": "configs/espeasy/standalone/resources/openandhome_32.png",
-      "sha256": "e478bc19905cf5f01cd69404068e195a8374854003b2b61a77d9689734e47eaf"
+      "pfad": "configs/espeasy/standalone/resources/openandhome_logo.png",
+      "sha256": "0cae8ef977a9a60afbfb39c3701d3364d88a9e96c7953d32c34ea4d08a707eef"
     },
     {
       "pfad": "configs/espeasy/standalone/resources/openandhome.css",
-      "sha256": "b45afc1d1d59489b9946d2251d422a0e389db00aa711b8c8b3034dfae7bb814f"
+      "sha256": "c1ec07aec97e64db25c25a4b1f193d9cf270cf1136f4779658c465bb86d1e465"
     }
   ],
   "klassen": {

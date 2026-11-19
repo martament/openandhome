@@ -490,9 +490,9 @@ def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
         else:
             label = f"{wert} ({task})"
             icon = ICONS.get(art, "humidity.png")
-        zeilen.append(f" <tr>\n  <td>{html.escape(label)}:</td>\n  <td><img src=\"{icon}\"></td>\n"
+        zeilen.append(f" <tr>\n  <td><img src=\"{icon}\" alt=\"\"></td>\n  <td>{html.escape(label)}</td>\n"
                       f"  <td>[{task}#{wert}] {EINHEITEN.get(art, '')}</td>\n </tr>")
-    tabelle = "<table id=\"sensordata\" >\n" + "\n".join(zeilen) + "\n</table>\n"
+    tabelle = "<table id=\"sensordata\">\n" + "\n".join(zeilen) + "\n</table>\n"
     with open(os.path.join(ressourcen, "header.txt"), encoding="utf-8") as f:
         kopf = f.read()
     with open(os.path.join(ressourcen, "footer.txt"), encoding="utf-8") as f:
