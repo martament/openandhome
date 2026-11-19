@@ -371,7 +371,7 @@ oder Logs übernehmen.
 |---|---|---|---|
 | **A1** | Plugins/Controller je Image | Geprüft an den Images `mega-20260720` (Plugin-Namen im Binary): **beide** enthalten P001, P004, P005, P013, P014, P023, P028, P031, P033, P036, P037, P051, P089; ESP32 zusätzlich Zabbix (C017) und Email (N001). **P145 (MQxxx) fehlt in beiden** → klären, ob eine Variante P145 nutzt. Plugin-Stats/Chart.js (ESP8266) nach dem Flashen ansehen | **erledigt** bis auf P145 |
 | **A2** | Ethernet im ESP32-Image | `collection_A_ESP32_4M316k` → `[esp32_common_LittleFS_ETH]` → `FEATURE_ETHERNET=1` | **erledigt** (LAN-Praxistest im 24h-Test) |
-| **A3** | `ApDontForceSetup`-Verhalten upstream | ESPEasy-Quelle/Doku nach `ApDontForceSetup` durchsuchen; Kommando `wifiallowap` prüfen; sonst Workaround | offen |
+| **A3** | `ApDontForceSetup`-Verhalten upstream | Upstream heißt die Option `ApCaptivePortal` („Force /setup in AP-Mode“, Bit 14), die Werkstatt schaltet sie ein. **Sie wirkt aber nicht:** `captivePortal()` (`src/src/WebServer/ESPEasy_WebServer.cpp`) bricht mit `if (!NetworkConnected()) return false;` ab, also gerade dann, wenn kein WLAN verbunden ist (Auslieferung). Die frühere Umleitung auf `/setup` ist in `RootPage.cpp`/`404.cpp` auskommentiert. Gilt für `mega-20260720` und den Zweig `mega` (Stand 2026-11-19). Handy landet auf der ESPEasy-Startseite, WLAN-Auswahl über den Reiter. Umweg per eigener `index.htm` geprüft und verworfen (die Main-Seite ginge auch im Heimnetz verloren) | erledigt: Upstream-Einschränkung akzeptiert, Issue bei ESPEasy melden |
 | **T1** | Syslog-Kommando | kein Kommando vorhanden; Weg: HTTP `/advanced` | **erledigt** |
 | **T2** | Formularfeldnamen von `/advanced` (Syslog-IP/-Level) und Verhalten bei Teil-POST | Felder `syslogip`, `syslog_log_level`; Speichern über verstecktes Feld `edit=1`. Vollständiger Formular-Rundlauf mit [`espeasy_syslog.py`](../tools/bin/espeasy_syslog.py) an der Testbox: übrige Felder unverändert | **erledigt** |
 | **B3** | Syslog in vorhandenen `config.dat` | [`espeasy_configcheck.py`](../tools/bin/espeasy_configcheck.py): Syslog aktiv in `professional/7Sensoren`, `professional/future`, `standalone/wemos_a0_feuchtigkeit`, `standalone/wemos_d5_testboard` und im `3_hut21`-Backup-Tar → vor Stable-Freigabe neu sichern (Syslog aus) | offen |
@@ -549,7 +549,7 @@ erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
 
 | Nr. | Punkt | Risiko / Entscheidung | Status |
 |---|---|---|---|
-| O-1 | `ApDontForceSetup` / AP-Mode-as-Daily-Driver fehlen ggf. | Workaround (`wifiallowap`?) oder Akzeptanz | offen (A3) |
+| O-1 | `ApDontForceSetup` / AP-Mode-as-Daily-Driver fehlen ggf. | Option heißt upstream `ApCaptivePortal`; die Umleitung auf `/setup` greift ohne WLAN-Verbindung nicht (Upstream-Fehler, siehe A3) → akzeptiert, Issue bei ESPEasy melden; bei neuem Release erneut prüfen | akzeptiert (A3) |
 | O-2 | Ethernet der Professional-Box | in `collection_A_ESP32_4M316k` enthalten | **erledigt** (A2) |
 | O-3 | `ESPEASY_P2P=0`/`ARDUINO_OTA=0` nicht abbildbar | tolerieren | akzeptiert |
 | O-4 | Filesystem | ESP32 LittleFS (alte `spiffs316k.bin` inkompatibel), ESP8266 SPIFFS → beide per Upload | gelöst (Upload) |
