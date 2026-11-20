@@ -116,15 +116,25 @@ Sicherheitsleitfaden mit Meldeadresse für Schwachstellen.
 Reihenfolge abgestimmt mit `umbenennung-typ2026-2025.md` Abschnitt 6: zuerst Pflicht und Rechtliches,
 dann Namen im Shop, dann Startseite und Inhalte.
 
-### Phase 0 – Sofort (Fehler und Pflichtangaben)
+### Phase 0 – Sofort (Fehler und Pflichtangaben) – umgesetzt 20.11.2026
 
-1. Impressum anlegen (GbR, beide Gesellschafter, Anschrift, Mail, Hinweis § 19 UStG), juristisch prüfen.
-2. Footer: Impressum · Datenschutz · AGB · Widerruf · Versand & Zahlung · **CE-Unterlagen** · Kontakt.
-3. Sitemap reparieren (Core-Sitemap statt Plugin), in der Search Console einreichen.
-4. **Englisch entfernen:** Menüpunkt „English“ (Google Translate) aus beiden Menüs löschen.
-5. Hinweis „Gemäß § 19 UStG wird keine Umsatzsteuer berechnet“ in Shop, Kasse und Rechnung
-   prüfen bzw. ergänzen.
-6. Ausverkauftes Sonderangebot (ID 9879) auf „privat“ stellen.
+Sicherung vorher: `~/sicherungen-openandhome-webseite/openandhome-{db,app}-2026-11-20_2021.*` (lokal und auf
+dem Server unter `~/sicherungen/`). Hinweis: Der WordPress-Container hat kein `mysqldump`; die Datenbank wird
+im Container `wordpress-db-openandhome` mit `mariadb-dump` gesichert (Abschnitt 5 entsprechend).
+
+1. ✔ Impressum (Seite 10359, `/index.php/impressum/`) veröffentlicht: Gesellschafter Martin Ament und Thomas
+   Heinrichs (beide auch verantwortlich nach § 18 Abs. 2 MStV), im Footer an erster Stelle. [Empfohlen] juristisch prüfen.
+2. ✔ Footer: Widget „Rechtliches“ (Menü 43) in Footer-Spalte 1: Impressum · Datenschutzerklärung · AGB · Widerrufsbelehrung ·
+   Versand und Zahlung · Kontakt. CE-Unterlagen folgen (Phase 1).
+   Neue Seiten: „Widerrufsbelehrung“ (10357, Text unverändert aus AGB § 6/7), „Versand und Zahlung“ (10358,
+   aus den WooCommerce-Einstellungen: DE 4,99 €, EU 9 €, Abholung; Vorkasse, PayPal; 7 Werktage aus AGB § 4).
+3. ✔ Sitemap: Plugin `google-sitemap-generator` deaktiviert, Yoast-Sitemap an (`/sitemap_index.xml`,
+   `/sitemap.xml` leitet weiter). **Offen (ihr):** in der Search Console einreichen.
+4. ✔ Menüpunkt „English“ (Google Translate) gelöscht.
+5. ✔ § 19 UStG: Code-Snippet „Kleinunternehmer-Hinweis (§ 19 UStG)“ – Zusatz am Preis, Zeile in Warenkorb und
+   Kasse, Satz in Bestellmails. AGB § 3 (1) „enthalten die gesetzliche Umsatzsteuer“ ersetzt durch „Endpreise,
+   gemäß § 19 UStG keine Umsatzsteuer“ (Revision in WordPress). **Offen (ihr):** Rechnungen außerhalb des Shops prüfen.
+6. ✔ Sonderangebot (ID 9879) auf „privat“.
 
 ### Phase 1 – CE-Seite und Weiterleitung (Voraussetzung: Erklärungen unterschrieben)
 
@@ -274,15 +284,14 @@ Dateien unter `{{ dir_data }}/wordpress-openandhome/app`. wp-cli ist im Containe
 ```
 # auf dem Server, Datum im Namen
 D=$(date +%F_%H%M)
-docker exec wordpress-openandhome wp db export /var/www/html/sicherung-$D.sql --allow-root
-tar czf ~/sicherung-openandhome-$D.tar.gz -C <dir_data>/wordpress-openandhome app
-#   (enthält die SQL-Datei; danach die .sql im app-Ordner wieder entfernen – liegt sonst im Webroot)
+mkdir -p ~/sicherungen
+sudo docker exec wordpress-db-openandhome sh -c 'mariadb-dump -uroot -p"$MARIADB_ROOT_PASSWORD" --single-transaction --databases wp-openandhome' | gzip > ~/sicherungen/openandhome-db-$D.sql.gz
+sudo tar czf ~/sicherungen/openandhome-app-$D.tar.gz -C /mnt/datenstorage/data/wordpress-openandhome app
 ```
 
 - Sicherung vom Server herunterladen und außerhalb aufbewahren; Inhalt kurz prüfen (`tar tzf`).
-- Wiederherstellung: `app` zurückspielen, `wp db import` im Container.
-- [Optional] Als Ansible-Aufgabe/Skript `wordpress_sicherung.sh` in die Rolle aufnehmen, damit die
-  SQL-Datei gar nicht erst im Webroot liegt (Export in ein Verzeichnis außerhalb von `/var/www/html`).
+- Wiederherstellung: `app` zurückspielen, SQL mit `mariadb` im DB-Container einspielen.
+- [Optional] Als Skript `wordpress_sicherung.sh` in die Ansible-Rolle aufnehmen.
 - Zusätzlich vor Shop-Änderungen: WooCommerce → Produkte → Export (CSV) als schnelle Teilsicherung.
 
 ## 6. Offen
