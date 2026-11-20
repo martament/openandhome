@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "stand": "mega-20260720",
+  "stand": "mega-20261119",
   "ressourcen": [
     {
       "pfad": "configs/espeasy/standalone/resources/header.txt",
@@ -38,8 +38,8 @@
   "klassen": {
     "ESP8266": {
       "firmware": {
-        "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_climate_B_ESP8266_4M1M.bin",
-        "sha256": "1d661be97f12f5aa44d2f19e8001ac6b3557147d1b6191c5690fa13c1c77bf06"
+        "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20261119_climate_B_ESP8266_4M1M.bin",
+        "sha256": "1d1a5b9204061690931f43b4b043d9d59dcd42c8537729d715b885cf1d5cf736"
       },
       "basis_config": {
         "pfad": "configs/espeasy/standalone/basis/config.dat",
@@ -62,8 +62,8 @@
       ],
       "am2320": {
         "firmware": {
-          "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_collection_H_ESP8266_4M1M.bin",
-          "sha256": "d34d0cb7fe45b50dc7aae81366ff66a817c7679b15bc95725c2200e14a230d68"
+          "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20261119_collection_H_ESP8266_4M1M.bin",
+          "sha256": "9406c8bd8cf77213f3b59ba55fdab738b682dd07e5b2f13443231f7ee5d551c2"
         },
         "basis_config": {
           "pfad": "configs/espeasy/standalone/basis_am2320/config.dat",
@@ -77,8 +77,8 @@
     },
     "ESP32": {
       "firmware": {
-        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20260720_collection_A_ESP32_4M316k.factory.bin",
-        "sha256": "5074c21a74bff3ca3eb8f4274923ef13b64dc629bfc6048aef7848a605466a2d"
+        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20261119_collection_A_ESP32_4M316k.factory.bin",
+        "sha256": "61ebf50445a940b490b9a0f5c3c8b643b913af62327274cbdd8df3d0b4004903"
       },
       "basis_config": {
         "pfad": "configs/espeasy/professional/basis/config.dat",
@@ -96,8 +96,8 @@
         "0x10000"
       ],
       "firmware_update": {
-        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20260720_collection_A_ESP32_4M316k.bin",
-        "sha256": "075bc946a49137d30b8a15b4c5627c334eab2e30f34a1ac70a000d39bf742fbe"
+        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20261119_collection_A_ESP32_4M316k.bin",
+        "sha256": "7165bd55b6b6ef8401a3fc567720a16e9c0cae5d0ea8b3a0070c6553e41d375c"
       },
       "update_loeschen": [
         "0xe000",
