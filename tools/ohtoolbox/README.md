@@ -51,7 +51,7 @@ Die Toolbox erkennt beim Start, ob eine Standalone- oder Professional-Box angesc
 | 4 | Debugger – Ausgaben anzeigen und in `oh-debug.txt` speichern (für unseren Support) |
 | 5 | WLAN-Daten löschen – danach öffnet der Sensor wieder sein eigenes WLAN „Sensorbox1“ |
 | 6 | Reset DHCP – feste IP-Adresse aufheben (bei Professional auch für das Netzwerkkabel) |
-| 7 | Admin-Passwort der Weboberfläche zurücksetzen |
+| 7 | Admin-Passwort der Weboberfläche auf die Werksvorgabe zurücksetzen (Benutzer `admin`, Passwort `configesp`) |
 | 8 | WLAN-Zugangspunkt des Sensors starten |
 | 9 | IP-Filter zurücksetzen (bis zum Neustart), z. B. bei der Meldung „IP blocked“ |
 | n | Zeitserver (NTP) setzen – Standard ist Ihr Router, Internet erst nach 15 min ohne Antwort; eigener Server z. B. `de.pool.ntp.org` (schaltet die Regeln mit der Router-Logik ab), `auto` = zurück zum Standard |

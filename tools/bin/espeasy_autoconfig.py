@@ -26,7 +26,7 @@ import time
 import serial
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from espeasy_syslog import Box, FormParser  # noqa: E402
+from espeasy_syslog import ADMIN_PASSWORT, Box, FormParser  # noqa: E402
 
 PLUGIN_DS18B20 = 4
 PLUGIN_SYSINFO = 26
@@ -265,7 +265,8 @@ def main():
     parser = argparse.ArgumentParser(description="Sensoren erkennen und Tasks passend einschalten.")
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
-    parser.add_argument("--passwort", help="Admin-Passwort der Box, falls gesetzt")
+    parser.add_argument("--passwort", default=ADMIN_PASSWORT,
+                        help=f"Admin-Passwort der Box (Standard: Werksvorgabe {ADMIN_PASSWORT})")
     parser.add_argument("--an", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks einschalten")
     parser.add_argument("--aus", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks ausschalten")
     parser.add_argument("--anwenden", action="store_true", help="Aenderungen wirklich schreiben")

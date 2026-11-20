@@ -40,7 +40,7 @@ import serial
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from espeasy_autoconfig import PLUGIN_DS18B20, PLUGIN_SYSINFO, PLUGINS_OLED, autokonfiguration, oeffne  # noqa: E402
 from espeasy_configcheck import lese_settings  # noqa: E402
-from espeasy_syslog import Box, FormParser, lies_formular, setze_syslog  # noqa: E402
+from espeasy_syslog import ADMIN_PASSWORT, Box, FormParser, lies_formular, setze_syslog  # noqa: E402
 from oh_klassen import DASHBOARD_DATEIEN, KLASSEN, manifest_schreiben  # noqa: E402
 from oh_klassen import RESSOURCEN as _RESSOURCEN  # noqa: E402
 
@@ -53,6 +53,9 @@ ZUGRIFF_VON, ZUGRIFF_BIS = "192.168.0.0", "192.168.255.255"
 # Name bei Auslieferung (wie bisher); im Test heisst die Box Sensorbox<Unit> (Vorgabe)
 AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT = "Sensorbox1", "0"
 AP_IP, AP_PASSWORT = "192.168.4.1", "configesp"    # ESPEasy-Standard fuer den Access Point
+# Admin-Passwort der Weboberflaeche: ab Werk ADMIN_PASSWORT (= AP-Schluessel). Hat der Kunde es
+# geaendert, fragt erreichbar() danach und merkt es sich hier fuer die laufende Sitzung.
+_passwort = [ADMIN_PASSWORT]
 DASHBOARD_DATEI = "openandhome.esp"
 BACKUPS = os.path.expanduser("~/openandhome-backups")
 # Werkstatt-WLAN: Zeile 1 SSID, Zeile 2 Passwort (chmod 600, nie ins Repo); fehlt sie, wird gefragt
@@ -202,8 +205,9 @@ def erreichbar(port, ip):
     """Box-Objekt, wenn die geschuetzten Seiten erreichbar sind, sonst None.
 
     /json antwortet auch bei Subnetz-Sperre, daher wird /advanced geprueft; eine
-    Sperre hebt ClearAccessBlock per USB auf (nur bis zum naechsten Reboot)."""
-    box = Box(ip, None)
+    Sperre hebt ClearAccessBlock per USB auf (nur bis zum naechsten Reboot). Lehnt die Box das
+    Admin-Passwort ab (vom Kunden geaendert), wird es abgefragt."""
+    box = neue_box(ip)
     for versuch in range(3):
         try:
             box.get("/advanced")
@@ -212,9 +216,44 @@ def erreichbar(port, ip):
             if e.code == 403 and port:
                 print("Web-Zugriff gesperrt (anderes Subnetz) -> ClearAccessBlock per USB")
                 sende(port, "ClearAccessBlock")
+            elif e.code == 401:
+                print("Die Box lehnt das Admin-Passwort ab (wurde es geaendert?). "
+                      "Ohne Eingabe: abbrechen; zuruecksetzen geht per Toolbox Menue 7.")
+                eingabe = getpass.getpass("Admin-Passwort der Weboberflaeche (Benutzer admin, unsichtbar): ")
+                if not eingabe:
+                    return None
+                _passwort[0] = eingabe
+                box = neue_box(ip)
         except OSError:
             time.sleep(2)
     return None
+
+
+def neue_box(ip):
+    """Box-Zugriff mit dem aktuell gueltigen Admin-Passwort."""
+    return Box(ip, _passwort[0])
+
+
+def setze_passwort(box, passwort=ADMIN_PASSWORT):
+    """Setzt das Admin-Passwort ueber die Config-Seite (geht per USB und per Netz) und prueft,
+    dass die Box ohne Passwort ablehnt und mit Passwort zulaesst. Liefert (Box, Berichtszeile)."""
+    felder = dict(lies_formular_config(box))
+    felder["password"] = passwort
+    box.post("/config", felder)
+    _passwort[0] = passwort
+    box = neue_box(box.basis.removeprefix("http://"))
+    try:
+        Box(box.basis.removeprefix("http://"), None).get("/config")
+        return box, "FEHLER  Admin-Passwort: Box laesst Konfiguration ohne Passwort zu"
+    except urllib.error.HTTPError as e:
+        if e.code != 401:
+            return box, f"FEHLER  Admin-Passwort: unerwartete Antwort HTTP {e.code}"
+    try:
+        box.get("/config")
+    except urllib.error.HTTPError as e:
+        return box, f"FEHLER  Admin-Passwort: Anmeldung mit neuem Passwort scheitert (HTTP {e.code})"
+    return box, (f"OK      Admin-Passwort gesetzt (Benutzer admin, Werksvorgabe {passwort})"
+                 if passwort == ADMIN_PASSWORT else "OK      Admin-Passwort gesetzt (Benutzer admin)")
 
 
 def http_bereit(port, ip, neustarts=3):
@@ -583,7 +622,8 @@ def sicherung(args):
         try:
             # ESP32 liefert unter /download ein TAR mit allen Dateien
             with open(os.path.join(ziel, "config_download.dat_oder_tar"), "wb") as f:
-                f.write(urllib.request.urlopen(f"http://{ip}/download", timeout=20).read())
+                with neue_box(ip).oeffner.open(f"http://{ip}/download", timeout=20) as antwort:
+                    f.write(antwort.read())
         except OSError as e:
             print(f"config.dat nicht per HTTP ladbar ({e}) - Flash-Sicherung reicht zur Wiederherstellung.")
     print(f"Sicherung: {ziel} (enthaelt WLAN-Daten, nicht ins Repo!)")
@@ -654,6 +694,8 @@ def aufsetzen(args):
     name = frage("Name im Test", f"Sensorbox{unit}")
     setze_name(port, box, name, unit)
     setze_zugriff(box)
+    box, passwort_zeile = setze_passwort(box)
+    melde(passwort_zeile)
 
     schritt("6/9 Sensoren erkennen")
     ow = klasse.get("ow_gpios")
@@ -685,7 +727,7 @@ def aufsetzen(args):
                        f"Box:      {chip} MAC {mac}, IP {ip}, Unit {unit}\n"
                        f"Firmware: {info.get('Binary Filename')} (Build {info.get('Build')})\n"
                        f"Config:   {basis}\nSyslog:   {args.syslog_ip}\n\nPruefung Start:")
-    for zeile in bericht:
+    for zeile in [passwort_zeile, *bericht]:
         protokoll.schreibe(f"  {zeile}")
     ende = start + datetime.timedelta(hours=24)
     print(f"\n24h-Test gestartet. Ende fruehestens {ende:%a %d.%m. %H:%M} -> Menue 'Test beenden'.")
@@ -699,7 +741,7 @@ def beenden(args):
     ip = args.host or (usb_ip(port) if port else None) or frage("IP der Box (z. B. aus dem Router)")
     if not ip:
         sys.exit("FEHLER: IP nicht per USB lesbar - --host angeben.")
-    box = http_bereit(port, ip) if port else Box(ip, None)
+    box = http_bereit(port, ip) if port else neue_box(ip)
     name = json.loads(box.get("/json"))["System"].get("Unit Name", "")
     protokoll = Protokoll.neuestes(name)
 
@@ -727,6 +769,10 @@ def beenden(args):
     kommando(port, box, NTP_AUS[0])     # Auslieferung: NTP aus, die Regeln nutzen den Router
     setze_name(port, box, AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT)
     setze_zugriff(box)
+    box, zeile = setze_passwort(box)     # Auslieferung immer mit Werksvorgabe
+    ok = ok and zeile.startswith("OK")
+    bericht.append(zeile)
+    melde(zeile)
 
     schritt("Neustart, Syslog aus pruefen")
     box, zeile = syslog_nach_neustart(port, box, ip)
@@ -765,7 +811,7 @@ def beenden(args):
         for zeile in bericht:
             protokoll.schreibe(f"  {zeile}")
         protokoll.schreibe(f"Syslog aus, Name {AUSLIEFERUNG_NAME}/Unit {AUSLIEFERUNG_UNIT}, "
-                           f"Zugriff {ZUGRIFF_VON}-{ZUGRIFF_BIS}, WLAN {'zurueckgesetzt' if wlan else 'unveraendert'}\n"
+                           f"Zugriff {ZUGRIFF_VON}-{ZUGRIFF_BIS}, Admin-Passwort {ADMIN_PASSWORT}, WLAN {'zurueckgesetzt' if wlan else 'unveraendert'}\n"
                            f"Ergebnis: {ergebnis}")
         print(f"Protokoll: {protokoll.pfad}")
     print(f"\nErgebnis: {ergebnis}")
@@ -781,7 +827,7 @@ def syslog_nach_neustart(port, box, ip, sekunden=90):
     ende = time.time() + sekunden
     while True:
         try:
-            box = Box(ip, None)
+            box = neue_box(ip)
             felder, level_feld = lies_formular(box.get("/advanced"))
             break
         except (OSError, SystemExit):

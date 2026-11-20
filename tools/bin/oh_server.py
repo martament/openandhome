@@ -28,10 +28,11 @@ import socket
 import struct
 import sys
 import time
+import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from espeasy_syslog import LEVEL_INFO, SYSLOG_PORT, Box, FormParser  # noqa: E402
+from espeasy_syslog import ADMIN_PASSWORT, LEVEL_INFO, SYSLOG_PORT, Box, FormParser  # noqa: E402
 
 MQTT_PORT = 1883
 MQTT_BENUTZER = "sensorbox"
@@ -204,7 +205,13 @@ def meldet_sich(server, passwort, name, sekunden=45):
 
 def _formular(box, pfad):
     f = FormParser()
-    f.feed(box.get(pfad))
+    try:
+        f.feed(box.get(pfad))
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            raise PermissionError("Box lehnt das Admin-Passwort ab (geaendert? --box-passwort angeben "
+                                  "oder per Toolbox Menue 7 zuruecksetzen)") from e
+        raise
     if "password" in f.felder and len(f.felder) <= 2:
         raise PermissionError("Box verlangt das Admin-Passwort der Weboberflaeche")
     return f.felder
@@ -287,7 +294,7 @@ def verbinde(b, server, passwort, box_passwort=None, ausgabe=print):
     ip = server_ip(server)
     ausgabe(f"\n{b['name']} ({b['ip']}):")
     try:
-        box = Box(b["ip"], box_passwort)
+        box = Box(b["ip"], box_passwort or ADMIN_PASSWORT)
         versuche = [(server, True), (ip, False)] if not ist_ip(server) else [(ip, False)]
         for nr, (ziel, per_name) in enumerate(versuche):
             mqtt_loesche(ip, passwort, f"openandhome/{b['name']}/status/LWT")
@@ -316,7 +323,7 @@ def verbinde(b, server, passwort, box_passwort=None, ausgabe=print):
 def trenne(b, box_passwort=None, ausgabe=print):
     ausgabe(f"\n{b['name']} ({b['ip']}):")
     try:
-        box = Box(b["ip"], box_passwort)
+        box = Box(b["ip"], box_passwort or ADMIN_PASSWORT)
         p = f"/controllers?index={CONTROLLER}"
         felder = _formular(box, p)
         if felder.get("protocol") == "5":
@@ -419,7 +426,8 @@ def main():
     parser.add_argument("--server", default="openandhome-server1", help="Name oder IP des Servers")
     parser.add_argument("--netz", action="append", help="weiteres Netz, z. B. 192.168.2.0/24 (mehrfach)")
     parser.add_argument("--box", action="append", help="nur diese Box-IP (mehrfach), sonst alle gefundenen")
-    parser.add_argument("--box-passwort", help="Admin-Passwort der Weboberflaeche, falls gesetzt")
+    parser.add_argument("--box-passwort", default=ADMIN_PASSWORT,
+                        help=f"Admin-Passwort der Weboberflaeche (Standard: Werksvorgabe {ADMIN_PASSWORT})")
     args = parser.parse_args()
 
     if args.aktion == "menue":

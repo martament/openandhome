@@ -10,7 +10,7 @@ Beispiele:
   tools/bin/espeasy_syslog.py 192.168.9.50 status
   tools/bin/espeasy_syslog.py 192.168.9.50 an            # 192.168.9.4, Level Info
   tools/bin/espeasy_syslog.py 192.168.9.50 aus
-  tools/bin/espeasy_syslog.py 192.168.9.50 an --passwort geheim
+  tools/bin/espeasy_syslog.py 192.168.9.50 an --passwort geheim   # vom Kunden geaendert
 """
 
 import argparse
@@ -23,6 +23,9 @@ import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
 
+# Admin-Zugang der Weboberflaeche ab Werk (Festlegung 20.11.2026: wie der AP-Schluessel).
+# Die Bedienungsanleitung weist an, es bei der Inbetriebnahme zu aendern (plans/ce-konformitaet.md 4.1).
+ADMIN_BENUTZER, ADMIN_PASSWORT = "admin", "configesp"
 TEST_SYSLOG_IP = "192.168.9.4"
 LEVEL_INFO = "2"
 SYSLOG_PORT = "514"
@@ -70,12 +73,20 @@ class FormParser(HTMLParser):
 
 
 class Box:
-    def __init__(self, host, passwort):
+    """HTTP-Zugriff auf eine Box. ESPEasy schuetzt die Konfigurationsseiten, /upload und /download
+    per HTTP-Auth (Benutzer 'admin', Digest; alte Cores Basic). /json, /metrics, /setup
+    und .esp-Dateien (Dashboard) sind ohne Passwort erreichbar. Ohne gesetztes Passwort fragt die
+    Box nicht nach, das hinterlegte Passwort stoert dann nicht."""
+
+    def __init__(self, host, passwort=ADMIN_PASSWORT):
         self.basis = f"http://{host}"
         self.cookies = http.cookiejar.CookieJar()
-        self.oeffner = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookies))
+        handler = [urllib.request.HTTPCookieProcessor(self.cookies)]
         if passwort:
-            self.post("/login", {"password": passwort})
+            zugang = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+            zugang.add_password(None, self.basis, ADMIN_BENUTZER, passwort)
+            handler += [urllib.request.HTTPDigestAuthHandler(zugang), urllib.request.HTTPBasicAuthHandler(zugang)]
+        self.oeffner = urllib.request.build_opener(*handler)
 
     def get(self, pfad):
         try:
@@ -132,7 +143,8 @@ def main():
     parser.add_argument("aktion", choices=["status", "an", "aus"])
     parser.add_argument("--ip", default=TEST_SYSLOG_IP, help=f"Syslog-Server (Standard {TEST_SYSLOG_IP})")
     parser.add_argument("--level", default=LEVEL_INFO, help="Syslog-Level bei 'an' (Standard 2 = Info)")
-    parser.add_argument("--passwort", help="Admin-Passwort der Box, falls gesetzt")
+    parser.add_argument("--passwort", default=ADMIN_PASSWORT,
+                        help=f"Admin-Passwort der Box (Standard: Werksvorgabe {ADMIN_PASSWORT})")
     args = parser.parse_args()
 
     setze_syslog(Box(args.host, args.passwort), args.aktion, args.ip, args.level)

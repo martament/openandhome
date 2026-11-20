@@ -30,11 +30,23 @@ ZIELE = {
     "standalone": "docs/2026 openandhome - Bedienungsanleitung - Standalone.docx",
 }
 TITEL = {
-    "professional": "Bedienungsanleitung Sensorbox Professional",
-    "standalone": "Bedienungsanleitung Sensorbox Standalone",
+    "professional": "Bedienungsanleitung Sensorbox Typ 2026 (Professional)",
+    "standalone": "Bedienungsanleitung Sensorbox Typ 2025 (Standalone)",
 }
-STAND = "Stand: 12.11.2026"
-DATUM_ISO = "2026-11-12T12:00:00Z"
+STAND = "Stand: 20.11.2026"
+DATUM_ISO = "2026-11-20T12:00:00Z"
+# Admin-Zugang ab Werk (gleich dem Schluessel des Sensorbox-WLANs), siehe tools/bin/espeasy_syslog.py
+ADMIN_BENUTZER, ADMIN_PASSWORT = "admin", "configesp"
+ANSCHRIFT = "Kirchstraße 6, 97511 Lülsfeld, Deutschland"
+# Typangaben fuer Konformitaet (siehe CE-Unterlagen, Dokument 03)
+TYPDATEN = {
+    "professional": dict(typ="Sensorbox Typ 2026", kennung="150x80 V1.9", url="https://openandhome.de/ce/typ-2026",
+                         funk="WLAN IEEE 802.11 b/g/n (nur als Ausweichverbindung und zur Einrichtung), "
+                              "Frequenzband 2400–2483,5 MHz, maximale Sendeleistung 19,5 dBm (EIRP). "
+                              "Bluetooth ist vorhanden, wird aber nicht verwendet."),
+    "standalone": dict(typ="Sensorbox Typ 2025", kennung="79x59 V1.9", url="https://openandhome.de/ce/typ-2025",
+                       funk="WLAN IEEE 802.11 b/g/n, Frequenzband 2400–2483,5 MHz, maximale Sendeleistung 20 dBm."),
+}
 FIRMA = "Ament & Heinrichs OpenandHome GbR"
 SEITE_BREITE = 10432          # A4 minus Raender (737 dxa je Seite)
 NUM_SCHRITTE, NUM_PUNKTE, NUM_SCHRITTE_2 = 1, 2, 13   # 13 wird beim Bauen angelegt (Neustart bei A)
@@ -140,13 +152,29 @@ def hinweis_ip_bereich(t):
                     "ein anderes Netz (z. B. 10.x.x.x), wenden Sie sich bitte an unseren Support."))
 
 
+def zugang(t):
+    """Admin-Passwort der Weboberflaeche (ab Werk gesetzt)."""
+    t.append(ueberschrift("Zugang zu den Einstellungen"))
+    t.append(absatz("Die Einstellungen der Sensorbox sind ab Werk durch ein Passwort geschützt. Beim Aufruf fragt "
+                    "Ihr Browser danach:"))
+    t.append(tabelle([("Benutzer", ADMIN_BENUTZER), ("Passwort", ADMIN_PASSWORT)]))
+    t.append(absatz("Dashboard, JSON und Prometheus-Metriken sind ohne Passwort abrufbar, damit Ihre "
+                    "Überwachungssysteme die Werte direkt lesen können."))
+    t.append(absatz(fett("Wichtig: "), "Das Passwort ist ab Werk bei allen Sensorboxen gleich. Ändern Sie es bei "
+                    "der Inbetriebnahme unter ", fett("http://<Adresse>/config"), ", Feld „Admin Password“, und "
+                    "speichern Sie mit „Submit“. "
+                    "Haben Sie es vergessen, setzt die openandhome-Toolbox es über das USB-Kabel wieder auf ",
+                    fett(ADMIN_PASSWORT), " zurück."))
+
+
 def abrufen(t, mit_zabbix):
     t.append(ueberschrift("Messwerte abrufen und einbinden"))
     t.append(tabelle([
         ("Dashboard", "http://<Adresse>/openandhome.esp"),
         ("JSON (alle Werte)", "http://<Adresse>/json"),
         ("Prometheus-Metriken", "http://<Adresse>/metrics"),
-        ("Einstellungen", "http://<Adresse>/ (Menü Config, Controllers, Devices)"),
+        ("Einstellungen", f"http://<Adresse>/ (Menü Config, Controllers, Devices; Benutzer {ADMIN_BENUTZER}, "
+                          f"Passwort ab Werk {ADMIN_PASSWORT})"),
     ]))
     t.append(absatz(fett("MQTT (z. B. openHAB, Home Assistant, ioBroker, Node-RED, openandhome-Datenlogger): "),
                     "Menü „Controllers“ → Controller 1 „Home Assistant (openHAB) MQTT“ → „Edit“. Tragen Sie Ihren "
@@ -175,7 +203,8 @@ def toolbox(t, professional):
     for b in ("Sensoren neu erkennen – nach dem Tausch oder Hinzufügen eines Fühlers",
               "Zeitserver (NTP) setzen, Gerätename ändern",
               *(() if professional else ("WLAN-Zugangsdaten setzen (mit Verbindungsprüfung) oder löschen",)),
-              "Grundkonfiguration wiederherstellen, IP-Filter oder Admin-Passwort zurücksetzen",
+              f"Grundkonfiguration wiederherstellen, IP-Filter zurücksetzen, Admin-Passwort auf {ADMIN_PASSWORT} "
+              "zurücksetzen",
               "Notfall und Updates: der mitgelieferte OH-Flasher („start_flasher.bat“ bzw. „flasher.sh“)"):
         t.append(punkt(b))
 
@@ -194,6 +223,8 @@ def sicherheit(t, speziell):
               "Die Sensorbox ist in einem stabilen Gehäuse eingebaut; schützen Sie sie zusätzlich gegen Schlag.",
               "Betreiben Sie die Sensorbox nicht in unmittelbarer Nähe von Strahlungsquellen wie Mikrowellen, "
               "Elektromotoren oder Pumpen.",
+              "Die Temperaturfühler sind nicht für den direkten Kontakt mit Lebensmitteln oder Trinkwasser "
+              "zugelassen.",
               "Die Sensorbox ist nicht für Kinder und Tiere geeignet.",
               "Die Geräte dürfen nicht in explosionsgefährdeten Bereichen verwendet werden.",
               "Öffnen Sie das Gerät nicht eigenmächtig.",
@@ -204,12 +235,20 @@ def sicherheit(t, speziell):
                     "eingestuft. Haben Sie Verbesserungsvorschläge, schreiben Sie uns – wir prüfen jede Anregung."))
 
 
-def konformitaet_entsorgung(t):
-    t.append(ueberschrift("Konformitätserklärung"))
-    t.append(absatz("Die Konformitätserklärung finden Sie im Onlineshop beim Produkt. Die vollständige Erklärung "
-                    "erhalten Sie auch per E-Mail an info@openandhome.de."))
+def konformitaet_entsorgung(t, variante):
+    d = TYPDATEN[variante]
+    t.append(ueberschrift("Funk"))
+    t.append(absatz(d["funk"]))
+    t.append(ueberschrift("Vereinfachte EU-Konformitätserklärung"))
+    t.append(absatz(f"Hiermit erklärt {FIRMA}, dass der Funkanlagentyp ", fett(d["typ"]), f" ({d['kennung']}) der "
+                    "Richtlinie 2014/53/EU entspricht. Der vollständige Text der EU-Konformitätserklärung ist unter "
+                    "der folgenden Internetadresse verfügbar: ", fett(d["url"]),
+                    " – oder per E-Mail an info@openandhome.de."))
+    t.append(absatz(f"Hersteller: {FIRMA}, {ANSCHRIFT}, info@openandhome.de"))
     t.append(ueberschrift("Entsorgungshinweise"))
     t.append(punkt("Entsorgen Sie das Gerät nicht im Hausmüll; beachten Sie die geltenden Entsorgungsvorschriften."))
+    t.append(punkt("Löschen Sie vor der Rückgabe oder Weitergabe Ihre Daten (WLAN-Zugangsdaten, Passwort): mit der "
+                   "openandhome-Toolbox, Menüpunkt „Grundkonfiguration wiederherstellen“ oder „WLAN-Daten löschen“."))
     t.append(punkt("Altgeräte können Sie direkt an uns zurückgeben. So vermeiden wir Elektroschrott und nutzen "
                    "Rohstoffe weiter."))
 
@@ -239,8 +278,8 @@ def schluss(t):
 # --- Professional (Olimex ESP32-POE, nicht ISO, PoE) ---
 def inhalt_professional():
     t = []
-    einleitung(t, [fett("Sensorbox Professional"),
-                   " (alle Ausführungen) – Netzwerkanschluss mit Stromversorgung über das Netzwerkkabel (PoE), "
+    einleitung(t, [fett("Sensorbox Typ 2026"),
+                   " (bisher „Sensorbox Professional“, Kennung 150x80 V1.9, alle Ausführungen) – Netzwerkanschluss mit Stromversorgung über das Netzwerkkabel (PoE), "
                    "je nach Ausstattung mit Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, "
                    "Wassersensor und Display."])
 
@@ -276,9 +315,11 @@ def inhalt_professional():
                      "Adresse als Lesezeichen."))
     t.append(schritt("Setzen Sie mehrere Sensorboxen ein, geben Sie jeder einen eigenen Namen: ",
                      fett("http://<IP-Adresse>/config"), ", Feld „Unit Name“ ändern und mit „Submit“ speichern."))
-    t.append(schritt("Empfehlung: Vergeben Sie auf derselben Seite ein Administrator-Passwort, damit niemand in Ihrem "
-                     "Netz die Einstellungen ändern kann."))
+    t.append(schritt("Die Einstellungsseiten fragen nach Benutzer ", fett(ADMIN_BENUTZER), " und Passwort ",
+                     fett(ADMIN_PASSWORT), ". Ändern Sie das Passwort jetzt auf derselben Seite (Feld „Admin Password“) – ab Werk ist es bei allen "
+                     "Sensorboxen gleich."))
     hinweis_ip_bereich(t)
+    zugang(t)
 
     t.append(ueberschrift("Uhrzeit (Zeitserver)"))
     t.append(absatz("Die Sensorbox holt die Uhrzeit ab Werk aus Ihrem eigenen Netz: etwa eine halbe Minute nach "
@@ -311,7 +352,9 @@ def inhalt_professional():
     t.append(ueberschrift("Technische Daten"))
     t.append(tabelle([
         ("Gehäuse", "Kunststoffgehäuse 155 × 90 × 62 mm (L × B × H), grau/klar, feuchtigkeitsbeständig und staubdicht"),
-        ("Messumformer", "Olimex ESP32-POE mit Ethernet (10/100 Mbit/s), nicht galvanisch getrennt"),
+        ("Messumformer", "Olimex ESP32-POE (Funkmodul ESP32-WROOM-32E) mit Ethernet (10/100 Mbit/s), "
+                         "nicht galvanisch getrennt"),
+        ("Funk", "WLAN 2400–2483,5 MHz, max. 19,5 dBm (nur Ausweichverbindung/Einrichtung)"),
         ("Stromversorgung", "Power over Ethernet nach IEEE 802.3af über das Netzwerkkabel"),
         ("Netzwerk", "Ethernet, IP-Adresse per DHCP"),
         ("Software", SOFTWARE),
@@ -329,7 +372,7 @@ def inhalt_professional():
         "Ein Kombifühler misst die Luftfeuchtigkeit; tauchen Sie ihn nicht in Wasser und schützen Sie ihn vor "
         "Kondenswasser.",
     ])
-    konformitaet_entsorgung(t)
+    konformitaet_entsorgung(t, "professional")
 
     t.append(ueberschrift("Fehlerbeschreibung"))
     t.append(tabelle([
@@ -353,8 +396,8 @@ def inhalt_professional():
 # --- Standalone (WeMos D1 mini, ESP8266, WLAN, USB-Netzteil) ---
 def inhalt_standalone():
     t = []
-    einleitung(t, [fett("Sensorbox Standalone"),
-                   " (alle Ausführungen) – Sensorbox mit WLAN und Stromversorgung über USB, je nach Ausstattung mit "
+    einleitung(t, [fett("Sensorbox Typ 2025"),
+                   " (bisher „Sensorbox Standalone“, Kennung 79x59 V1.9, alle Ausführungen) – Sensorbox mit WLAN und Stromversorgung über USB, je nach Ausstattung mit "
                    "Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, Wassersensor, Abstandssensor "
                    "und Display."])
 
@@ -392,10 +435,11 @@ def inhalt_standalone():
                      "IP-Adresse; dann funktioniert ", fett("http://<IP-Adresse>/openandhome.esp"), "."))
     t.append(schritt("Ist die Sensorbox nicht erreichbar, suchen Sie in Ihrem Router unter „Heimnetz“ nach dem Gerät "
                      "„Sensorbox1“. Es kann einen Moment dauern, bis der Name erreichbar ist."))
-    t.append(schritt("Empfehlung: Vergeben Sie unter ", fett("http://sensorbox1/config"),
-                     " ein Administrator-Passwort. Setzen Sie mehrere Sensorboxen ein, geben Sie dort jeder einen "
-                     "eigenen Namen („Unit Name“)."))
+    t.append(schritt("Ändern Sie jetzt unter ", fett("http://sensorbox1/config"), " das Admin-Passwort (ab Werk bei allen Sensorboxen gleich: Benutzer ",
+                     fett(ADMIN_BENUTZER), ", Passwort ", fett(ADMIN_PASSWORT), "). Setzen Sie mehrere Sensorboxen "
+                     "ein, geben Sie dort jeder einen eigenen Namen („Unit Name“)."))
     hinweis_ip_bereich(t)
+    zugang(t)
 
     t.append(absatz(fett("Alternativ mit der openandhome-Toolbox: "),
                     "Verbinden Sie die Sensorbox per USB-Kabel mit Ihrem Rechner, starten Sie die Toolbox und wählen "
@@ -442,9 +486,10 @@ def inhalt_standalone():
 
     t.append(ueberschrift("Technische Daten"))
     t.append(tabelle([
-        ("Gehäuse", "Kunststoffgehäuse KH-F20, 82 × 58 × 35 mm (L × B × H), grau/klar, feuchtigkeitsbeständig "
-                    "und staubdicht"),
-        ("Messumformer", "WeMos D1 mini (ESP8266) mit WLAN 2,4 GHz, eingebaut im Gehäuse"),
+        ("Gehäuse", "Kunststoffgehäuse 132,2 × 68,7 × 50,1 mm (L × B × H), ABS/PC mit klarem Deckel, "
+                    "feuchtigkeitsbeständig"),
+        ("Messumformer", "AZ-Delivery D1 mini (ESP8266, Funkmodul ESP-12F) mit WLAN 2,4 GHz, eingebaut im Gehäuse"),
+        ("Funk", "WLAN 2400–2483,5 MHz, max. 20 dBm"),
         ("Stromversorgung", "USB, 5 V DC, mindestens 500 mA (Netzteil nicht im Lieferumfang)"),
         ("Software", SOFTWARE),
         ("Temperaturfühler (je nach Ausstattung bis zu 4)", DS18B20_DATEN),
@@ -457,7 +502,7 @@ def inhalt_standalone():
     sicherheit(t, ["Betreiben Sie die Sensorbox nur mit der vorgesehenen Schutzkleinspannung 5 V DC über USB.",
                    "Ein Kombifühler misst die Luftfeuchtigkeit; tauchen Sie ihn nicht in Wasser und schützen Sie ihn "
                    "vor Kondenswasser."])
-    konformitaet_entsorgung(t)
+    konformitaet_entsorgung(t, "standalone")
 
     t.append(ueberschrift("Fehlerbeschreibung"))
     t.append(tabelle([

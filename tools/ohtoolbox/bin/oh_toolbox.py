@@ -22,6 +22,7 @@ sys.path[:0] = [os.path.join(HIER, "lib"), os.path.join(PAKET, "..", "bin")]
 import oh_kunde as k  # noqa: E402
 import oh_server  # noqa: E402
 from espeasy_autoconfig import oeffne  # noqa: E402
+from espeasy_syslog import ADMIN_PASSWORT  # noqa: E402
 from espeasy_testbox import sende, usb_ip, wlan_verbinden  # noqa: E402
 
 TITEL = "openandhome - Toolbox v4.0"
@@ -156,7 +157,8 @@ def main():
                                                      "WifiSSID2 ssid", "WifiKey2 wpakey")),
         "6": ("Reset DHCP (feste IP-Adresse aufheben)",
               lambda: befehle(port, "Reset DHCP", "IP 0.0.0.0", *(["ethip,0.0.0.0"] if chip == "ESP32" else []))),
-        "7": ("Admin-Passwort zuruecksetzen", lambda: befehle(port, "Admin-Passwort zuruecksetzen", "password")),
+        "7": (f"Admin-Passwort zuruecksetzen (auf {ADMIN_PASSWORT})",
+              lambda: befehle(port, "Admin-Passwort zuruecksetzen", f"Password,{ADMIN_PASSWORT}")),
         "8": ("WLAN-Zugangspunkt starten", lambda: befehle(port, "WLAN-Zugangspunkt starten", "WifiAPMode")),
         "9": ("IP-Filter zuruecksetzen (bis zum Neustart)", lambda: befehle(port, "IP-Filter zuruecksetzen",
                                                                           "ClearAccessBlock")),

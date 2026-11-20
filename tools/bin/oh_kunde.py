@@ -19,8 +19,8 @@ import urllib.request
 import serial.tools.list_ports
 
 from espeasy_autoconfig import autokonfiguration, i2c_scan
-from espeasy_testbox import (dashboard_hochladen, http_bereit, lade_hoch, sende, setze_zugriff, usb_ip,
-                             warte_ip, wlan_verbinden)
+from espeasy_testbox import (dashboard_hochladen, http_bereit, lade_hoch, sende, setze_passwort, setze_zugriff,
+                             usb_ip, warte_ip, wlan_verbinden)
 
 GITHUB = "https://raw.githubusercontent.com/martament/openandhome/master/"
 MANIFEST = "tools/ohtoolbox/manifest.json"
@@ -205,6 +205,8 @@ def grundkonfiguration(port, quelle, k, chip, temporaer=None):
     # Zugriff dauerhaft erlauben: ClearAccessBlock gilt nur bis die Box ihre Einstellungen neu laedt
     # (passiert beim config.dat-Upload) - danach waere der Regel-Upload gesperrt
     setze_zugriff(box)
+    box, zeile = setze_passwort(box)     # Grundkonfiguration = Werkszustand, auch beim Admin-Passwort
+    print(zeile)
     lade_hoch(box, quelle.datei(k["basis_config"]), "config.dat")
     if "regeln" in k:
         # Zeit nur lokal: Regeln schalten NTP mit Router / 192.168.178.1 ein
