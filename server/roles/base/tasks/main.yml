@@ -174,14 +174,38 @@
     state: absent
   when: "'/var/swap' not in base_swaps.stdout"
 
-- name: Journal begrenzen
+# Raspberry Pi OS haelt das Journal schon im RAM (40-rpi-volatile-storage.conf); hier
+# ausdruecklich, damit es so bleibt. Grafana und Mosquitto loggen nur noch dorthin.
+- name: Journal nur im RAM, begrenzt
   ansible.builtin.copy:
     dest: /etc/systemd/journald.conf.d/openandhome.conf
     content: |
       [Journal]
+      Storage=volatile
+      RuntimeMaxUse={{ base_journal_max_use }}
       SystemMaxUse={{ base_journal_max_use }}
     mode: "0644"
   notify: Journal neu starten
+
+# Geaenderte Dateien sammelt der Kernel im RAM und schreibt sie erst nach
+# oh_write_interval_s (Standard: 30 s); das ext4-Journal ebenso (Standard: commit=5).
+- name: Kernel schreibt gesammelt (Writeback)
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/90-openandhome.conf
+    content: |
+      # openandhome: SD-Karte schonen, geaenderte Daten hoechstens alle {{ oh_write_interval_s }} s schreiben
+      vm.dirty_expire_centisecs = {{ oh_write_interval_s * 100 }}
+      vm.dirty_writeback_centisecs = {{ oh_write_interval_s * 100 }}
+    mode: "0644"
+  notify: Kernel-Parameter laden
+
+- name: Ext4-Journal gesammelt schreiben (commit)
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: '^(\S+\s+/\s+ext4\s+)([^\s]*?)(?:,commit=\d+)?(\s.*)$'
+    line: '\1\2,commit={{ oh_write_interval_s }}\3'
+    backrefs: true
+  notify: Wurzeldateisystem neu einhaengen
 
 # --- Zugang und Firewall -------------------------------------------------------
 

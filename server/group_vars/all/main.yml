@@ -50,3 +50,9 @@ oh_min_disk_gb: 28
 
 # Mindestens so viele synchrone 4-KB-Schreibvorgaenge pro Sekunde (A1-Karten: >= 500)
 oh_min_card_iops: 100
+
+# SD-Karte schonen: Daten sammeln und hoechstens etwa alle 5 Minuten schreiben (Telegraf,
+# ext4-Journal, Kernel-Writeback). Bei Stromausfall gehen bis zu ~10 Minuten Messwerte
+# verloren - bewusst in Kauf genommen. Telegraf (stack/telegraf/telegraf.conf) hat
+# denselben Wert fest eingetragen (interval/flush_interval = "300s").
+oh_write_interval_s: 300

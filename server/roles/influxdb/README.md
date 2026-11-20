@@ -26,3 +26,6 @@ Teil von [`../../site.yml`](../../site.yml) (Tag `influxdb`).
 ## Stolperfallen
 
 Kürzere Aufbewahrung löscht ältere Daten beim nächsten Lauf.
+
+Nie `storage-wal-fsync-delay` setzen: Schreiben und Löschen warten dann auf das verzögerte
+fsync (Telegraf-Abbrüche). Die Karte schont Telegraf, das nur alle 5 Minuten schreibt.

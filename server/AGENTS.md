@@ -93,3 +93,23 @@ Maßgeblich ist [`../plans/server-ansible.md`](../plans/server-ansible.md); Proj
 - Prüfung im Browser: `grafana_sicht.py` (headless Chromium per CDP, im Scratchpad dieser
   Sitzung) – sichtbar ist ein Panel nur mit `getBoundingClientRect().height > 0`, ausgeblendete
   stehen weiter im DOM.
+
+## Befunde SD-Karte schonen (2026-11-20)
+
+- **Gesammelt schreiben, alle 5 Minuten** (`oh_write_interval_s: 300`, Vorgabe Nutzer:
+  seltenes Schreiben ist wichtiger als Datenverlust bei Stromausfall, bis ~10 min in Kauf
+  genommen): Telegraf `interval`/`flush_interval` 300 s (fest in `stack/telegraf/telegraf.conf`),
+  Kernel `vm.dirty_expire/writeback_centisecs` 30000, ext4 `commit=300` (fstab + remount),
+  Grafana SQLite `GF_DATABASE_WAL=true` und Log nur ins Journal, Mosquitto ohne Persistenz und
+  Log ins Journal; das Journal liegt im RAM (`Storage=volatile`, Raspberry Pi OS ohnehin).
+- **Nie `storage-wal-fsync-delay` in InfluxDB:** jeder Schreibzugriff wartet dann auf das
+  verzögerte fsync – Telegraf bricht nach 5 s ab („context deadline exceeded“), `/api/v2/delete`
+  hängt > 400 s. Die Rolle `influxdb` entfernt die Zeile.
+- Telegraf `max_undelivered_messages = 20000` (Standard 1000 hielte das MQTT-Lesen bis zum
+  nächsten Schreiben an). Der Funktionstest lässt Telegraf per `systemctl reload` (SIGHUP
+  schreibt den Puffer) sofort schreiben, sonst warteten T2–T4 bis zu 5 Minuten.
+- Messung ohne sendende Box (Leerlauf): vorher ~440 Schreibvorgänge/~3,4 MB in 9 min, nachher
+  113/~1 MB. Rest fast nur Grafana: `server_lock` (interne Jobs, minütlich), nicht abschaltbar.
+  Messen: `/proc/diskstats` (Feld 8 = Schreibvorgänge) und `/proc/<pid>/io` (`write_bytes`).
+- Grafana-Panels verbinden Lücken bis 1 h (`spanNulls`), 5-Minuten-Daten sehen daher normal aus.
+  Neue Werte erscheinen in Grafana erst nach bis zu 5 Minuten.

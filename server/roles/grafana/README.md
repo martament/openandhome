@@ -5,7 +5,8 @@ Grafana OSS mit Datenquellen, Dashboards und den Rollen Viewer/Editor.
 ## Zweck
 
 - Installiert `grafana` (OSS). Einstellungen per `GF_*` in `/etc/openandhome/grafana.env`
-  (anonymer Zugriff aus, keine Registrierung, keine Telemetrie, Startseite = Messwerte).
+  (anonymer Zugriff aus, keine Registrierung, keine Telemetrie, Startseite = Messwerte,
+  SQLite im WAL-Modus, Log nur ins Journal).
 - Datenquellen und Dashboards aus [`../../stack/grafana`](../../stack/grafana/); Editoren dürfen
   die Dashboards in der Oberfläche ändern.
 - Setzt das Admin-Passwort und legt `editor` (Editor) und `viewer` (Viewer) an.

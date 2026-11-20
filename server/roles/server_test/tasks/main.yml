@@ -84,6 +84,13 @@
   failed_when: false
   no_log: true
 
+# Telegraf schreibt nur alle 5 Minuten (SD-Karte schonen); beim Neuladen (SIGHUP)
+# schreibt er seinen Puffer sofort.
+- name: T2 | Telegraf sofort schreiben lassen
+  ansible.builtin.shell: sleep 2 && systemctl reload telegraf
+  changed_when: false
+  failed_when: false
+
 - name: T2 | Messwert in der InfluxDB?
   ansible.builtin.uri:
     url: "{{ server_test_q }}&db=openandhome&q={{ server_test_abfrage | urlencode }}"
@@ -122,9 +129,10 @@
   failed_when: false
   no_log: true
 
-- name: T3 | Warten (Telegraf schreibt alle 10 s)
-  ansible.builtin.wait_for:
-    timeout: 15
+- name: T3 | Telegraf sofort schreiben lassen
+  ansible.builtin.shell: sleep 2 && systemctl reload telegraf && sleep 10
+  changed_when: false
+  failed_when: false
 
 - name: T3 | Wert von telegraf in der InfluxDB?
   ansible.builtin.uri:
@@ -150,6 +158,11 @@
     printf '%s' '<14>{{ server_test_box }}_EspEasy: T4 Funktionstest {{ server_test_marke }}' > /dev/udp/127.0.0.1/{{ oh_port_syslog }}
   args:
     executable: /bin/bash
+  changed_when: false
+  failed_when: false
+
+- name: T4 | Telegraf sofort schreiben lassen
+  ansible.builtin.shell: sleep 2 && systemctl reload telegraf
   changed_when: false
   failed_when: false
 

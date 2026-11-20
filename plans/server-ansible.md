@@ -128,7 +128,7 @@ Inhalt der Konfiguration:
 
 | Dienst | Konfiguration |
 |---|---|
-| Mosquitto | Listener 1883 (LAN), `allow_anonymous false`, Benutzer `sensorbox` (nur Schreiben auf `openandhome/#`) und `telegraf` (nur Lesen), ACL-Datei, Persistenz an |
+| Mosquitto | Listener 1883 (LAN), `allow_anonymous false`, Benutzer `sensorbox` (nur Schreiben auf `openandhome/#`) und `telegraf` (nur Lesen), ACL-Datei, Persistenz aus (SD-Karte schonen, 2026-11-20) |
 | Telegraf | `inputs.mqtt_consumer` auf `openandhome/+/+/+`, `topic_parsing` → Tags `sensorbox`, `device`, `valuename`, Measurement `openandhome`, Wert als float; `inputs.syslog` UDP 514 → Bucket `sensorbox_logs`; Systemmetriken des Servers (cpu, mem, disk, system, temp) → Bucket `system` |
 | InfluxDB 2 | Org `openandhome`, Buckets `openandhome` (Aufbewahrung Standard 2 Jahre), `sensorbox_logs` (30 Tage), `system` (30 Tage); DBRP `telegraf/autogen` → `openandhome`; getrennte Tokens für Telegraf (schreiben) und Grafana (lesen) |
 | Grafana | Datenquelle InfluxQL (Token per Header), Ordner „openandhome“ mit den Dashboards, Variable `$sensorbox`; Benutzer `admin`/`editor`/`viewer`; Dashboards **nur importieren, wenn sie fehlen** (Änderungen der Editoren bleiben); Alarmregel „Sensorbox sendet nicht“ (optional, nur aktiv, wenn SMTP gesetzt ist) |

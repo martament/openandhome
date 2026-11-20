@@ -18,6 +18,9 @@
       GF_NEWS_NEWS_FEED_ENABLED=false
       GF_SECURITY_DISABLE_GRAVATAR=true
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH={{ grafana_dashboard_dir }}/messwerte.json
+      # SD-Karte schonen: SQLite im WAL-Modus, Log nur ins Journal (liegt im RAM)
+      GF_DATABASE_WAL=true
+      GF_LOG_MODE=console
       OH_INFLUX_URL=http://127.0.0.1:8086
       OH_INFLUX_GRAFANA_PASSWORD={{ credentials_values.influx_grafana }}
     dest: "{{ oh_server_etc }}/grafana.env"

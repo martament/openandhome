@@ -16,6 +16,19 @@
     - { src: openandhome.acl, dest: "{{ mosquitto_acl_file }}", owner: mosquitto, mode: "0600" }
   notify: Mosquitto neu starten
 
+# SD-Karte schonen: keine Persistenz-Datei (die Boxen melden ihren Status nach einem
+# Neustart des Brokers selbst neu), Log ins Journal (liegt im RAM) statt in eine Datei.
+# Steht in der Debian-Hauptdatei, weil log_dest sich nicht ueberschreiben, nur ergaenzen laesst.
+- name: Keine Persistenz, Log ins Journal
+  ansible.builtin.lineinfile:
+    path: /etc/mosquitto/mosquitto.conf
+    regexp: "^{{ item.key }}\\s"
+    line: "{{ item.key }} {{ item.value }}"
+  loop:
+    - { key: persistence, value: "false" }
+    - { key: log_dest, value: syslog }
+  notify: Mosquitto neu starten
+
 # mosquitto_passwd hasht mit Salz - die Datei waere bei jedem Lauf anders. Daher nur
 # neu erzeugen, wenn sich Benutzer/Passwoerter geaendert haben (Pruefsumme daneben).
 - name: Passwort-Pruefsumme bilden

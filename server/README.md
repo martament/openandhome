@@ -8,7 +8,9 @@ Ein Server je Kunde. Plan und Entscheidungen: [`../plans/server-ansible.md`](../
 (Funktionstest, `test.yml`) sind umgesetzt. Offen: `oh_config` (`openandhome.txt`, T8).
 
 **SD-Karte:** mindestens 16 GB, empfohlen 32 GB, **Klasse A1 oder A2**. Das System mit allen
-Diensten belegt ca. 6,2 GB; Grafana und InfluxDB schreiben ständig in kleinen Blöcken.
+Diensten belegt ca. 6,2 GB. Um die Karte zu schonen, schreibt der Server gesammelt etwa alle
+5 Minuten (`oh_write_interval_s`); bei Stromausfall gehen bis zu ~10 Minuten Messwerte verloren,
+neue Werte erscheinen in Grafana mit bis zu 5 Minuten Verzögerung.
 `site.yml` bricht bei zu kleinen (< 14 GB Dateisystem) oder zu langsamen Karten
 (< 100 synchrone 4-KB-Schreibvorgänge/s) mit einer Meldung ab.
 

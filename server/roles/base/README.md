@@ -8,7 +8,9 @@ Grundeinrichtung des Pi für den Dauerbetrieb.
 - Trägt die Paketquellen von InfluxData und Grafana ein (deb822). Die Schlüssel werden auf dem
   Werkstatt-PC geladen und gegen feste Fingerabdrücke geprüft.
 - Systemupdate, Neustart bei Bedarf, apt behält keine `.deb`-Dateien.
-- Auslagerung nur zram (`/var/swap` weg), Journal auf 100 MB begrenzt.
+- Auslagerung nur zram (`/var/swap` weg), Journal nur im RAM (100 MB).
+- SD-Karte schonen: Kernel-Writeback und ext4-Journal (`commit=`) nur alle `oh_write_interval_s`
+  (300 s); bei Stromausfall gehen bis zu ~10 Minuten Daten verloren.
 - SSH nur per Key, kein root; Firewall (nftables) nur aus privaten Netzen: SSH, MQTT,
   Grafana, NTP, Syslog, mDNS. Automatische Sicherheitsupdates.
 

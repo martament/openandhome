@@ -14,5 +14,8 @@ Teil von [`../../site.yml`](../../site.yml) (Tag `telegraf`).
 
 ## Stolperfallen
 
+Schreibt nur alle 5 Minuten in die InfluxDB (SD-Karte schonen); `systemctl reload telegraf`
+schreibt den Puffer sofort (nutzt der Funktionstest).
+
 ESPEasy-Syslog hat keinen Zeitstempel; deshalb `socket_listener` + Starlark statt
 `inputs.syslog` (siehe [`../../AGENTS.md`](../../AGENTS.md)).

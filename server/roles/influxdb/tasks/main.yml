@@ -14,6 +14,16 @@
     - { key: reporting-disabled, value: "true" }
   notify: InfluxDB neu starten
 
+# Nie setzen: mit storage-wal-fsync-delay wartet jeder Schreibzugriff auf das verzoegerte
+# fsync - Telegraf bricht nach 5 s ab, Loeschen haengt (gemessen 2026-11-20 mit 300 s).
+# Die SD-Karte schont stattdessen Telegraf (schreibt nur alle 5 Minuten).
+- name: Keine verzoegerte WAL-Synchronisation
+  ansible.builtin.lineinfile:
+    path: /etc/influxdb/config.toml
+    regexp: "^storage-wal-fsync-delay\\s*="
+    state: absent
+  notify: InfluxDB neu starten
+
 - name: InfluxDB einschalten
   ansible.builtin.systemd_service:
     name: influxdb
