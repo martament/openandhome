@@ -39,7 +39,7 @@ def erkenne_chip(port):
 
 def update(port, quelle, chip):
     print("\n--- Firmware aktualisieren (Einstellungen bleiben) ---")
-    # Standalone: collection_H, wenn sie schon laeuft oder ein AM2320 antwortet, sonst climate_B
+    # Typ 2025: collection_H, wenn sie schon laeuft oder ein AM2320 antwortet, sonst climate_B
     am2320 = True if chip == "ESP8266" and "collection_H" in k.image_name(port) else None
     klasse = k.klasse(quelle, chip, port, am2320=am2320)
     neu = os.path.basename(klasse.get("firmware_update", klasse["firmware"])["pfad"])
@@ -58,7 +58,7 @@ def neu_aufspielen(port, quelle, chip):
         return
     standard = k.klasse(quelle, chip, am2320=False)
     k.neu_aufspielen(port, quelle, standard, chip, SITE_PACKAGES)
-    temporaer = k.ins_netz(port, chip)     # WLAN fuer die Einrichtung (Professional: danach geloescht)
+    temporaer = k.ins_netz(port, chip)     # WLAN fuer die Einrichtung (Typ 2026: danach geloescht)
     klasse = k.klasse(quelle, chip, port)
     if klasse["firmware"] != standard["firmware"]:
         print("AM2320 erkannt - spiele die passende Firmware ein (Einstellungen bleiben) ...")
@@ -95,7 +95,7 @@ def main():
     print(" Fuer WLAN, Name, Zeitserver und Sensoren bitte die Toolbox verwenden.")
     print("*" * 70)
     chip = erkenne_chip(port)
-    print(f"Sensorbox {'Professional' if chip == 'ESP32' else 'Standalone'} erkannt, "
+    print(f"Sensorbox {'Typ 2026' if chip == 'ESP32' else 'Typ 2025'} erkannt, "
           f"freigegebener Stand: {quelle.manifest()['stand']}")
     if chip == "ESP32" and not k.poe_warnung():
         return

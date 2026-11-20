@@ -73,9 +73,9 @@ Maßgeblich ist [`../plans/server-ansible.md`](../plans/server-ansible.md); Proj
   `uptime`, `freeheap`, `rssi`, `load` – Dashboards erkennen zusätzlich die englischen Namen.
 - **System-Werte beider Klassen gleich** (Basis-configs seit 2026-11-15): `uptime` Minuten,
   `freeheap` Bytes, `rssi` dBm, `load` %, alle 300 s, 0 Nachkommastellen, keine Formeln.
-  Ältere Standalone-Boxen (Kunden) senden noch `freeheap` in KB (`%value%/1024`) und `rssi` als
+  Ältere ESP8266-Boxen (Kunden) senden noch `freeheap` in KB (`%value%/1024`) und `rssi` als
   `100+%value%`; das Dashboard „Sensorboxen – System“ rechnet sie um (`UMRECHNUNG` in
-  `dashboards.py`: zweite Abfrage je Wert für `< 1024` bzw. `> 0`). `rssi` = 0 (Professional über
+  `dashboards.py`: zweite Abfrage je Wert für `< 1024` bzw. `> 0`). `rssi` = 0 (Typ 2026 über
   Ethernet, WLAN aus) wird nicht angezeigt.
 - config.dat direkt ändern: Settings-MD5 liegt bei ESP32 an 0xBBC (Struktur 3064 Byte), bei ESP8266
   an 0x514 (Struktur 1352 Byte); MD5 über die Struktur ohne die 16 MD5-Bytes. Die Firmware prüft sie

@@ -14,7 +14,7 @@ Device-Einstellungen, Zugriffsbereich und Dashboard gehen über HTTP.
 
 | Punkt | Funktion |
 |---|---|
-| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Flashen (Image der Klasse laut [`oh_klassen.py`](../bin/oh_klassen.py)) → Professional: Ethernet per USB → WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`: Zeile 1 SSID, Zeile 2 Passwort, `chmod 600`; fehlt die Datei, wird gefragt) → Web-Zugriff 192.168.0.0–192.168.255.255 → Basis-`config.dat` + `rules1.txt` (bei AM2320 automatisch collection_H/`basis_am2320`) → Testname `Sensorbox<Unit>` (Vorgabe) → Admin-Passwort `configesp` (Benutzer `admin`, geprüft) → Sensoren erkennen → Zabbix-Abfrage (Professional) → Dashboard → Werte- und Dashboard-Prüfung → Syslog an (UDP-Port 514) + Testlog-Regel `rules2.txt` (Syslog sendet in `mega-20260720` nichts: die Regel schickt per `SendToUDP` an 192.168.9.4:514 beim Start den Startgrund, dann alle 5 min Uptime, freien Speicher, WLAN-Signal/-Abbrüche und alle Messwerte). Der Zugriffsbereich schaltet auch „Append Unit Number to hostname“ aus (Hostname = Name) |
+| 1 | **Box aufsetzen und 24h-Test starten:** Chip erkennen → Flashen (Image der Klasse laut [`oh_klassen.py`](../bin/oh_klassen.py)) → Typ 2026: Ethernet per USB → WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`: Zeile 1 SSID, Zeile 2 Passwort, `chmod 600`; fehlt die Datei, wird gefragt) → Web-Zugriff 192.168.0.0–192.168.255.255 → Basis-`config.dat` + `rules1.txt` (bei AM2320 automatisch collection_H/`basis_am2320`) → Testname `Sensorbox<Unit>` (Vorgabe) → Admin-Passwort `configesp` (Benutzer `admin`, geprüft) → Sensoren erkennen → Zabbix-Abfrage (Typ 2026) → Dashboard → Werte- und Dashboard-Prüfung → Syslog an (UDP-Port 514) + Testlog-Regel `rules2.txt` (Syslog sendet in `mega-20260720` nichts: die Regel schickt per `SendToUDP` an 192.168.9.4:514 beim Start den Startgrund, dann alle 5 min Uptime, freien Speicher, WLAN-Signal/-Abbrüche und alle Messwerte). Der Zugriffsbereich schaltet auch „Append Unit Number to hostname“ aus (Hostname = Name) |
 | 2 | Test prüfen: Messwerte plausibel? Dashboard vollständig ersetzt? |
 | 3 | **Test beenden:** Abschlussprüfung → Syslog aus, Testlog-Regel löschen (geprüft) → Name `Sensorbox1`/Unit 0 → Zugriffsbereich → Admin-Passwort `configesp` (geprüft) → Neustart, prüfen ob Syslog wirklich aus ist → WLAN löschen wie `esp_resetap` (immer, ohne Nachfrage), Neustart und prüfen, ob der AP startet (Boot-Log per USB oder WLAN-Scan per `nmcli`) → AP wie ein Handy prüfen: WLAN-Auswahl kommt von selbst, `http://192.168.4.1/openandhome.esp` erreichbar (automatisch mit WLAN-Adapter am PC, sonst mit dem Handy bestätigen) |
 | 4 | Sensoren erkennen (I2C, DS18B20), Tasks einschalten, OLED-Zeilen setzen |
@@ -50,7 +50,7 @@ Kunden-ZIP: baut die CI auf `master` automatisch (Release mit Release-Notes); lo
 `python3 tools/ohtoolbox/paket_bauen.py` → `tools/ohtoolbox/dist/ohtoolbox.zip`.
 
 
-## Professional (Olimex ESP32-POE)
+## Typ 2026 (Olimex ESP32-POE)
 
 - **USB und PoE nie gleichzeitig anschließen** — das Board ist nicht galvanisch
   getrennt (Olimex-Hinweis; unsere Boxen haben die Variante **ohne** ISO).

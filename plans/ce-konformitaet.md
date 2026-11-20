@@ -207,7 +207,7 @@ Aufbewahrung **10 Jahre** nach dem letzten Inverkehrbringen [Pflicht].
 | 13 | Etikettenvorlage (Abschnitt 5) | [Pflicht] |
 | 14 | Firmware-Stand je Charge (Image, SHA256 aus `readme_image.txt`) | [Pflicht] |
 | 15 | Chargen-/MAC-Liste (Rückverfolgbarkeit) | [Pflicht] |
-| 16 | Schwachstellenprozess (CRA): Meldeadresse, Registrierung ENISA-Meldeplattform | [Pflicht] |
+| 16 | Schwachstellenprozess (CRA): Meldeadresse security@openandhome.de (Festlegung 20.11.2026), Registrierung ENISA-Meldeplattform | [Pflicht] |
 | 17 | Änderungsprotokoll: wann eine Neubewertung nötig ist | [Empfohlen] |
 | 18 | Erklärungen und Anleitungen als PDF auf der Webseite | [Empfohlen] |
 

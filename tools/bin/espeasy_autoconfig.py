@@ -140,7 +140,7 @@ def dallas_option(html, adresse):
 def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None, leise=False):
     """Scannt, zeigt die Aenderungen und schreibt sie bei anwenden=True.
 
-    ow_gpios: 1-Wire-Busse, die gescannt werden (Professional: 4 und 2); Standard
+    ow_gpios: 1-Wire-Busse, die gescannt werden (Typ 2026: 4 und 2); Standard
     ist der GPIO des ersten DS18B20-Tasks. Fuehler1..N werden in Scan-Reihenfolge
     vergeben und bekommen GPIO und Adresse ihres Busses.
     leise=True: nur Warnungen ausgeben (Endanwender-Werkzeuge).
@@ -277,7 +277,7 @@ def main():
     ow = args.ow_gpios
     if ow is None and "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", ""):
         from oh_klassen import KLASSEN
-        ow = KLASSEN["ESP32"]["ow_gpios"]      # Professional: zwei 1-Wire-Busse
+        ow = KLASSEN["ESP32"]["ow_gpios"]      # Typ 2026: zwei 1-Wire-Busse
     autokonfiguration(box, args.port, args.an, args.aus, args.anwenden, ow_gpios=ow)
 
 

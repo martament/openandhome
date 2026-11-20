@@ -1,4 +1,4 @@
-# Firmware-Image Standalone/Wemos (ESP8266 4M1M, SPIFFS) - climate_B Standard, collection_H bei AM2320
+# Firmware-Image Typ 2025/Wemos (ESP8266 4M1M, SPIFFS) - climate_B Standard, collection_H bei AM2320
 # Automatisch erzeugt von tools/bin/espeasy_download.py - nicht von Hand aendern.
 
 Quelle:        https://github.com/letscontrolit/ESPEasy/releases/tag/mega-20261119

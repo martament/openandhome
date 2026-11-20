@@ -99,7 +99,7 @@
     {
       "type": "timeseries",
       "title": "WLAN-Signal",
-      "description": "WLAN-Empfang in dBm (-50 sehr gut, -80 schwach). Boxen über Ethernet ohne WLAN erscheinen nicht. Ältere Standalone-Boxen (100 + dBm) werden umgerechnet.",
+      "description": "WLAN-Empfang in dBm (-50 sehr gut, -80 schwach). Boxen über Ethernet ohne WLAN erscheinen nicht. Ältere ESP8266-Boxen (100 + dBm) werden umgerechnet.",
       "datasource": {
         "type": "influxdb",
         "uid": "oh-messwerte"
@@ -164,7 +164,7 @@
     {
       "type": "timeseries",
       "title": "Freier Speicher",
-      "description": "Freier Arbeitsspeicher in Bytes. Ältere Standalone-Boxen (KB) werden umgerechnet.",
+      "description": "Freier Arbeitsspeicher in Bytes. Ältere ESP8266-Boxen (KB) werden umgerechnet.",
       "datasource": {
         "type": "influxdb",
         "uid": "oh-messwerte"

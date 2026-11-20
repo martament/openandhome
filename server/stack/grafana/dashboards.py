@@ -156,10 +156,10 @@ def als_v2(d, bedingt=(), spalten=1):
 
 
 # freeheap/rssi (Task System, P026): Basis-configs beider Klassen senden Bytes und dBm.
-# Aeltere Standalone-Boxen (Basis vor 2026-11-15, Kundenboxen) senden KB ("%value%/1024")
+# Aeltere ESP8266-Boxen (Basis vor 2026-11-15, Kundenboxen) senden KB ("%value%/1024")
 # und 100 + dBm ("100+%value%") - die zweite Abfrage je Wert rechnet diese um.
-# rssi = 0 heisst "kein WLAN" (Professional ueber Ethernet) und wird nicht angezeigt.
-UMRECHNUNG = {  # Wertname: ((Bedingung, Rechnung) aktuell, (Bedingung, Rechnung) alte Standalone)
+# rssi = 0 heisst "kein WLAN" (Typ 2026 ueber Ethernet) und wird nicht angezeigt.
+UMRECHNUNG = {  # Wertname: ((Bedingung, Rechnung) aktuell, (Bedingung, Rechnung) alte ESP8266-Boxen)
     "freeheap": (('"value" >= 1024', ""), ('"value" < 1024', " * 1024")),
     "rssi": (('"value" < 0', ""), ('"value" > 0', " - 100")),
 }
@@ -179,9 +179,9 @@ def boxsystem():
     alias = "$tag_sensorbox"
     panels = [
         zeitreihe("WLAN-Signal", DS_WERTE, umgerechnet("rssi", alias), "dBm", (0, 0, 12, 8),
-                  beschreibung="WLAN-Empfang in dBm (-50 sehr gut, -80 schwach). Boxen über Ethernet ohne WLAN erscheinen nicht. Ältere Standalone-Boxen (100 + dBm) werden umgerechnet."),
+                  beschreibung="WLAN-Empfang in dBm (-50 sehr gut, -80 schwach). Boxen über Ethernet ohne WLAN erscheinen nicht. Ältere ESP8266-Boxen (100 + dBm) werden umgerechnet."),
         zeitreihe("Freier Speicher", DS_WERTE, umgerechnet("freeheap", alias), "bytes", (12, 0, 12, 8),
-                  beschreibung="Freier Arbeitsspeicher in Bytes. Ältere Standalone-Boxen (KB) werden umgerechnet."),
+                  beschreibung="Freier Arbeitsspeicher in Bytes. Ältere ESP8266-Boxen (KB) werden umgerechnet."),
         zeitreihe("Laufzeit seit Neustart", DS_WERTE,
                   [ziel(DS_WERTE, wert('"valuename" =~ /^[Uu]ptime$/', '"sensorbox"'), alias)], "m", (0, 8, 12, 8)),
         zeitreihe("Auslastung", DS_WERTE, [ziel(DS_WERTE, wert('"valuename" = \'load\'', '"sensorbox"'), alias)],

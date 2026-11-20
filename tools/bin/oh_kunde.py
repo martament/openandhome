@@ -101,7 +101,7 @@ class Quelle:
 
 # --- Box ---
 def box_typ(port):
-    """'ESP32' (Professional), 'ESP8266' (Standalone) oder None - per Konsole, ohne Neustart."""
+    """'ESP32' (Typ 2026), 'ESP8266' (Typ 2025) oder None - per Konsole, ohne Neustart."""
     antwort = " ".join(sende(port, "logentry,%sysbuild_filename%", wartezeit=2))
     for chip in ("ESP32", "ESP8266"):
         if chip in antwort:
@@ -117,7 +117,7 @@ def image_name(port):
 
 
 def klasse(quelle, chip, port=None, am2320=None):
-    """Manifest-Teil der Box-Klasse; bei Standalone mit AM2320 die AM2320-Variante."""
+    """Manifest-Teil der Box-Klasse; bei Typ 2025 mit AM2320 die AM2320-Variante."""
     k = dict(quelle.manifest()["klassen"][chip])
     if "am2320" in k:
         if am2320 is None and port:
@@ -129,7 +129,7 @@ def klasse(quelle, chip, port=None, am2320=None):
 
 
 def poe_warnung():
-    rot("\nSensorbox Professional: USB und Netzwerkkabel (PoE) nie gleichzeitig anschliessen!")
+    rot("\nSensorbox Typ 2026: USB und Netzwerkkabel (PoE) nie gleichzeitig anschliessen!")
     rot("Das Netzwerkkabel muss abgezogen sein - die Box wird ueber USB versorgt.")
     return ja("Ist das Netzwerkkabel abgezogen?")
 
@@ -146,7 +146,7 @@ def wlan_loeschen(port):
 
 def ins_netz(port, chip):
     """Sorgt fuer eine Netzverbindung (fuer die Weboberflaeche). Liefert True, wenn das WLAN nur
-    voruebergehend gesetzt wurde (Professional) und danach wieder geloescht werden soll."""
+    voruebergehend gesetzt wurde (Typ 2026) und danach wieder geloescht werden soll."""
     if usb_ip(port):
         return False
     if chip == "ESP32":
@@ -227,7 +227,7 @@ def sensoren_neu(port, quelle, k, chip):
 
 
 def neu_aufspielen(port, quelle, k, chip, site_packages):
-    """Loeschen, aktuelles Image schreiben, Ethernet (Professional), danach Grundkonfiguration."""
+    """Loeschen, aktuelles Image schreiben, Ethernet (Typ 2026), danach Grundkonfiguration."""
     firmware = quelle.datei(k["firmware"])
     esptool(port, "erase_flash", site_packages=site_packages)
     esptool(port, "write_flash", *k["flash"], firmware, site_packages=site_packages)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Baut ein LittleFS-Image fuer die Professional-Box (ESP32, Plan 14).
+"""Baut ein LittleFS-Image fuer die Box Typ 2026 (ESP32, Plan 14).
 
-Die Professional-Box (Olimex ESP32-POE) hat am USB kein Netzwerk; die
+Die Box Typ 2026 (Olimex ESP32-POE) hat am USB kein Netzwerk; die
 Grundkonfiguration muss deshalb beim Flashen als Dateisystem-Image mit.
 Inhalt: config.dat (Name/Unit gepatcht), security.dat, notification.dat
 und optional Dashboard-Dateien. mklittlefs wird aus dem offiziellen Release
@@ -93,7 +93,7 @@ def baue(basis, name, unit, ausgabe, extra=()):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="LittleFS-Image fuer die Professional-Box bauen.")
+    parser = argparse.ArgumentParser(description="LittleFS-Image fuer die Box Typ 2026 bauen.")
     parser.add_argument("--basis", required=True, help="Ordner mit config.dat, security.dat, notification.dat")
     parser.add_argument("--name", required=True)
     parser.add_argument("--unit", default="0")

@@ -1,4 +1,4 @@
-# Firmware-Image Professional (ESP32 4MB, Ethernet, LittleFS)
+# Firmware-Image Typ 2026 (ESP32 4MB, Ethernet, LittleFS)
 # Automatisch erzeugt von tools/bin/espeasy_download.py - nicht von Hand aendern.
 
 Quelle:        https://github.com/letscontrolit/ESPEasy/releases/tag/mega-20261119

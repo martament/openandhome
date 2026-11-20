@@ -4,7 +4,7 @@
 Quelle: GitHub Releases von letscontrolit/ESPEasy. Das Skript
 - laeuft nur auf dem Branch 'devel' (Downloads nur dort, siehe AGENTS.md),
 - prueft die ZIP-Archive gegen den SHA256-Digest von GitHub,
-- legt pro Geraeteklasse die freigegebenen Images ab (Standalone: climate_B, collection_H fuer AM2320),
+- legt pro Geraeteklasse die freigegebenen Images ab (Typ 2025: climate_B, collection_H fuer AM2320),
 - schreibt readme_image.txt mit Release-Tag, Asset, SHA256 und Flash-Adressen.
 
 Beispiele:
@@ -35,7 +35,7 @@ KLASSEN = {
         "bild": re.compile(r"^ESP_Easy_mega_\d+_collection_A_ESP32_4M316k(\.factory)?\.bin$"),
         "alt": re.compile(r"^ESP_Easy_mega_\d+_collection_A_ESP32_4M316k.*\.bin$"),
         "ziel": "configs/espeasy/professional",
-        "beschreibung": "Professional (ESP32 4MB, Ethernet, LittleFS)",
+        "beschreibung": "Typ 2026 (ESP32 4MB, Ethernet, LittleFS)",
         "flash": [
             "factory.bin -> 0x000000 (Neu-Aufspielen), .bin -> 0x10000 (Update)",
             "Filesystem LittleFS @0x3B1000, Groesse 0x4F000 (esp32_partition_app1810k_spiffs316k.csv)",
@@ -47,7 +47,7 @@ KLASSEN = {
         "bild": re.compile(r"^ESP_Easy_mega_\d+_(climate_B|collection_H)_ESP8266_4M1M\.bin$"),
         "alt": re.compile(r"^ESP_Easy_mega_\d+_(collection_A|climate_B|collection_H)_ESP8266_4M1M.*\.bin$"),
         "ziel": "configs/espeasy/standalone",
-        "beschreibung": "Standalone/Wemos (ESP8266 4M1M, SPIFFS) - climate_B Standard, collection_H bei AM2320",
+        "beschreibung": "Typ 2025/Wemos (ESP8266 4M1M, SPIFFS) - climate_B Standard, collection_H bei AM2320",
         "flash": [
             ".bin -> 0x000000 (Neu-Aufspielen und Update)",
             "Filesystem SPIFFS @0x300000, Groesse 0x100000",

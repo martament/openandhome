@@ -226,7 +226,7 @@ neu ist die Netzwerksuche nach Boxen und nach dem Server.
 **Grundsätze**
 
 - **Je Ebene höchstens 5–6 Punkte**; was selten oder riskant ist, steht unter **w – Weitere**.
-- **Nur zeigen, was passt:** ohne Box am USB kein USB-Menü; Professional ohne WLAN-Punkte
+- **Nur zeigen, was passt:** ohne Box am USB kein USB-Menü; Typ 2026 ohne WLAN-Punkte
   (außer unter Weitere); im Server-Bereich nur die Punkte der gewählten Betriebsart;
   „Stack installieren“ nur, solange noch keiner installiert ist.
 - **Betriebsart einmal wählen:** Beim ersten Aufruf fragt ein kurzer Assistent „Wohin sollen
@@ -252,8 +252,8 @@ heute). Keine Box am USB → direkt in den Netzwerk-Bereich. Sonst das Startmen�
 **1 – Sensorbox am USB** (bestehende Funktionen, gruppiert)
 
 ```
-Sensorbox1 · Standalone · 192.168.178.34
-  1  WLAN einrichten               (nicht bei Professional mit LAN)
+Sensorbox1 · Typ 2025 · 192.168.178.34
+  1  WLAN einrichten               (nicht bei Typ 2026 mit LAN)
   g  Namen ändern
   s  Sensoren neu erkennen
   3  Einstellungen anzeigen
@@ -280,7 +280,7 @@ Wohin sollen Ihre Sensorboxen ihre Daten senden?
   1  An den openandhome-Server, den Sie von uns haben          → a
   2  Auf Ihren Docker-Server (wir installieren alles)          → b
   3  An Ihr eigenes System (MQTT-Broker/Syslog angeben)        → c
-  4  Nirgendwohin – Sensorboxen arbeiten allein (Standalone)   → Boxen trennen
+  4  Nirgendwohin – Sensorboxen arbeiten allein (eigenständig)   → Boxen trennen
 ```
 
 Danach je nach Betriebsart:
@@ -357,7 +357,7 @@ Servereinstellungen (a, b)                Weitere (a, b, c)
     (`locatecontroller=0`, `controllerip`) – siehe 6.5.
   - Optional NTP-Host = Server (Toolbox-Menü n gibt es schon).
   - Prüfen: Controller verbunden (`/json`), und – wo möglich – Wert kommt beim Ziel an.
-- **Box vom Server lösen:** Controller aus, Syslog leer (Zurück zu Standalone).
+- **Box vom Server lösen:** Controller aus, Syslog leer (zurück zum eigenständigen Betrieb).
 - Name der Box muss eindeutig sein (`%sysname%`); das Programm warnt bei Dubletten.
 
 ### 6.2 Betriebsart a) Gelieferter openandhome-Server
@@ -430,7 +430,7 @@ leert Passwortfelder und schreibt `letzte_anwendung=<Datum> OK/FEHLER: …` zur�
 |---|---|
 | [`tools/bin/`](../tools/bin/) | neues Modul `oh_server.py` (Box-Suche, Box auf Ziel stellen, Stack erzeugen/deployen); nutzt `espeasy_testbox.py`-Funktionen (`setze_syslog`, HTTP-Zugriff) |
 | [`tools/ohtoolbox/`](../tools/ohtoolbox/) | Menü „Server“ (a/b/c), Paket enthält `server/stack/`; Abhängigkeit für SSH (paramiko) ins portable Python |
-| Basis-configs | MQTT-Controller bleibt aus (Standalone). *Prüfpunkt P2:* in beiden Basis-configs prüfen, ob Controller 1 schon C005 mit den Themen oben ist (laut Custom.h-Analyse ja) |
+| Basis-configs | MQTT-Controller bleibt aus (eigenständiger Betrieb). *Prüfpunkt P2:* in beiden Basis-configs prüfen, ob Controller 1 schon C005 mit den Themen oben ist (laut Custom.h-Analyse ja) |
 | [`AGENTS.md`](../AGENTS.md) | Abschnitt „Server“ ergänzen (Ziel, Regeln, Verweis auf `server/`) |
 | Anleitungen | Kapitel „Sensorboxen mit Server verbinden“ (später, über `tools/docs/anleitung.py`) |
 
@@ -441,8 +441,8 @@ leert Passwortfelder und schreibt `letzte_anwendung=<Datum> OK/FEHLER: …` zur�
 | # | Punkt |
 |---|---|
 | P1 | **Erledigt** (2026-10-06-raspios-trixie-arm64-lite): cloud-init 25.2, NoCloud aus `/boot/firmware`, Modul `rpi:` für I2C. SSH über die leere Datei `ssh` (`sshswitch.service`). Anpassung braucht kein Loop-Mount und kein root (mtools auf der FAT-Partition); nur das SD-Schreiben braucht sudo |
-| P2 | **Erledigt** (Professional, 2026-11-15): Controller 1 = C005, Host `openandhome-server1`, Port 1883, Publish `openandhome/%sysname%/%tskname%/%valname%`, Subscribe `openandhome/%sysname%/#`, aus. **Bei keinem Task ist „Send to Controller 1“ (`TDSD1`) gesetzt** – ohne das sendet die Box nur ihren LWT-Status |
-| P8 | **Erledigt** (2026-11-15): Ursache war nicht die Werteart, sondern die Quelle – im Task System (P026) standen Wert 2–4 auf „None“ (`pconfigIndex_1..3` = 11). Basis-config Professional korrigiert auf Free RAM (1), Wifi RSSI (2), System load (4) (Offset 0x2C8, MD5 bei 0xBBC neu berechnet), auf Sensorbox1 geprüft. Standalone war schon richtig |
+| P2 | **Erledigt** (Typ 2026, 2026-11-15): Controller 1 = C005, Host `openandhome-server1`, Port 1883, Publish `openandhome/%sysname%/%tskname%/%valname%`, Subscribe `openandhome/%sysname%/#`, aus. **Bei keinem Task ist „Send to Controller 1“ (`TDSD1`) gesetzt** – ohne das sendet die Box nur ihren LWT-Status |
+| P8 | **Erledigt** (2026-11-15): Ursache war nicht die Werteart, sondern die Quelle – im Task System (P026) standen Wert 2–4 auf „None“ (`pconfigIndex_1..3` = 11). Basis-config Typ 2026 korrigiert auf Free RAM (1), Wifi RSSI (2), System load (4) (Offset 0x2C8, MD5 bei 0xBBC neu berechnet), auf Sensorbox1 geprüft. Typ 2025 war schon richtig |
 | P3 | **Entschieden:** Wir gehen davon aus, dass bald ein ESPEasy-Release mit funktionierendem Syslog kommt (`mega-20260720` sendet keins). Keine eigene Log-Regel als Produktfunktion; die Testlog-Regel bleibt nur im Test. Server und Konfigprogramm setzen die normale Syslog-Einstellung (`/advanced`). Bis zum neuen Image kommen beim Kunden nur Metriken an – der Funktionstest prüft Syslog serverseitig (T4) |
 | P4 | Pi 3 B v1.2: Funktionstest einmal probehalber; bei RAM-Problemen Unterstützung streichen (E2) |
 | P5 | **Erledigt** (2026-11-15): arm64-Pakete influxdb2/influxdb2-cli 2.9.1, telegraf 1.40.3 (repos.influxdata.com), grafana 13.3.1 (apt.grafana.com); Schlüssel-Fingerabdrücke in `roles/base/defaults` |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""openandhome-Toolbox - Standardwerkzeug fuer Endanwender (Standalone und Professional).
+"""openandhome-Toolbox - Standardwerkzeug fuer Endanwender (Typ 2025 und Typ 2026).
 
 Arbeitet ueber das USB-Kabel: WLAN, Name, Zeitserver, Resets, Diagnose sowie
 Grundkonfiguration und Sensorerkennung (dafuer kurz per WLAN im Netz).
@@ -38,7 +38,7 @@ def befehle(port, titel, *kommandos):
 def wlan(port, chip):
     print("\n--- WLAN-Zugangsdaten setzen ---")
     if chip == "ESP32":
-        print("Die Sensorbox Professional arbeitet mit dem Netzwerkkabel; WLAN brauchen Sie nur ohne Kabel.")
+        print("Die Sensorbox Typ 2026 arbeitet mit dem Netzwerkkabel; WLAN brauchen Sie nur ohne Kabel.")
         if not k.ja("Trotzdem WLAN setzen?"):
             return
     ip = wlan_verbinden(port, *k.wlan_eingeben())
@@ -144,7 +144,7 @@ def main():
 
     print("Erkenne Sensorbox ...")
     chip = k.box_typ(port)
-    typ = {"ESP32": "Professional", "ESP8266": "Standalone"}.get(chip, "unbekannt")
+    typ = {"ESP32": "Typ 2026", "ESP8266": "Typ 2025"}.get(chip, "unbekannt")
     if chip == "ESP32" and not k.poe_warnung():
         return
 

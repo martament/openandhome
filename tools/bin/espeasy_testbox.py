@@ -125,7 +125,7 @@ def usb_da(port):
 
 
 def kommando(port, box, *kommandos):
-    """Sendet Kommandos per USB, sonst per HTTP (/control?cmd=), z. B. Professional am PoE."""
+    """Sendet Kommandos per USB, sonst per HTTP (/control?cmd=), z. B. Typ 2026 am PoE."""
     if usb_da(port):
         return sende(port, *kommandos)
     for k in kommandos:
@@ -516,6 +516,15 @@ def testlog_aus(port, box):
 
 
 # --- Dashboard ---
+def box_typ_name(box):
+    """'Typ 2026' (ESP32) bzw. 'Typ 2025' (ESP8266) laut Firmware-Name, sonst ''."""
+    try:
+        datei = json.loads(box.get("/json"))["System"].get("Binary Filename", "")
+    except (OSError, ValueError, KeyError):
+        return ""
+    return "Typ 2026" if "ESP32" in datei else "Typ 2025" if "ESP8266" in datei else ""
+
+
 def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
     """alle=True: Zeilen fuer alle Sensor-Tasks (Kundenpaket ohne Netzwerk)."""
     zeilen, fuehler_nr = [], 0
@@ -534,6 +543,10 @@ def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
     tabelle = "<table id=\"sensordata\">\n" + "\n".join(zeilen) + "\n</table>\n"
     with open(os.path.join(ressourcen, "header.txt"), encoding="utf-8") as f:
         kopf = f.read()
+    typ = box_typ_name(box)
+    if typ:
+        # Im Code statt in header.txt: aeltere Toolboxen laden header.txt von GitHub master
+        kopf = kopf.replace("<p>openandhome Dashboard</p>", f"<p>Sensorbox {typ} &middot; openandhome Dashboard</p>")
     with open(os.path.join(ressourcen, "footer.txt"), encoding="utf-8") as f:
         fuss = f.read()
     return kopf + tabelle + fuss, len(zeilen)
@@ -782,7 +795,7 @@ def beenden(args):
 
     chip = "ESP32" if "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", "") else "ESP8266"
     vorgabe = KLASSEN[chip].get("wlan_reset", False)
-    frage_text = ("WLAN-Daten der Werkstatt loeschen (Professional laeuft beim Kunden ueber LAN)?" if vorgabe
+    frage_text = ("WLAN-Daten der Werkstatt loeschen (Typ 2026 laeuft beim Kunden ueber LAN)?" if vorgabe
                   else "WLAN-Daten loeschen wie esp_resetap (nur WLAN-Boxen)?")
     wlan = args.wlan_reset or (not args.ohne_wlan_reset and ja(frage_text, vorgabe))
     if wlan:
@@ -976,7 +989,7 @@ def main():
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
     parser.add_argument("--ohne-flash", action="store_true", help="aufsetzen ohne Sicherung/Flashen")
-    parser.add_argument("--zabbix", metavar="SERVER", help="aufsetzen (Professional): Zabbix-Controller mit diesem Server einschalten")
+    parser.add_argument("--zabbix", metavar="SERVER", help="aufsetzen (Typ 2026): Zabbix-Controller mit diesem Server einschalten")
     parser.add_argument("--am2320", action="store_true",
                         help="aufsetzen: AM2320-Variante erzwingen; kundenpaket: AM2320-Teil des Manifests erzeugen")
     parser.add_argument("--wlan-datei", help="Datei mit SSID (Zeile 1) und Key (Zeile 2), Standard ~/.config/openandhome/wlan.txt falls vorhanden")

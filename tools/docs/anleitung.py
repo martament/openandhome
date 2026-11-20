@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Baut die Bedienungsanleitungen aus der Word-Vorlage tools/docs/vorlage.docx.
 
-Je eine Anleitung fuer alle Professional- und fuer alle Standalone-Boxen: keine
+Je eine Anleitung fuer alle Boxen Typ 2026 und fuer alle Boxen Typ 2025: keine
 Angaben zu einzelnen Ausstattungen (Fuehleranzahl, Zusatzsensoren) oder Firmware-Versionen.
 
-Standalone und Professional sind verschiedene Boxen (Gehaeuse, Board, Fuehler,
+Typ 2025 und Typ 2026 sind verschiedene Boxen (Gehaeuse, Board, Fuehler,
 Stromversorgung) - box-spezifische Inhalte stehen getrennt je Variante, nur
 allgemeine Bausteine (Messreihe, Sicherheit, Konformitaet, Entsorgung, Kontakt,
 allgemeine Fehlerbilder) werden geteilt.
@@ -26,12 +26,12 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 # Vorlage: Formatvorlagen, Kopf-/Fusszeile, Logo, Nummerierung (urspruenglich aus der Anleitung 2023.1)
 VORLAGE = os.path.join(ROOT, "tools/docs/vorlage.docx")
 ZIELE = {
-    "professional": "docs/2026 openandhome - Bedienungsanleitung - Professional.docx",
-    "standalone": "docs/2026 openandhome - Bedienungsanleitung - Standalone.docx",
+    "professional": "docs/2026 openandhome - Bedienungsanleitung - Typ 2026.docx",
+    "standalone": "docs/2026 openandhome - Bedienungsanleitung - Typ 2025.docx",
 }
 TITEL = {
-    "professional": "Bedienungsanleitung Sensorbox Typ 2026 (Professional)",
-    "standalone": "Bedienungsanleitung Sensorbox Typ 2025 (Standalone)",
+    "professional": "Bedienungsanleitung Sensorbox Typ 2026",
+    "standalone": "Bedienungsanleitung Sensorbox Typ 2025",
 }
 STAND = "Stand: 20.11.2026"
 DATUM_ISO = "2026-11-20T12:00:00Z"
@@ -275,11 +275,11 @@ def schluss(t):
     t.append(absatz("Ament & Heinrichs OpenandHome GbR, Kirchstraße 6, 97511 Lülsfeld"))
 
 
-# --- Professional (Olimex ESP32-POE, nicht ISO, PoE) ---
+# --- Typ 2026 (Olimex ESP32-POE, nicht ISO, PoE) ---
 def inhalt_professional():
     t = []
     einleitung(t, [fett("Sensorbox Typ 2026"),
-                   " (bisher „Sensorbox Professional“, Kennung 150x80 V1.9, alle Ausführungen) – Netzwerkanschluss mit Stromversorgung über das Netzwerkkabel (PoE), "
+                   " (Kennung 150x80 V1.9, alle Ausführungen) – Netzwerkanschluss mit Stromversorgung über das Netzwerkkabel (PoE), "
                    "je nach Ausstattung mit Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, "
                    "Wassersensor und Display."])
 
@@ -341,7 +341,7 @@ def inhalt_professional():
 
     toolbox(t, professional=True)
 
-    t.append(ueberschrift("Ihre Sensorbox Professional"))
+    t.append(ueberschrift("Ihre Sensorbox Typ 2026"))
     for b in ("Mit deutscher Bedienungsanleitung und deutschem Support",
               "Keine Datenübertragung aus Ihrem Netz",
               "Mit quelloffener Software (ESPEasy)",
@@ -393,11 +393,11 @@ def inhalt_professional():
     return "".join(t)
 
 
-# --- Standalone (WeMos D1 mini, ESP8266, WLAN, USB-Netzteil) ---
+# --- Typ 2025 (WeMos D1 mini, ESP8266, WLAN, USB-Netzteil) ---
 def inhalt_standalone():
     t = []
     einleitung(t, [fett("Sensorbox Typ 2025"),
-                   " (bisher „Sensorbox Standalone“, Kennung 79x59 V1.9, alle Ausführungen) – Sensorbox mit WLAN und Stromversorgung über USB, je nach Ausstattung mit "
+                   " (Kennung 79x59 V1.9, alle Ausführungen) – Sensorbox mit WLAN und Stromversorgung über USB, je nach Ausstattung mit "
                    "Temperaturfühlern, Kombifühler für Temperatur und Luftfeuchtigkeit, Wassersensor, Abstandssensor "
                    "und Display."])
 
@@ -575,7 +575,7 @@ def main():
     parser = argparse.ArgumentParser(description="Bedienungsanleitung erzeugen")
     parser.add_argument("--variante", choices=sorted(INHALT), required=True)
     parser.add_argument("--vorlage", default=VORLAGE)
-    parser.add_argument("--ziel", help="Standard: docs/2026 openandhome - Bedienungsanleitung - <Variante>.docx")
+    parser.add_argument("--ziel", help="Standard: docs/2026 openandhome - Bedienungsanleitung - Typ 2026|Typ 2025.docx")
     args = parser.parse_args()
     baue(args.variante, args.vorlage, args.ziel or os.path.join(ROOT, ZIELE[args.variante]))
 

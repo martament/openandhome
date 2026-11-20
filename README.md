@@ -2,7 +2,7 @@
 
 <a href="https://www.openandhome.de"><img src="https://raw.githubusercontent.com/martament/openandhome/master/images/logo.gif"></a>
 
-Dateien für die openandhome-Sensorboxen (**Standalone** mit WLAN und **Professional** mit
+Dateien für die openandhome-Sensorboxen (**Typ 2025** mit WLAN und **Typ 2026** mit
 Netzwerkkabel/PoE). Die Boxen laufen mit [ESPEasy](https://github.com/letscontrolit/ESPEasy) –
 mit den offiziellen Release-Images, ohne Eigenbuild.
 

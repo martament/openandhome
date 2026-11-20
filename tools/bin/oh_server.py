@@ -106,7 +106,7 @@ def zeige_boxen(boxen, ausgabe=print):
     if not boxen:
         ausgabe("Keine Sensorbox gefunden.")
     for i, b in enumerate(boxen, 1):
-        typ = "Professional" if "ESP32" in b["image"] else "Standalone" if "ESP8266" in b["image"] else "?"
+        typ = "Typ 2026" if "ESP32" in b["image"] else "Typ 2025" if "ESP8266" in b["image"] else "?"
         warn = "  << Name doppelt!" if b["doppelt"] else ""
         ausgabe(f" {i:2}) {b['name']:<16} {b['ip']:<15} {typ:<12} {len(b['tasks'])} Sensor(en){warn}")
 
