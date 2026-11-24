@@ -14,6 +14,7 @@ nur der Inhalt von word/document.xml wird ersetzt.
 
   python3 tools/docs/anleitung.py --variante professional
   python3 tools/docs/anleitung.py --variante standalone
+  python3 tools/docs/anleitung.py --variante professional --web   # Fassung fuer die Webseite, ohne Passwoerter
 """
 
 import argparse
@@ -37,6 +38,11 @@ STAND = "Stand: 20.11.2026"
 DATUM_ISO = "2026-11-20T12:00:00Z"
 # Admin-Zugang ab Werk (gleich dem Schluessel des Sensorbox-WLANs), siehe tools/bin/espeasy_syslog.py
 ADMIN_BENUTZER, ADMIN_PASSWORT = "admin", "configesp"
+AP_SCHLUESSEL = "configesp"          # Schluessel des Sensorbox-WLANs (AP-Modus)
+# Fassung fuer die Webseite (--web): ohne Passwoerter, sonst identisch (Festlegung 24.11.2026).
+# Die gedruckte Anleitung in der Verpackung enthaelt die Werte.
+WEB = False
+WEB_ZIELE = {k: v.replace(".docx", " - Webseite.docx") for k, v in ZIELE.items()}
 ANSCHRIFT = "Kirchstraße 6, 97511 Lülsfeld, Deutschland"
 # Typangaben fuer Konformitaet (siehe CE-Unterlagen, Dokument 03)
 TYPDATEN = {
@@ -130,7 +136,17 @@ HTU21D_DATEN = ["HTU21D für Temperatur und relative Luftfeuchtigkeit",
                 "Temperatur −40 °C bis +125 °C, Genauigkeit typ. ±0,3 °C"]
 
 
+def pw(wert, ersatz="siehe gedruckte Anleitung"):
+    """Passwort im Text - in der Webseiten-Fassung durch einen Verweis ersetzt."""
+    return ersatz if WEB else wert
+
+
 def einleitung(t, gilt_fuer):
+    if WEB:
+        t.append(absatz(fett("Fassung für die Webseite: "),
+                        "Aus Sicherheitsgründen enthält diese Fassung keine Passwörter. Sie stehen in der "
+                        "gedruckten Bedienungsanleitung, die jeder Sensorbox beiliegt, oder auf Anfrage unter "
+                        "info@openandhome.de."))
     t.append(absatz("Diese Anleitung gilt für:"))
     t.append(absatz(*gilt_fuer))
     t.append(absatz("Diese Bedienungsanleitung enthält wichtige Informationen zur Inbetriebnahme und Handhabung. "
@@ -157,14 +173,14 @@ def zugang(t):
     t.append(ueberschrift("Zugang zu den Einstellungen"))
     t.append(absatz("Die Einstellungen der Sensorbox sind ab Werk durch ein Passwort geschützt. Beim Aufruf fragt "
                     "Ihr Browser danach:"))
-    t.append(tabelle([("Benutzer", ADMIN_BENUTZER), ("Passwort", ADMIN_PASSWORT)]))
+    t.append(tabelle([("Benutzer", ADMIN_BENUTZER), ("Passwort", pw(ADMIN_PASSWORT))]))
     t.append(absatz("Dashboard, JSON und Prometheus-Metriken sind ohne Passwort abrufbar, damit Ihre "
                     "Überwachungssysteme die Werte direkt lesen können."))
     t.append(absatz(fett("Wichtig: "), "Das Passwort ist ab Werk bei allen Sensorboxen gleich. Ändern Sie es bei "
                     "der Inbetriebnahme unter ", fett("http://<Adresse>/config"), ", Feld „Admin Password“, und "
                     "speichern Sie mit „Submit“. "
                     "Haben Sie es vergessen, setzt die openandhome-Toolbox es über das USB-Kabel wieder auf ",
-                    fett(ADMIN_PASSWORT), " zurück."))
+                    fett(pw(ADMIN_PASSWORT, "das Passwort ab Werk")), " zurück."))
 
 
 def abrufen(t, mit_zabbix):
@@ -174,7 +190,7 @@ def abrufen(t, mit_zabbix):
         ("JSON (alle Werte)", "http://<Adresse>/json"),
         ("Prometheus-Metriken", "http://<Adresse>/metrics"),
         ("Einstellungen", f"http://<Adresse>/ (Menü Config, Controllers, Devices; Benutzer {ADMIN_BENUTZER}, "
-                          f"Passwort ab Werk {ADMIN_PASSWORT})"),
+                          f"Passwort ab Werk {pw(ADMIN_PASSWORT)})"),
     ]))
     t.append(absatz(fett("MQTT (z. B. openHAB, Home Assistant, ioBroker, Node-RED, openandhome-Datenlogger): "),
                     "Menü „Controllers“ → Controller 1 „Home Assistant (openHAB) MQTT“ → „Edit“. Tragen Sie Ihren "
@@ -203,7 +219,7 @@ def toolbox(t, professional):
     for b in ("Sensoren neu erkennen – nach dem Tausch oder Hinzufügen eines Fühlers",
               "Zeitserver (NTP) setzen, Gerätename ändern",
               *(() if professional else ("WLAN-Zugangsdaten setzen (mit Verbindungsprüfung) oder löschen",)),
-              f"Grundkonfiguration wiederherstellen, IP-Filter zurücksetzen, Admin-Passwort auf {ADMIN_PASSWORT} "
+              f"Grundkonfiguration wiederherstellen, IP-Filter zurücksetzen, Admin-Passwort auf {pw(ADMIN_PASSWORT, 'den Wert ab Werk')} "
               "zurücksetzen",
               "Notfall und Updates: der mitgelieferte OH-Flasher („start_flasher.bat“ bzw. „flasher.sh“)"):
         t.append(punkt(b))
@@ -316,7 +332,7 @@ def inhalt_professional():
     t.append(schritt("Setzen Sie mehrere Sensorboxen ein, geben Sie jeder einen eigenen Namen: ",
                      fett("http://<IP-Adresse>/config"), ", Feld „Unit Name“ ändern und mit „Submit“ speichern."))
     t.append(schritt("Die Einstellungsseiten fragen nach Benutzer ", fett(ADMIN_BENUTZER), " und Passwort ",
-                     fett(ADMIN_PASSWORT), ". Ändern Sie das Passwort jetzt auf derselben Seite (Feld „Admin Password“) – ab Werk ist es bei allen "
+                     fett(pw(ADMIN_PASSWORT)), ". Ändern Sie das Passwort jetzt auf derselben Seite (Feld „Admin Password“) – ab Werk ist es bei allen "
                      "Sensorboxen gleich."))
     hinweis_ip_bereich(t)
     zugang(t)
@@ -422,7 +438,7 @@ def inhalt_standalone():
     t.append(schritt("Versorgen Sie die Sensorbox über das USB-Kabel mit Strom (USB-Netzteil 5 V, mindestens 500 mA)."))
     t.append(schritt("Öffnen Sie an Ihrem Smartphone oder Laptop die WLAN-Einstellungen und suchen Sie nach Netzen. "
                      "Die Sensorbox öffnet nach kurzer Zeit ein eigenes WLAN mit dem Namen ", fett("„Sensorbox1“"), "."))
-    t.append(schritt("Verbinden Sie sich mit diesem WLAN. Das Passwort lautet: ", fett("configesp")))
+    t.append(schritt("Verbinden Sie sich mit diesem WLAN. Das Passwort lautet: ", fett(pw(AP_SCHLUESSEL))))
     t.append(schritt("Erscheint eine Meldung wie „Keine Internetverbindung“, behalten Sie die Verbindung trotzdem bei."))
     t.append(schritt("Meist öffnet Ihr Gerät die WLAN-Auswahl der Sensorbox von selbst. Sonst öffnen Sie im Browser "
                      "die Adresse ", fett("http://192.168.4.1/setup"), "."))
@@ -436,7 +452,7 @@ def inhalt_standalone():
     t.append(schritt("Ist die Sensorbox nicht erreichbar, suchen Sie in Ihrem Router unter „Heimnetz“ nach dem Gerät "
                      "„Sensorbox1“. Es kann einen Moment dauern, bis der Name erreichbar ist."))
     t.append(schritt("Ändern Sie jetzt unter ", fett("http://sensorbox1/config"), " das Admin-Passwort (ab Werk bei allen Sensorboxen gleich: Benutzer ",
-                     fett(ADMIN_BENUTZER), ", Passwort ", fett(ADMIN_PASSWORT), "). Setzen Sie mehrere Sensorboxen "
+                     fett(ADMIN_BENUTZER), ", Passwort ", fett(pw(ADMIN_PASSWORT)), "). Setzen Sie mehrere Sensorboxen "
                      "ein, geben Sie dort jeder einen eigenen Namen („Unit Name“)."))
     hinweis_ip_bereich(t)
     zugang(t)
@@ -450,7 +466,7 @@ def inhalt_standalone():
     t.append(absatz("Diese Möglichkeit nutzen Sie, wenn am Einsatzort kein WLAN vorhanden ist."))
     t.append(schritt("Versorgen Sie die Sensorbox über das USB-Kabel mit Strom.", liste=NUM_SCHRITTE_2))
     t.append(schritt("Verbinden Sie Ihr Smartphone mit dem WLAN ", fett("„Sensorbox1“"), " (Passwort ",
-                     fett("configesp"), ").", liste=NUM_SCHRITTE_2))
+                     fett(pw(AP_SCHLUESSEL)), ").", liste=NUM_SCHRITTE_2))
     t.append(schritt("Bestätigen Sie, dass Sie das WLAN ohne Internetzugang verwenden möchten.", liste=NUM_SCHRITTE_2))
     t.append(schritt("Öffnet sich die WLAN-Auswahl der Sensorbox, schließen Sie diese – Sie brauchen sie nur, wenn "
                      "die Sensorbox in Ihr WLAN soll.", liste=NUM_SCHRITTE_2))
@@ -576,8 +592,13 @@ def main():
     parser.add_argument("--variante", choices=sorted(INHALT), required=True)
     parser.add_argument("--vorlage", default=VORLAGE)
     parser.add_argument("--ziel", help="Standard: docs/2026 openandhome - Bedienungsanleitung - Typ 2026|Typ 2025.docx")
+    parser.add_argument("--web", action="store_true",
+                        help="Fassung fuer die Webseite ohne Passwoerter (Standardziel '... - Webseite.docx')")
     args = parser.parse_args()
-    baue(args.variante, args.vorlage, args.ziel or os.path.join(ROOT, ZIELE[args.variante]))
+    global WEB
+    WEB = args.web
+    ziele = WEB_ZIELE if WEB else ZIELE
+    baue(args.variante, args.vorlage, args.ziel or os.path.join(ROOT, ziele[args.variante]))
 
 
 if __name__ == "__main__":

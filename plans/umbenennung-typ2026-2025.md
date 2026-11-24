@@ -124,7 +124,7 @@ Link im Footer-Menü (neben Impressum, Datenschutz, AGB).
 |---|---|---|
 | Vollständige EU-Konformitätserklärung (unterschrieben, PDF) | CE-Mappe 01 | ja (Pflicht, RED Art. 10 Abs. 9) |
 | Vereinfachte Erklärung (Text auf der Seite) | CE-Mappe 02 | ja |
-| Bedienungsanleitung (PDF) | `docs/…Typ 2026/2025.docx` → PDF | ja (GPSR) |
+| Bedienungsanleitung (PDF) | **Webseiten-Fassung** `docs/…Typ 2026/2025 - Webseite.docx` → PDF (ohne Passwörter; `anleitung.py --web`) | ja (GPSR) |
 | Sicherheitshinweise, Funkdaten (Frequenzband, max. Sendeleistung) | Anleitung | ja |
 | Hersteller mit Anschrift und Mail | – | ja |
 | Kennung und Gültigkeit (Platinenversion, ab welchem Datum) | CE-Mappe 03 | ja |
