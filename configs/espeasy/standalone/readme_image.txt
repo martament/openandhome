@@ -5,7 +5,7 @@ Quelle:        https://github.com/letscontrolit/ESPEasy/releases/tag/mega-202611
 Release-Tag:   mega-20261119 (veroeffentlicht 2026-11-19)
 Asset:         ESPEasy_mega_20261119_ESP82xx_binaries.zip
 Asset-SHA256:  6c2e596f9a27cb81f35c470454961fce2d1cf30114b00634d58b357a48a08664
-Heruntergeladen: 2026-11-20
+Heruntergeladen: 2026-11-24
 
 Dateien (SHA256):
   1d1a5b9204061690931f43b4b043d9d59dcd42c8537729d715b885cf1d5cf736  ESP_Easy_mega_20261119_climate_B_ESP8266_4M1M.bin
@@ -17,4 +17,4 @@ Flashen:
   - config.dat/Dashboard per Web-Upload (Werkstatt-Tool bzw. OH-Flasher)
 
 Test (24h, Syslog 192.168.9.4) und Freigabe: siehe plans/espeasy-fertig-images.md, Abschnitt 6.
-Getestet am: (offen)
+Getestet am: 2026-11-23 (24h-Test bestanden)
