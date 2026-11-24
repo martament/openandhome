@@ -1,0 +1,11 @@
+---
+# sd_device hat bewusst keinen Standard: -e sd_device=/dev/sdX ist Pflicht.
+
+# Groesste erlaubte Karte (schuetzt vor Verwechslung mit Festplatten)
+sd_write_max_size_gb: 256
+
+# Nach dem Schreiben Karte gegen das Image vergleichen (dauert ca. 1 min)
+sd_write_verify: true
+
+# Rueckfrage ueberspringen: -e sd_write_confirm=/dev/sdX (muss gleich sd_device sein)
+sd_write_confirm: ""

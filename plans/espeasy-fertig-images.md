@@ -33,8 +33,8 @@ Umsetzung (Skripte) als separate Aufgabe.
    ist nur ein **Minimalbeispiel** (2 Zeilen, nennt nur Image-Name und
    Begründung) — der Ziel-Standard (Release-Tag, Asset, SHA256, Testdatum) ist
    in Abschnitt 3 definiert und noch nicht umgesetzt.
-2. **Zwei Varianten, zwei Images:** Professional (ESP32, **ETH**) und
-   Wemos/Standalone (ESP8266 4M1M).
+2. **Zwei Varianten, zwei Images:** Typ 2026 (ESP32, **ETH**) und
+   Wemos/Typ 2025 (ESP8266 4M1M).
 3. **Stable/Devel als Git-Branches:** `devel` = Entwicklung (hier wird
    **heruntergeladen**, angepasst, getestet), **`master` = Stable**. Merge
    `devel` → `master` erst nach bestandenem Test. **Downloads ausschließlich
@@ -68,7 +68,7 @@ Umsetzung (Skripte) als separate Aufgabe.
 
 - **Neuestes Release:** Tag `mega-20260720`, veröffentlicht 2026-07-20
   (Vorgänger u. a. `mega-20260125` = `mega-20260121 (20260108-hotfix)` — das
-  ist der Stand des bereits vorhandenen Professional-Images
+  ist der Stand des bereits vorhandenen Typ 2026-Images
   [`ESP_Easy_mega_20260121_collection_A_ESP32_4M316k.bin`](../configs/espeasy/professional/ESP_Easy_mega_20260121_collection_A_ESP32_4M316k.bin)).
 - **Download-URL-Muster:**
   `https://github.com/letscontrolit/ESPEasy/releases/download/<TAG>/<ASSET>`
@@ -106,7 +106,7 @@ P031, P051 (AM2320), P089, P145** → für `wemos_hcsr04`, `wemos_htu21d`,
 
 | Geräteklasse | Image | Begründung |
 |---|---|---|
-| Professional (ESP32) | `ESP_Easy_mega_<TAG>_collection_A_ESP32_4M316k.factory.bin` | bereits in Produktion (3_hut21), enthält Zabbix (C017), DS18B20, HTU21, **Ethernet** |
+| Typ 2026 (ESP32) | `ESP_Easy_mega_<TAG>_collection_A_ESP32_4M316k.factory.bin` | bereits in Produktion (3_hut21), enthält Zabbix (C017), DS18B20, HTU21, **Ethernet** |
 | Wemos (ESP8266) | `ESP_Easy_mega_<TAG>_collection_A_ESP8266_4M1M.bin` | Stable-Set + Collection-Set: P004, P014, P028, P029, P031, P033, P036, P037, P051, P089, C005. **Kein C017** (nur `#ifdef ESP32`), **kein N001** (in ESP8266-Collections `#undef`). P005/P013/P145 und Stats in A1 prüfen |
 
 ---
@@ -170,7 +170,7 @@ zunächst bestehen, werden aber durch `config.dat`-Sets ersetzt (O-8).
 |---|---|---|
 | Anzahl/Art Fühler, Display, Wassersensor (Tasks/Devices) | **`config.dat` je Variante** | gerätespezifisch, stabil |
 | Delay, MQTT/Controller, NTP, Regeln, IP-Filter, I2C-Pins, Log-Levels | **`config.dat` je Variante** | produktbezogen |
-| Netzwerk Professional (ETH-PHY, Pins, Network-Medium) | **`config.dat` Professional** | Soll-Werte: [`settings_lan_i2c.png`](../configs/espeasy/professional/settings_lan_i2c.png) |
+| Netzwerk Typ 2026 (ETH-PHY, Pins, Network-Medium) | **`config.dat` Typ 2026** | Soll-Werte: [`settings_lan_i2c.png`](../configs/espeasy/professional/settings_lan_i2c.png) |
 | **Gerätename/Unit-Nr.** | **per Befehl** (`Name`, `Unit`, `Save`) | je Box eindeutig, sonst Kollision in MQTT (`%sysname%`) und Syslog |
 | **WLAN SSID/Key** | **nur per Befehl** (`WifiSSID`, `WifiKey`, `Save`, `reboot`) → `security.dat` | ortsabhängig, gehört nicht ins Release |
 | **Syslog-IP/Level** | **nur per HTTP `/advanced`** (Testmodus an/aus) | kein Kommando vorhanden, O-9 |
@@ -260,13 +260,13 @@ flowchart LR
 | WLAN (Hidden-SSID, NoSleep) | an | Flags in `config.dat`; **Zugangsdaten stehen in `security.dat` und kommen nie ins Release** |
 | Log-Level Serial/Web | INFO | Variante |
 | **Syslog-IP/Level** | **leer/aus in Stable** | **nur per HTTP `/advanced` im Test setzen** |
-| I2C ESP32 | SDA `13`, SCL `16` | Variante Professional |
-| ETH ESP32 | PHY-Typ, MDC/MDIO/Power-Pins, Network-Medium | Variante Professional (Screenshot `settings_lan_i2c.png`) |
+| I2C ESP32 | SDA `13`, SCL `16` | Variante Typ 2026 |
+| ETH ESP32 | PHY-Typ, MDC/MDIO/Power-Pins, Network-Medium | Variante Typ 2026 (Screenshot `settings_lan_i2c.png`) |
 | `DEFAULT_ApDontForceSetup` | `true` | setzt Patch voraus → O-1 |
 
 ### Kategorie C — Flash-Layout und Filesystem
 
-| | Professional (ESP32, ETH) | Wemos/Standalone (ESP8266) |
+| | Typ 2026 (ESP32, ETH) | Wemos/Typ 2025 (ESP8266) |
 |---|---|---|
 | Image | `…_collection_A_ESP32_4M316k.factory.bin` | `…_collection_A_ESP8266_4M1M.bin` |
 | App @ | `0x000000` (factory) | `0x000000` |
@@ -318,7 +318,7 @@ flowchart LR
 **Teststart**
 1. Image flashen, `config.dat` + Dashboard per Upload (Syslog noch nicht drin).
 2. Eindeutige Identität: `Name,<box>` → `Unit,<n>` → `Save`.
-3. Professional: Netzwerk über ETH prüfen (ggf. `ethwifimode`, `ethip`).
+3. Typ 2026: Netzwerk über ETH prüfen (ggf. `ethwifimode`, `ethip`).
    WLAN-Boxen: `WifiSSID …` → `WifiKey …` → `Save` → `reboot`
    (Alias `esp_sendap*`).
 4. DS18B20-Adressen zuordnen (Abschnitt 8).
@@ -371,7 +371,7 @@ oder Logs übernehmen.
 |---|---|---|---|
 | **A1** | Plugins/Controller je Image | Geprüft an den Images `mega-20260720` (Plugin-Namen im Binary): **beide** enthalten P001, P004, P005, P013, P014, P023, P028, P031, P033, P036, P037, P051, P089; ESP32 zusätzlich Zabbix (C017) und Email (N001). **P145 (MQxxx) fehlt in beiden** → klären, ob eine Variante P145 nutzt. Plugin-Stats/Chart.js (ESP8266) nach dem Flashen ansehen | **erledigt** bis auf P145 |
 | **A2** | Ethernet im ESP32-Image | `collection_A_ESP32_4M316k` → `[esp32_common_LittleFS_ETH]` → `FEATURE_ETHERNET=1` | **erledigt** (LAN-Praxistest im 24h-Test) |
-| **A3** | `ApDontForceSetup`-Verhalten upstream | ESPEasy-Quelle/Doku nach `ApDontForceSetup` durchsuchen; Kommando `wifiallowap` prüfen; sonst Workaround | offen |
+| **A3** | `ApDontForceSetup`-Verhalten upstream | Upstream heißt die Option `ApCaptivePortal` („Force /setup in AP-Mode“, Bit 14), die Werkstatt schaltet sie ein. **Sie wirkt aber nicht:** `captivePortal()` (`src/src/WebServer/ESPEasy_WebServer.cpp`) bricht mit `if (!NetworkConnected()) return false;` ab, also gerade dann, wenn kein WLAN verbunden ist (Auslieferung). Die frühere Umleitung auf `/setup` ist in `RootPage.cpp`/`404.cpp` auskommentiert. Gilt für `mega-20260720` und den Zweig `mega` (Stand 2026-11-19). Handy landet auf der ESPEasy-Startseite, WLAN-Auswahl über den Reiter. Umweg per eigener `index.htm` geprüft und verworfen (die Main-Seite ginge auch im Heimnetz verloren) | erledigt: Upstream-Einschränkung akzeptiert, Issue bei ESPEasy melden |
 | **T1** | Syslog-Kommando | kein Kommando vorhanden; Weg: HTTP `/advanced` | **erledigt** |
 | **T2** | Formularfeldnamen von `/advanced` (Syslog-IP/-Level) und Verhalten bei Teil-POST | Felder `syslogip`, `syslog_log_level`; Speichern über verstecktes Feld `edit=1`. Vollständiger Formular-Rundlauf mit [`espeasy_syslog.py`](../tools/bin/espeasy_syslog.py) an der Testbox: übrige Felder unverändert | **erledigt** |
 | **B3** | Syslog in vorhandenen `config.dat` | [`espeasy_configcheck.py`](../tools/bin/espeasy_configcheck.py): Syslog aktiv in `professional/7Sensoren`, `professional/future`, `standalone/wemos_a0_feuchtigkeit`, `standalone/wemos_d5_testboard` und im `3_hut21`-Backup-Tar → vor Stable-Freigabe neu sichern (Syslog aus) | offen |
@@ -459,7 +459,7 @@ komplette Formular zurück.
 **Offen (braucht DS18B20 an der Box):** Format der Optionswerte von
 `dallas_addr0` und Abgleich mit der `OWScan`-Ausgabe (das Skript sucht die
 gescannte Adresse im Optionstext und warnt, wenn sie fehlt); Verhalten bei
-mehr Fühlern als vorbereiteten Tasks (Professional bis 8).
+mehr Fühlern als vorbereiteten Tasks (Typ 2026 bis 8).
 
 ### 8.2 Erprobter Ablauf Neuflash (Testbox ESP8266, 2026-11-11)
 
@@ -528,8 +528,8 @@ erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
    `config.dat` der Variante.
 7. **B3 — `config.dat`-Sollwerte erfassen:** vorhandene
    [`configs/espeasy/professional/config.dat`](../configs/espeasy/professional/config.dat)
-   und Standalone-`config.dat` gegen Abschnitt 5, Kategorie B;
-   **Syslog-Werte entfernen**, ETH-Settings (Professional) und
+   und Typ 2025-`config.dat` gegen Abschnitt 5, Kategorie B;
+   **Syslog-Werte entfernen**, ETH-Settings (Typ 2026) und
    „Auto Select Sensor" (1-Fühler-Varianten) setzen; mit dem Ziel-Image-Tag
    neu speichern.
 8. **C1 — Flash-Prozedur je Geräteklasse** formulieren (erase → App →
@@ -549,8 +549,8 @@ erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
 
 | Nr. | Punkt | Risiko / Entscheidung | Status |
 |---|---|---|---|
-| O-1 | `ApDontForceSetup` / AP-Mode-as-Daily-Driver fehlen ggf. | Workaround (`wifiallowap`?) oder Akzeptanz | offen (A3) |
-| O-2 | Ethernet der Professional-Box | in `collection_A_ESP32_4M316k` enthalten | **erledigt** (A2) |
+| O-1 | `ApDontForceSetup` / AP-Mode-as-Daily-Driver fehlen ggf. | Option heißt upstream `ApCaptivePortal`; die Umleitung auf `/setup` greift ohne WLAN-Verbindung nicht (Upstream-Fehler, siehe A3) → akzeptiert, Issue bei ESPEasy melden; bei neuem Release erneut prüfen | akzeptiert (A3) |
+| O-2 | Ethernet der Box Typ 2026 | in `collection_A_ESP32_4M316k` enthalten | **erledigt** (A2) |
 | O-3 | `ESPEASY_P2P=0`/`ARDUINO_OTA=0` nicht abbildbar | tolerieren | akzeptiert |
 | O-4 | Filesystem | ESP32 LittleFS (alte `spiffs316k.bin` inkompatibel), ESP8266 SPIFFS → beide per Upload | gelöst (Upload) |
 | O-5 | `DEFAULT_*` greift nur bei Erstinit | immer `config.dat` mitspielen | gelöst |
@@ -590,7 +590,7 @@ erreichen die Weboberfläche nicht mehr — Abhilfe per ohtoolbox Punkt 9
 
 **Entscheidungen (2026-11-11):** Flasher wird umgestellt; er soll die
 Konfiguration **automatisch erkennen** und alles **aus unserem Repo laden**.
-**Nur Standalone (ESP8266)** — Professional-Kunden brauchen ihn nicht.
+**Nur Typ 2025 (ESP8266)** — Typ 2026-Kunden brauchen ihn nicht.
 
 **Ist:** [`openandhome-flasher.ps1`](../tools/oh-flasher/bin/openandhome-flasher.ps1)
 (PowerShell + portables Python 3.9 + esptool 3.0 + pyserial 3.5): Update
@@ -663,7 +663,7 @@ DS18B20-Task.
 
 ---
 
-## 13. Basis-config.dat Standalone: Anpassungen (2026-11-11)
+## 13. Basis-config.dat Typ 2025: Anpassungen (2026-11-11)
 
 Geprüft an der Testbox, umgesetzt in
 [`configs/espeasy/standalone/basis/config.dat`](../configs/espeasy/standalone/basis/config.dat)
@@ -672,7 +672,7 @@ Geprüft an der Testbox, umgesetzt in
 | Einstellung | vorher | jetzt | Grund |
 |---|---|---|---|
 | NTP-Server | `192.168.178.1` (eigene FritzBox) | `de.pool.ntp.org` | beim Kunden erreichbar |
-| MQTT-Controller (C005 → `openandhome-server1`) | an | **aus** | Standalone ohne Server; Last sank von **100 % auf ~12 %**, freier RAM 7,4 → 9,6 KB |
+| MQTT-Controller (C005 → `openandhome-server1`) | an | **aus** | Typ 2025 ohne Server; Last sank von **100 % auf ~12 %**, freier RAM 7,4 → 9,6 KB |
 | WLAN Force No Sleep | aus | an | war in `Custom.h` gesetzt; stabilere Verbindung (Netzteil) |
 | WLAN Periodical Gratuitous ARP | aus | an | Router „vergessen" ruhige Geräte nicht |
 
@@ -717,7 +717,7 @@ nicht garantiert.
 ### 13.2 Umstellung climate_B / AM2320-Variante — Stand 2026-11-12 (Arbeitsende)
 
 **Umgesetzt (devel):**
-- Standard-Image Standalone: **climate_B**; bei AM2320 (I2C 0x5C, zweimal
+- Standard-Image Typ 2025: **climate_B**; bei AM2320 (I2C 0x5C, zweimal
   gescannt) **collection_H** + [`basis_am2320/config.dat`](../configs/espeasy/standalone/basis_am2320/config.dat)
   (Task 6 `Fuehler5`, AM2320, aus; Autoerkennung schaltet ihn bei 0x5C ein).
 - Download-Skript lädt climate_B + collection_H, collection_A (ESP8266) entfernt.
@@ -735,8 +735,8 @@ vorhanden und aus (kein AM2320 angeschlossen), Prüfung OK.
 **Nicht getestet / offen:**
 - AM2320 mit **echtem Sensor** (Erkennung 0x5C, Werte, Dashboard-Zeile).
 - Flasher-AM2320-Zweig (nur über echten Sensor auslösbar).
-- Windows-Test des Flashers; Professional-Download unverändert (collection_A ESP32).
-- Doku (AGENTS.md, Readmes) nennt teils noch collection_A für Standalone.
+- Windows-Test des Flashers; Typ 2026-Download unverändert (collection_A ESP32).
+- Doku (AGENTS.md, Readmes) nennt teils noch collection_A für Typ 2025.
 
 **Zustand Testbox bei Arbeitsende:** collection_H, AM2320-Basis-config,
 Name `Sensorbox1`/Unit 0, Syslog aus, WLAN `openandhome`, kein Test aktiv.
@@ -744,7 +744,7 @@ Für den Standardstand: Flasher Menü 1 (Werkstatt `f`) erneut ausführen.
 
 ---
 
-## 14. Professional (Olimex ESP32-POE) — Zwischenstand 2026-11-12
+## 14. Typ 2026 (Olimex ESP32-POE) — Zwischenstand 2026-11-12
 
 Plan: `~/.claude/plans/in-openandhome-hat-mir-tender-magpie.md` (zwei Phasen,
 **USB und PoE nie gleichzeitig** — ESP32-POE ist nicht galvanisch getrennt).
@@ -790,13 +790,13 @@ Autoerkennung mit zwei 1-Wire-Bussen, Dashboard, Syslog). Prüfen, ob ein
 [`espeasy_fsimage.py`](../tools/bin/espeasy_fsimage.py) (mklittlefs 4.1.0) ist
 vorbereitet, falls die Basis doch schon in Phase A als Dateisystem-Image mit muss.
 
-### 14.1 Umsetzung Professional (2026-11-12)
+### 14.1 Umsetzung Typ 2026 (2026-11-12)
 
 **Werkstatt-Ablauf (Menü 1) — komplett an der Testbox durchlaufen:**
 1. USB (kein PoE!): Chip erkennen; **leerer Flash** (neues Board) → keine
    Sicherung; erase, `collection_A_ESP32_4M316k.factory.bin` @0x0.
 2. Ethernet per USB: `NetworkImportConfig,3,{…Olimex ESP32-POE…}` + `Save`.
-3. **Konfiguration über WLAN am USB** (wie Standalone, kein Umstecken):
+3. **Konfiguration über WLAN am USB** (wie Typ 2025, kein Umstecken):
    WLAN per USB, Basis-`config.dat` per HTTP, Testname, Zugriffsbereich.
    WLAN (Prio 100) und LAN (Prio 200) laufen parallel, LAN gewinnt.
 4. Autoerkennung mit **zwei 1-Wire-Bussen (GPIO 4, 2)**: Fühler werden in
@@ -817,14 +817,14 @@ Zabbix (aus); I2C 13/16, NTP `de.pool.ntp.org`, Syslog aus, Name `Sensorbox1`.
 - **Serieller Port:** Öffnen mit DTR/RTS **aktiv** (pyserial-Standard) löst
   keinen Reset aus, DTR/RTS aus schon. ESP32-Konsole färbt mit ANSI-Codes →
   vor dem Parsen entfernen.
-- Testende: WLAN-Reset bei Professional als Vorgabe „ja“; ohne USB (PoE)
+- Testende: WLAN-Reset bei Typ 2026 als Vorgabe „ja“; ohne USB (PoE)
   gehen Name/Unit/WLAN-Reset/TaskRun per HTTP `/control?cmd=`.
 - **HTU21D der Testbox antwortet nicht** (kein I2C-ACK bei 400 und 100 kHz,
   Messung NaN), Display an 0x3C schon → Hardware prüfen (Stecker/Kabel).
 - Testbox: 3 Fühler (1 an GPIO 4, 2 an GPIO 2), Display mit 3 Zeilen.
 
 **Offen:** HTU21D-Hardware, Box-Suche per DNS/MAC ohne USB (bisher
-IP-Eingabe), 24h-Test am PoE, Flasher bleibt Standalone-only.
+IP-Eingabe), 24h-Test am PoE, Flasher bleibt Typ 2025-only.
 
 ## 15. Aufräumen (2026-11-12)
 
@@ -849,7 +849,7 @@ Endanwender: ohtoolbox = Standard, OH-Flasher = Notlösung (beide Klassen).
   `tools/oh-flasher/` entfallen.
 - **Toolbox:** WLAN mit Pruefung, Name, NTP, Resets, Debug, **Sensoren neu erkennen**,
   **Grundkonfiguration wiederherstellen**. **Flasher:** **Firmware-Update** (Einstellungen bleiben;
-  Professional: App nach 0x10000 + otadata loeschen, NVS/Ethernet bleiben - **getestet 2026-11-12**:
+  Typ 2026: App nach 0x10000 + otadata loeschen, NVS/Ethernet bleiben - **getestet 2026-11-12**:
   Name, Ethernet, WLAN, Sensoren erhalten) und **Neu aufspielen** (danach Grundkonfiguration wie Toolbox).
 - **CI** [`.github/workflows/ohtoolbox.yml`](../.github/workflows/ohtoolbox.yml): devel prueft das
   Manifest; master baut `ohtoolbox.zip` und erstellt Release `ohtoolbox-JJJJ.MM.TT-N` mit
@@ -857,17 +857,17 @@ Endanwender: ohtoolbox = Standard, OH-Flasher = Notlösung (beide Klassen).
   `releases/latest/download/ohtoolbox.zip`. Das alte Release V2.4 (PowerShell-Toolbox) bleibt
   bestehen; einen `oh-flasher.zip`-Download gab es nie.
 - Anleitungs-Vorlage liegt jetzt in [`tools/docs/vorlage.docx`](../tools/docs/vorlage.docx).
-- **Neu aufspielen Professional getestet (2026-11-12):** erase, factory.bin, Ethernet per USB, WLAN
+- **Neu aufspielen Typ 2026 getestet (2026-11-12):** erase, factory.bin, Ethernet per USB, WLAN
   voruebergehend, Grundkonfiguration + Regeln, 3 Fuehler + Display erkannt, WLAN geloescht, Name
   Sensorbox1. Befund: Nach ClearAccessBlock sperrt die Box wieder, sobald der config.dat-Upload die
   Einstellungen neu laedt -> Zugriffsbereich wird jetzt **vor** den Uploads dauerhaft gesetzt
   (Toolbox/Flasher und Werkstatt).
-- **Standalone getestet (2026-11-12, Testbox ESP8266, Linux, Quelle lokal):**
+- **Typ 2025 getestet (2026-11-12, Testbox ESP8266, Linux, Quelle lokal):**
   Flasher Neu aufspielen (collection_H -> climate_B, HTU21D + Display erkannt, rules1.txt auf der Box),
   Flasher Firmware-Update (Name `Testbox2` und Sensoren erhalten), Toolbox g/3/s/k (k setzt
   `Sensorbox1` zurueck), Toolbox 5 + Neustart -> eigenes WLAN **„Sensorbox1“, 192.168.4.1** (wie in
   der Anleitung; Passwort = ESPEasy-Standard `configesp`, nicht per Verbindung geprueft), Toolbox 1
   mit falschem Passwort -> WLAN-Liste -> richtiges Passwort -> verbunden. NTP-Rueckfall auf dem
   ESP8266: Gateway nach 90 s, 192.168.178.1 nach weiteren 90 s, Zeit da.
-  **Offen:** Windows (Toolbox/Flasher), echter AM2320, DS18B20 an einer Standalone-Box.
+  **Offen:** Windows (Toolbox/Flasher), echter AM2320, DS18B20 an einer Box Typ 2025.
 

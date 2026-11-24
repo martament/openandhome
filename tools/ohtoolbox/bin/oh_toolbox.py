@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""openandhome-Toolbox - Standardwerkzeug fuer Endanwender (Standalone und Professional).
+"""openandhome-Toolbox - Standardwerkzeug fuer Endanwender (Typ 2025 und Typ 2026).
 
 Arbeitet ueber das USB-Kabel: WLAN, Name, Zeitserver, Resets, Diagnose sowie
 Grundkonfiguration und Sensorerkennung (dafuer kurz per WLAN im Netz).
+Ohne Box am USB (oder Menue v): Sensorboxen im Netzwerk suchen und an einen
+openandhome-Server senden lassen (oh_server.py).
 Start: start_toolbox.bat (Windows) bzw. toolbox.sh (Linux).
 """
 
@@ -18,7 +20,9 @@ PAKET = os.path.dirname(HIER)
 sys.path[:0] = [os.path.join(HIER, "lib"), os.path.join(PAKET, "..", "bin")]
 
 import oh_kunde as k  # noqa: E402
+import oh_server  # noqa: E402
 from espeasy_autoconfig import oeffne  # noqa: E402
+from espeasy_syslog import ADMIN_PASSWORT  # noqa: E402
 from espeasy_testbox import sende, usb_ip, wlan_verbinden  # noqa: E402
 
 TITEL = "openandhome - Toolbox v4.0"
@@ -34,7 +38,7 @@ def befehle(port, titel, *kommandos):
 def wlan(port, chip):
     print("\n--- WLAN-Zugangsdaten setzen ---")
     if chip == "ESP32":
-        print("Die Sensorbox Professional arbeitet mit dem Netzwerkkabel; WLAN brauchen Sie nur ohne Kabel.")
+        print("Die Sensorbox Typ 2026 arbeitet mit dem Netzwerkkabel; WLAN brauchen Sie nur ohne Kabel.")
         if not k.ja("Trotzdem WLAN setzen?"):
             return
     ip = wlan_verbinden(port, *k.wlan_eingeben())
@@ -54,13 +58,18 @@ def name(port):
 
 def ntp(port):
     print("\n--- Zeitserver (NTP) setzen ---")
-    print("Standard ist de.pool.ntp.org (Internet). Ohne Internet z. B. die Adresse Ihres Routers")
-    print("(FRITZ!Box: 192.168.178.1) eintragen.")
-    server = input("NTP-Server (leer = Abbruch): ").strip()
+    print("Standard (auto): Die Sensorbox holt die Uhrzeit aus Ihrem Netz, von Ihrem Router (bzw.")
+    print("192.168.178.1); erst nach 15 Minuten ohne Antwort aus dem Internet. Hier koennen Sie einen eigenen Zeitserver")
+    print("eintragen, z. B. de.pool.ntp.org (Internet) - oder mit 'auto' zum Standard zurueck.")
+    server = input("NTP-Server oder auto (leer = Abbruch): ").strip()
+    if server.lower() == "auto":
+        befehle(port, "Zeitserver auf Standard (Router) setzen", "UseNTP,0", "Rules,1")
+        return
     if not re.fullmatch(r"[A-Za-z0-9.-]+", server):
         print("Abgebrochen.")
         return
-    befehle(port, "Zeitserver setzen", f"NTPHost,{server}")
+    # Regeln aus: sie enthalten nur die Router-Zeitlogik und wuerden den Server sonst ueberschreiben
+    befehle(port, "Zeitserver setzen", f"NTPHost,{server}", "UseNTP,1", "Rules,0")
 
 
 def einstellungen(port):
@@ -124,12 +133,18 @@ def main():
     args = parser.parse_args()
     if os.name == "nt":
         os.system("")      # ANSI-Farben in der Windows-Konsole
-    port = args.port or k.finde_port()
+    try:
+        port = args.port or k.finde_port()
+    except SystemExit:
+        # Ohne Box am USB: Sensorboxen im Netzwerk an einen openandhome-Server senden
+        print("Keine Sensorbox am USB - weiter mit den Sensorboxen im Netzwerk.")
+        oh_server.menue()
+        return
     quelle = k.Quelle(args.quelle, PAKET)
 
     print("Erkenne Sensorbox ...")
     chip = k.box_typ(port)
-    typ = {"ESP32": "Professional", "ESP8266": "Standalone"}.get(chip, "unbekannt")
+    typ = {"ESP32": "Typ 2026", "ESP8266": "Typ 2025"}.get(chip, "unbekannt")
     if chip == "ESP32" and not k.poe_warnung():
         return
 
@@ -142,7 +157,8 @@ def main():
                                                      "WifiSSID2 ssid", "WifiKey2 wpakey")),
         "6": ("Reset DHCP (feste IP-Adresse aufheben)",
               lambda: befehle(port, "Reset DHCP", "IP 0.0.0.0", *(["ethip,0.0.0.0"] if chip == "ESP32" else []))),
-        "7": ("Admin-Passwort zuruecksetzen", lambda: befehle(port, "Admin-Passwort zuruecksetzen", "password")),
+        "7": (f"Admin-Passwort zuruecksetzen (auf {ADMIN_PASSWORT})",
+              lambda: befehle(port, "Admin-Passwort zuruecksetzen", f"Password,{ADMIN_PASSWORT}")),
         "8": ("WLAN-Zugangspunkt starten", lambda: befehle(port, "WLAN-Zugangspunkt starten", "WifiAPMode")),
         "9": ("IP-Filter zuruecksetzen (bis zum Neustart)", lambda: befehle(port, "IP-Filter zuruecksetzen",
                                                                           "ClearAccessBlock")),
@@ -150,6 +166,7 @@ def main():
         "g": ("Geraetename aendern", lambda: name(port)),
         "s": ("Sensoren neu erkennen (Einstellungen bleiben)", lambda: sensoren(port, quelle, chip)),
         "k": ("Grundkonfiguration wiederherstellen", lambda: grundkonfiguration(port, quelle, chip)),
+        "v": ("Sensorboxen im Netzwerk an openandhome-Server senden", oh_server.menue),
     }
     while True:
         print("\n" + "=" * 60)

@@ -1,0 +1,56 @@
+---
+- name: Aktuelles Release ermitteln (Weiterleitung lesen)
+  ansible.builtin.uri:
+    url: "{{ image_download_url }}"
+    method: HEAD
+    follow_redirects: none
+    use_netrc: false
+    status_code: [301, 302, 303, 307, 308]
+  register: image_download_redirect
+  check_mode: false
+
+- name: Release-Daten setzen
+  ansible.builtin.set_fact:
+    image_download_file_url: "{{ image_download_redirect.location }}"
+    image_download_file: "{{ image_download_redirect.location | basename }}"
+    image_download_release: "{{ image_download_redirect.location | basename | regex_replace('\\.img\\.xz$', '') }}"
+
+- name: Release-Name pruefen
+  ansible.builtin.assert:
+    that:
+      - image_download_file is search('^\\d{4}-\\d{2}-\\d{2}-raspios-[a-z]+-arm64-lite\\.img\\.xz$')
+    fail_msg: "Unerwarteter Dateiname {{ image_download_file }} - Download-Quelle pruefen."
+    quiet: true
+
+- name: Cache-Ordner anlegen
+  ansible.builtin.file:
+    path: "{{ image_download_cache }}/{{ image_download_release }}"
+    state: directory
+    mode: "0755"
+
+- name: Prüfsumme laden
+  ansible.builtin.uri:
+    url: "{{ image_download_file_url }}.sha256"
+    return_content: true
+    use_netrc: false
+  register: image_download_sha_file
+  check_mode: false
+
+- name: SHA256 merken
+  ansible.builtin.set_fact:
+    image_download_sha256: "{{ image_download_sha_file.content.split()[0] }}"
+    image_download_xz: "{{ image_download_cache }}/{{ image_download_release }}/{{ image_download_file }}"
+
+# get_url laedt nur, wenn die Datei fehlt oder die Pruefsumme nicht passt
+- name: Image laden und SHA256 pruefen
+  ansible.builtin.get_url:
+    url: "{{ image_download_file_url }}"
+    dest: "{{ image_download_xz }}"
+    checksum: "sha256:{{ image_download_sha256 }}"
+    mode: "0644"
+    timeout: 60
+    use_netrc: false
+
+- name: Release
+  ansible.builtin.debug:
+    msg: "{{ image_download_release }} (SHA256 {{ image_download_sha256 }})"

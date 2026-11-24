@@ -1,0 +1,30 @@
+openandhome-Server - Uebergabeblatt
+===================================
+Bitte sicher aufbewahren. Diese Zugangsdaten gibt es nur auf diesem Blatt.
+
+Server:   {{ oh_hostname }}   (bei der Einrichtung: IP {{ ansible_facts['default_ipv4']['address'] }})
+Grafana:  http://{{ oh_hostname }}:{{ oh_port_grafana }}
+          (falls der Name nicht geht: http://<IP des Servers>:{{ oh_port_grafana }},
+           die IP zeigt Ihr Router unter den verbundenen Geraeten)
+
+Grafana-Zugaenge
+----------------
+  Ansehen      Benutzer: viewer   Passwort: {{ credentials_values.grafana_viewer }}
+  Bearbeiten   Benutzer: editor   Passwort: {{ credentials_values.grafana_editor }}
+  Verwalten    Benutzer: admin    Passwort: {{ credentials_values.grafana_admin }}
+
+Sensorboxen (MQTT)
+------------------
+  Benutzer: sensorbox   Passwort: {{ credentials_values.mqtt_sensorbox }}
+  Die ohtoolbox (Menue v) traegt Server und Passwort automatisch in alle Sensorboxen ein.
+
+Hinweise
+--------
+- Server per Netzwerkkabel anschliessen; er bezieht seine Adresse per DHCP.
+  Empfehlung: im Router eine feste IP (DHCP-Reservierung) fuer den Server einrichten.
+- Admin-Passwort vergessen? Auf der SD-Karte des Servers (Laufwerk "bootfs") in der
+  Datei openandhome.txt ein neues Passwort eintragen und den Server neu starten.
+  Unser Support hilft dabei nur mit der Neukonfiguration des Servers - dabei gehen
+  alle gespeicherten Messwerte, Dashboards und Einstellungen verloren.
+
+Funktionstest: {{ now(fmt='%d.%m.%Y') }}, {{ 'bestanden' if server_test_bestanden else 'NICHT bestanden' }}

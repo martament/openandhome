@@ -1,0 +1,350 @@
+{
+  "uid": "oh-boxsystem",
+  "title": "Sensorboxen – System",
+  "tags": [
+    "openandhome"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "sensorbox",
+        "label": "Sensorbox",
+        "type": "query",
+        "datasource": {
+          "type": "influxdb",
+          "uid": "oh-messwerte"
+        },
+        "query": "SHOW TAG VALUES FROM \"openandhome\" WITH KEY = \"sensorbox\"",
+        "definition": "SHOW TAG VALUES FROM \"openandhome\" WITH KEY = \"sensorbox\"",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "state-timeline",
+      "title": "Online-Status",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-messwerte"
+      },
+      "description": "Meldung der Box an den MQTT-Broker (LWT): Connected = online",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT last(\"value\") FROM \"openandhome_status\" WHERE \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(previous)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "Connected": {
+                  "text": "online",
+                  "color": "green",
+                  "index": 0
+                },
+                "Connection Lost": {
+                  "text": "offline",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "never",
+        "mergeValues": true,
+        "alignValue": "left"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "WLAN-Signal",
+      "description": "WLAN-Empfang in dBm (-50 sehr gut, -80 schwach). Boxen über Ethernet ohne WLAN erscheinen nicht. Ältere ESP8266-Boxen (100 + dBm) werden umgerechnet.",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-messwerte"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'rssi' AND \"value\" < 0 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "B",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") - 100 FROM \"openandhome\" WHERE \"valuename\" = 'rssi' AND \"value\" > 0 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dBm",
+          "custom": {
+            "lineWidth": 2,
+            "spanNulls": 3600000,
+            "lineInterpolation": "smooth"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Freier Speicher",
+      "description": "Freier Arbeitsspeicher in Bytes. Ältere ESP8266-Boxen (KB) werden umgerechnet.",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-messwerte"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'freeheap' AND \"value\" >= 1024 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "B",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") * 1024 FROM \"openandhome\" WHERE \"valuename\" = 'freeheap' AND \"value\" < 1024 AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "lineWidth": 2,
+            "spanNulls": 3600000,
+            "lineInterpolation": "smooth"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Laufzeit seit Neustart",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-messwerte"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" =~ /^[Uu]ptime$/ AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "custom": {
+            "lineWidth": 2,
+            "spanNulls": 3600000,
+            "lineInterpolation": "smooth"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Auslastung",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-messwerte"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-messwerte"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT mean(\"value\") FROM \"openandhome\" WHERE \"valuename\" = 'load' AND \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter GROUP BY time($__interval), \"sensorbox\" fill(null)",
+          "resultFormat": "time_series",
+          "alias": "$tag_sensorbox"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 2,
+            "spanNulls": 3600000,
+            "lineInterpolation": "smooth"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "links": [
+    {
+      "type": "dashboards",
+      "tags": [
+        "openandhome"
+      ],
+      "asDropdown": true,
+      "title": "openandhome",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ]
+}

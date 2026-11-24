@@ -1,0 +1,4 @@
+---
+influxdb_url: http://127.0.0.1:8086
+# Nur lokal erreichbar: Telegraf und Grafana laufen auf demselben Server
+influxdb_bind_address: 127.0.0.1:8086

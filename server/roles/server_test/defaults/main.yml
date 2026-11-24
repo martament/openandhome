@@ -1,0 +1,19 @@
+---
+# Name der simulierten Sensorbox (Daten werden am Ende geloescht, T11)
+server_test_box: Testbox
+
+# T1 mit Neustart des Servers
+server_test_neustart: true
+
+# T9: site.yml ein zweites Mal ausfuehren, erwartet changed=0 (dauert ca. 1-2 min)
+server_test_idempotenz: true
+
+# T10: Name einer echten Sensorbox, die an den Server sendet (leer = uebersprungen)
+server_test_echte_box: ""
+
+# Ablage auf dem Werkstatt-PC
+server_test_protokolle: "{{ lookup('env', 'HOME') }}/openandhome-serverprotokolle"
+
+server_test_dienste: [mosquitto, influxdb, telegraf, grafana-server, chrony, nftables]
+server_test_influx: http://127.0.0.1:8086
+server_test_grafana: "http://127.0.0.1:{{ oh_port_grafana }}"

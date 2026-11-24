@@ -1,0 +1,156 @@
+---
+# Passt das Image ohne root an: alle Aenderungen liegen auf der FAT-Boot-Partition
+# und werden mit mtools direkt in die Image-Datei geschrieben (kein Loop-Mount).
+# Erste Einrichtung auf dem Pi macht cloud-init (NoCloud von /boot/firmware).
+
+- name: Build-Daten und SSH-Keys setzen
+  ansible.builtin.set_fact:
+    image_customize_build_time: "{{ now(fmt='%Y-%m-%d %H:%M:%S') }}"
+    image_customize_build_id: "{{ now(fmt='%Y%m%d%H%M%S') }}"
+    image_customize_staging: "{{ image_customize_build_dir }}/boot"
+    image_customize_pubkeys: []
+
+- name: SSH-Keys lesen
+  ansible.builtin.set_fact:
+    image_customize_pubkeys: "{{ image_customize_pubkeys + [lookup('ansible.builtin.file', item | expanduser) | trim] }}"
+  loop: "{{ oh_admin_ssh_pubkeys }}"
+
+- name: SSH-Keys pruefen
+  ansible.builtin.assert:
+    that:
+      - image_customize_pubkeys | length > 0
+      - image_customize_pubkeys | select('match', '^(ssh-|ecdsa-)') | list | length == image_customize_pubkeys | length
+    fail_msg: "oh_admin_ssh_pubkeys enthaelt keinen gueltigen oeffentlichen SSH-Key."
+    quiet: true
+
+- name: Werkzeuge pruefen (xz, sfdisk, mtools)
+  ansible.builtin.command: "which {{ item }}"
+  loop: [xz, sfdisk, mcopy, mtype]
+  changed_when: false
+  check_mode: false
+
+- name: Build- und Staging-Ordner anlegen
+  ansible.builtin.file:
+    path: "{{ image_customize_staging }}"
+    state: directory
+    mode: "0755"
+
+# Jeder Lauf beginnt mit einem frischen Image (keine Reste frueherer Anpassungen)
+- name: Image entpacken
+  ansible.builtin.shell: >-
+    set -o pipefail &&
+    xz -dc -T0 {{ image_download_xz | quote }} > {{ (image_customize_image ~ '.tmp') | quote }} &&
+    mv {{ (image_customize_image ~ '.tmp') | quote }} {{ image_customize_image | quote }}
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Partitionstabelle lesen
+  ansible.builtin.command: "sfdisk -J {{ image_customize_image | quote }}"
+  register: image_customize_sfdisk
+  changed_when: false
+
+- name: Boot-Partition bestimmen
+  ansible.builtin.set_fact:
+    image_customize_boot: >-
+      {{ image_customize_image }}@@{{ ((image_customize_sfdisk.stdout | from_json).partitiontable.partitions[0].start | int)
+      * ((image_customize_sfdisk.stdout | from_json).partitiontable.sectorsize | default(512) | int) }}
+
+- name: Boot-Partition ist FAT
+  ansible.builtin.assert:
+    that:
+      - (image_customize_sfdisk.stdout | from_json).partitiontable.partitions[0].type in ['c', 'b', 'e']
+    fail_msg: "Erste Partition ist keine FAT-Partition - Image-Aufbau hat sich geaendert."
+    quiet: true
+
+- name: Mit mtools arbeiten
+  environment:
+    MTOOLS_SKIP_CHECK: "1"
+  block:
+    - name: Image nutzt cloud-init (Plan P1)
+      ansible.builtin.command: "mtype -i {{ image_customize_boot | quote }} ::/meta-data"
+      changed_when: false
+      register: image_customize_meta_orig
+      failed_when: image_customize_meta_orig.rc != 0 or 'dsmode' not in image_customize_meta_orig.stdout
+
+    - name: Cloud-init- und openandhome-Dateien erzeugen
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "{{ image_customize_staging }}/{{ item }}"
+        mode: "0644"
+      loop:
+        - user-data
+        - network-config
+        - meta-data
+        - openandhome.txt
+        - openandhome-build.txt
+
+    - name: Cloud-config pruefen
+      ansible.builtin.command: "cloud-init schema -c {{ (image_customize_staging ~ '/user-data') | quote }}"
+      changed_when: false
+      when: lookup('pipe', 'command -v cloud-init || true') | length > 0
+
+    - name: Network-config pruefen
+      ansible.builtin.command: >-
+        cloud-init schema -t network-config -c {{ (image_customize_staging ~ '/network-config') | quote }}
+      changed_when: false
+      when: lookup('pipe', 'command -v cloud-init || true') | length > 0
+
+    - name: SSH einschalten (sshswitch.service wertet /boot/firmware/ssh aus)
+      ansible.builtin.copy:
+        content: ""
+        dest: "{{ image_customize_staging }}/ssh"
+        mode: "0644"
+
+    - name: Config.txt aus dem Image lesen
+      ansible.builtin.command: "mtype -i {{ image_customize_boot | quote }} ::/config.txt"
+      changed_when: false
+      register: image_customize_config_orig
+
+    - name: Config.txt bereitstellen
+      ansible.builtin.copy:
+        content: "{{ image_customize_config_orig.stdout }}\n"
+        dest: "{{ image_customize_staging }}/config.txt"
+        mode: "0644"
+
+    - name: Config.txt ergaenzen (RTC, nur Ethernet)
+      ansible.builtin.blockinfile:
+        path: "{{ image_customize_staging }}/config.txt"
+        marker: "# {mark} openandhome"
+        block: |
+          [all]
+          {% for line in image_customize_config_txt %}
+          {{ line }}
+          {% endfor %}
+
+    - name: Dateien in die Boot-Partition schreiben
+      ansible.builtin.command: >-
+        mcopy -o -i {{ image_customize_boot | quote }}
+        {{ image_customize_staging }}/user-data
+        {{ image_customize_staging }}/network-config
+        {{ image_customize_staging }}/meta-data
+        {{ image_customize_staging }}/openandhome.txt
+        {{ image_customize_staging }}/openandhome-build.txt
+        {{ image_customize_staging }}/ssh
+        {{ image_customize_staging }}/config.txt
+        ::/
+      changed_when: true
+
+    - name: Ergebnis im Image pruefen
+      ansible.builtin.command: "mtype -i {{ image_customize_boot | quote }} ::/{{ item }}"
+      loop: [user-data, config.txt, ssh]
+      register: image_customize_check
+      changed_when: false
+
+    - name: Inhalt pruefen
+      ansible.builtin.assert:
+        that:
+          - "('hostname: ' ~ oh_hostname) in image_customize_check.results[0].stdout"
+          - "'i2c-rtc,ds3231' in image_customize_check.results[1].stdout"
+        quiet: true
+
+- name: Herkunft neben das Image legen
+  ansible.builtin.copy:
+    src: "{{ image_customize_staging }}/openandhome-build.txt"
+    dest: "{{ image_customize_build_dir }}/openandhome-build.txt"
+    mode: "0644"

@@ -1,0 +1,6 @@
+---
+# Weiterleitung auf das jeweils aktuelle Release (kein festes Image, Plan E6)
+image_download_url: https://downloads.raspberrypi.com/raspios_lite_arm64_latest
+
+# Cache fuer die .img.xz-Dateien (je Release ein Unterordner)
+image_download_cache: "{{ oh_cache_dir }}/raspios"

@@ -17,7 +17,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MANIFEST = "tools/ohtoolbox/manifest.json"
 RESSOURCEN = "configs/espeasy/standalone/resources"
 DASHBOARD_DATEIEN = ["temperature.png", "temperature1.png", "humidity.png", "distance.png",
-                     "openandhome_32.png", "openandhome.css"]
+                     "openandhome_logo.png", "openandhome.css"]
 
 KLASSEN = {
     "ESP8266": {

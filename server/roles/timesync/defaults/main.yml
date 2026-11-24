@@ -1,0 +1,4 @@
+---
+# Zeitquellen im Internet; der DHCP-Server (Router) kommt per NetworkManager-Hook dazu
+timesync_pools:
+  - de.pool.ntp.org

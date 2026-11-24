@@ -26,7 +26,7 @@ import time
 import serial
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from espeasy_syslog import Box, FormParser  # noqa: E402
+from espeasy_syslog import ADMIN_PASSWORT, Box, FormParser  # noqa: E402
 
 PLUGIN_DS18B20 = 4
 PLUGIN_SYSINFO = 26
@@ -41,6 +41,8 @@ I2C_PLUGINS = {
 PLUGINS_OLED = {36, 23}
 EINHEITEN = {"temperatur": "C", "luftfeuchtigkeit": "%", "distance": "cm", "druck": "hPa"}
 OLED_ZEILEN = 12
+P036_SCROLL_SOFORT = "32"   # OLED Framed 'Scroll': 1 Very Slow ... 32 Instant
+P036_ZEIT_HHMM = "1"   # OLED Framed 'Header Time format': 0 HH:MM:SS, 1 HH:MM (24h)
 
 
 # --- USB ---
@@ -138,7 +140,7 @@ def dallas_option(html, adresse):
 def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None, leise=False):
     """Scannt, zeigt die Aenderungen und schreibt sie bei anwenden=True.
 
-    ow_gpios: 1-Wire-Busse, die gescannt werden (Professional: 4 und 2); Standard
+    ow_gpios: 1-Wire-Busse, die gescannt werden (Typ 2026: 4 und 2); Standard
     ist der GPIO des ersten DS18B20-Tasks. Fuehler1..N werden in Scan-Reihenfolge
     vergeben und bekommen GPIO und Adresse ihres Busses.
     leise=True: nur Warnungen ausgeben (Endanwender-Werkzeuge).
@@ -224,6 +226,13 @@ def autokonfiguration(box, port, an=(), aus=(), anwenden=False, ow_gpios=None, l
         if plugin.get(nr) in PLUGINS_OLED and "TDE" in f:
             for i in range(1, OLED_ZEILEN + 1):
                 f[f"pc_arg{i}"] = f"{i}: {werte[i - 1]}" if i <= len(werte) else ""
+            if "scroll" in f:
+                # Seitenwechsel ohne Rein-/Rausscrollen: Scrollen war instabil
+                f["scroll"] = P036_SCROLL_SOFORT
+            f.pop("ScrollLines", None)      # lange Zeilen nicht scrollen (Checkbox aus)
+            if "timeFmt" in f:
+                # Uhrzeit oben links HH:MM statt HH:MM:SS (Feld fehlt in ESP8266-Images mit LIMIT_BUILD_SIZE)
+                f["timeFmt"] = P036_ZEIT_HHMM
 
     # Aenderungen anzeigen und schreiben
     aenderungen = 0
@@ -256,7 +265,8 @@ def main():
     parser = argparse.ArgumentParser(description="Sensoren erkennen und Tasks passend einschalten.")
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
-    parser.add_argument("--passwort", help="Admin-Passwort der Box, falls gesetzt")
+    parser.add_argument("--passwort", default=ADMIN_PASSWORT,
+                        help=f"Admin-Passwort der Box (Standard: Werksvorgabe {ADMIN_PASSWORT})")
     parser.add_argument("--an", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks einschalten")
     parser.add_argument("--aus", nargs="*", default=[], metavar="TASKNAME", help="nicht erkennbare Tasks ausschalten")
     parser.add_argument("--anwenden", action="store_true", help="Aenderungen wirklich schreiben")
@@ -267,7 +277,7 @@ def main():
     ow = args.ow_gpios
     if ow is None and "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", ""):
         from oh_klassen import KLASSEN
-        ow = KLASSEN["ESP32"]["ow_gpios"]      # Professional: zwei 1-Wire-Busse
+        ow = KLASSEN["ESP32"]["ow_gpios"]      # Typ 2026: zwei 1-Wire-Busse
     autokonfiguration(box, args.port, args.an, args.aus, args.anwenden, ow_gpios=ow)
 
 

@@ -59,7 +59,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
    WLAN steht in ESPEasy in `security.dat` und wird per Befehl gesetzt/gelöscht
    (`WifiSSID`/`WifiKey`/`Save`/`reboot`). Die Syslog-IP steht in `config.dat`,
    bleibt dort im Stable leer und wird im Test per HTTP an `/advanced` gesetzt
-   (ESPEasy hat kein Syslog-Kommando). Test-Syslog-IP: `192.168.9.4`.
+   (ESPEasy hat kein Syslog-Kommando). Test-Syslog-IP: `192.168.9.4`, UDP-Port **514** (in allen Basis-configs; `setze_syslog` setzt ihn zusätzlich).
 8. **Keine `security.dat` committen** (auch nicht in Backup-Tars), außer sie
    enthält nachweislich nur Defaults (`ssid`/`wpakey`/`configesp`).
 9. **24h-Testverfahren:** Testboxen laufen ca. 24 Stunden mit Syslog-Logging
@@ -74,30 +74,31 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 | [`build/ESPEasy/myfiles/Custom.hESPEasy`](build/ESPEasy/myfiles/Custom.hESPEasy) | **Maßgebliche** Compile-/Default-Optionen des alten Eigenbuilds |
 | [`build/ESPEasy/myfiles/*.patch`](build/ESPEasy/myfiles/) | 7 Patches (AP-Mode als Daily-Driver, ApDontForceSetup, SettingsStruct) |
 | [`build/Tasmota/`](build/Tasmota/) | Alte Tasmota-Builds und Releases — Umstellung siehe [`plans/tasmota-fertig-images.md`](plans/tasmota-fertig-images.md) |
-| [`configs/espeasy/professional/`](configs/espeasy/professional/) | **Professional (ESP32)**: collection_A (factory + App-Update), `readme_image.txt`, Partition-CSV, `basis/` (config.dat, rules1.txt) |
-| [`configs/espeasy/standalone/`](configs/espeasy/standalone/) | **Standalone (ESP8266 4M1M)**: climate_B (Standard) und collection_H (AM2320), `readme_image.txt`, `basis/` und `basis_am2320/` (config.dat, rules1.txt) |
+| [`configs/espeasy/professional/`](configs/espeasy/professional/) | **Typ 2026 (ESP32)**: collection_A (factory + App-Update), `readme_image.txt`, Partition-CSV, `basis/` (config.dat, rules1.txt) |
+| [`configs/espeasy/standalone/`](configs/espeasy/standalone/) | **Typ 2025 (ESP8266 4M1M)**: climate_B (Standard) und collection_H (AM2320), `readme_image.txt`, `basis/` und `basis_am2320/` (config.dat, rules1.txt) |
 | [`tools/bin/oh_klassen.py`](tools/bin/oh_klassen.py) | **Eine Quelle** für Images, Basis-configs, Regeln und Hardware je Klasse; erzeugt das Manifest |
 | [`configs/espeasy/standalone/resources/`](configs/espeasy/standalone/resources/) | Dashboard-Bausteine für beide Klassen: `header.txt`, `footer.txt`, Icons, CSS |
 | [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) | Endanwender-Paket: Toolbox (Standard) und OH-Flasher (Update/Notfall) |
 | [`tools/ohwerkstatt/`](tools/ohwerkstatt/README.md) | Werkstatt-Tool (intern, Linux): Aufsetzen, 24h-Test, Testende |
 | [`tools/bin/`](tools/bin/) | Python-Module: Download, Autoerkennung, Syslog, config.dat-Prüfung, Testablauf (Werkstatt), `oh_kunde.py` (Toolbox/Flasher) |
 | [`tools/docs/`](tools/docs/) | Anleitungs-Generator `anleitung.py` und Word-Vorlage |
-| [`docs/`](docs/) | Bedienungsanleitungen 2026 (Word), je eine für Standalone und Professional |
+| [`docs/`](docs/) | Bedienungsanleitungen 2026 (Word), je eine für Typ 2025 und Typ 2026 |
 | [`.github/workflows/ohtoolbox.yml`](.github/workflows/ohtoolbox.yml) | CI: Manifest prüfen, auf `master` Release `ohtoolbox-…` mit Release-Notes |
 | [`plans/`](plans/) | Planungs-/Konzeptdokumente |
 
 ## 4. Geräteklassen und Flash-Layouts
 
-### Professional (ESP32, 4 MB, **mit Ethernet/ETH**)
+### Typ 2026 (ESP32, 4 MB, **mit Ethernet/ETH**)
 
 - **Board: Olimex ESP32-POE — USB und PoE nie gleichzeitig** (keine galvanische Trennung).
-- **Standalone und Professional sind verschiedene Boxen** (Gehäuse, Board, Fühler). Anleitungen, Basis-configs und technische Daten nie zwischen den Klassen übernehmen; Anleitungen erzeugt [`tools/docs/anleitung.py`](tools/docs/anleitung.py) mit `--variante standalone|professional` (box-spezifische Inhalte getrennt).
+- **Typ 2025 und Typ 2026 sind verschiedene Boxen** (Gehäuse, Board, Fühler). Anleitungen, Basis-configs und technische Daten nie zwischen den Klassen übernehmen; Anleitungen erzeugt [`tools/docs/anleitung.py`](tools/docs/anleitung.py) mit `--variante standalone|professional` (box-spezifische Inhalte getrennt).
 - HTU21D (Kombifühler) bleibt in der Basis-config; die Autoerkennung schaltet ihn nur ein, wenn er am I2C-Bus antwortet (0x40).
 - Ethernet per USB: `NetworkImportConfig,3,{"nwpluginID":3,…,"MDC":23,"MDIO":18,"pwr":12,"clock":3}`.
 - Basis: [`configs/espeasy/professional/basis/config.dat`](configs/espeasy/professional/basis/config.dat)
   (alle Sensoren, MQTT + Zabbix aus). Zabbix ist Sonderanfertigung (optional).
 - 1-Wire an GPIO 4 und 2, Wassersensor GPIO 34, I2C 13/16.
-- Zeitserver (Professional **und** Standalone, auch AM2320-Basis): `de.pool.ntp.org`; `basis/rules1.txt` fällt ohne Zeit nach 90 s auf das Gateway, nach weiteren 90 s auf 192.168.178.1 zurück (nur zur Laufzeit). Werkstatt und Kunden-Flasher (Manifest-Eintrag `regeln`) laden `rules1.txt` mit der Basis hoch; Endanwender ändern den NTP-Server über die Weboberfläche (`/advanced`) oder die ohtoolbox (Menü n).
+- Netzwerk (Basis): WiFi-STA ist **Fallback-Interface** (Prio 100) – sobald Ethernet (Prio 200) aktiv ist, schaltet ESPEasy das WLAN nach 10 s ab, ohne LAN startet es wieder. „Restart WiFi on lost connection“ und „Include hidden SSID“ an.
+- Zeitserver (Typ 2026 **und** Typ 2025, auch AM2320-Basis): **primär lokal, Internet erst nach 15 min.** Ab Werk `UseNTP,0` (Werkstatt/Toolbox senden es nach dem Basis-Upload und beim Testende); `basis/rules1.txt` setzt 30 s nach dem Start immer das Gateway als NTP-Server und schaltet NTP ein; kommt keine Zeit (`Time#Set`/`Time#Initialized` setzen `[var#1]`), wechselt sie alle 90 s zwischen 192.168.178.1 und Gateway, bis einer antwortet, und behält ihn bis zum Neustart; nach 15 min ohne Zeit `de.pool.ntp.org` (nur zur Laufzeit, nichts gespeichert). Eigener Server: Toolbox n (`NTPHost`, `UseNTP,1`, `Rules,0` – die Regeln enthalten nur die Zeitlogik), `auto` stellt zurück (`UseNTP,0`, `Rules,1`). Werkstatt und Kunden-Flasher (Manifest-Eintrag `regeln`) laden `rules1.txt` mit der Basis hoch; Endanwender ändern den NTP-Server über die Weboberfläche (`/advanced`, mit „Use NTP“) oder die ohtoolbox (Menü n).
 
 - Image: `ESP_Easy_mega_*_collection_A_ESP32_4M316k.factory.bin` (Neu-Aufspielen @0x0) und
   `…_4M316k.bin` (Update: App @0x10000 + otadata 0xE000/0x2000 löschen; NVS/Ethernet bleiben).
@@ -106,7 +107,7 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
   (`app0` @0x10000, `app1` @0x1E0000, `eeprom` @0x3B0000, `spiffs` @0x3B1000 Größe 0x4F000)
 - `/download` liefert bei ESP32 ein TAR (config.dat, security.dat, …).
 
-### Standalone (ESP8266, 4 MB, 1 MB FS)
+### Typ 2025 (ESP8266, 4 MB, 1 MB FS)
 
 - Board: WeMos D1 mini (ESP8266), WLAN, USB-Versorgung.
 - Image: `ESP_Easy_mega_*_climate_B_ESP8266_4M1M.bin` (Standard, kleinstes passendes Image,
@@ -115,9 +116,26 @@ Der Shop und die Dokumentation liegen unter <https://www.openandhome.de>.
 - Flash @0x0; Update = dasselbe Image @0x0 (Dateisystem bleibt). Filesystem **SPIFFS** @0x300000.
 - Basis: 1-Wire GPIO 0 (Fuehler1–4), HTU21D, OLED, HC-SR04; MQTT aus.
 
+### Gemeinsame Basis-Werte (beide Klassen)
+
+- DS18B20 12 Bit, Temperatur/Feuchte mit 1 Nachkommastelle; I2C 400 kHz, Clock-Stretch-Limit 0
+  (auf dem ESP32 ist der Wert ein I2C-Timeout in ms – die früheren 15000 hießen 15 s Hänger).
+- „Force /setup in AP-Mode“ an (früher eigener Patch `ApDontForceSetup`, jetzt upstream als
+  `ApCaptivePortal`, Bit 14): Handy-Captive-Portal zeigt die WLAN-Auswahl, `http://192.168.4.1/openandhome.esp`
+  bleibt direkt erreichbar (Dateien werden vor der Umleitung ausgeliefert).
+- Display (P036): 180° gedreht, Seitenwechsel „Instant“ ohne Scrollen (Scrollen führte zu Abstürzen).
+- Task System (P026), in beiden Klassen gleich: `uptime` (Minuten), `freeheap` (Bytes), `rssi` (dBm),
+  `load` (%), ohne Formeln, 0 Nachkommastellen, alle 300 s. Ältere ESP8266-Boxen senden noch
+  KB (`%value%/1024`) und `100+%value%`; das Server-Dashboard rechnet sie um
+  (siehe [`server/AGENTS.md`](server/AGENTS.md), dort auch die Offsets für direkte `config.dat`-Änderungen).
+
 ### Serielle Konsole (beide Klassen)
 
 - WLAN: `WifiSSID,"…"`, `WifiKey,"…"`, `Save`, `Reboot`; löschen mit `ssid`/`wpakey` (wie `esp_resetap`).
+- Admin-Passwort: ab Werk Benutzer `admin`, Passwort `configesp` (wie der AP-Schlüssel; `ADMIN_PASSWORT` in
+  [`espeasy_syslog.py`](tools/bin/espeasy_syslog.py)). Setzen `Password,configesp` + `Save` (nur seriell) bzw. Werkstatt
+  über `/config`. ESPEasy prüft per HTTP-Digest; ohne Passwort lesbar bleiben `/json`, `/metrics`, `/setup` und
+  `.esp`-Dateien. Die Anleitung weist an, das Passwort bei der Inbetriebnahme zu ändern (siehe [`plans/ce-konformitaet.md`](plans/ce-konformitaet.md)).
 - Weitere: `Name`, `Unit`, `NTPHost`, `I2CScanner`, `OWScan,<gpio>`, `TaskEnable/TaskDisable,<n>`,
   `TaskClear,<n>` (nur seriell erlaubt), `logentry,%sysbuild_filename%` (Image-Name).
 - Port mit DTR/RTS **an** öffnen (sonst Reset bei ESP32); ESP32-Ausgabe enthält ANSI-Farbcodes.
@@ -138,17 +156,17 @@ benennen unter Devices um und erneuern dann mit Toolbox **s** Dashboard und Disp
 Mit [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/README.md):
 
 1. **Menü 1 – aufsetzen:** Chip erkennen, flashen (Sicherung vorher optional über Menü b), bei
-   Professional Ethernet per USB, WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`, sonst Abfrage), Zugriffsbereich, Basis-config + Regeln,
-   Testname `Testbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an.
+   Typ 2026 Ethernet per USB, WLAN mit Prüfung (aus `~/.config/openandhome/wlan.txt`, sonst Abfrage), Zugriffsbereich, Basis-config + Regeln,
+   Testname `Sensorbox<n>`, Sensoren erkennen, Dashboard, Werteprüfung, Syslog `192.168.9.4` an und Testlog-Regel `rules2.txt` (Ersatz, weil Syslog in `mega-20260720` auf ESP8266 und ESP32 nichts sendet; `SendToUDP` an 192.168.9.4:514: Startgrund, alle 5 min Uptime/Speicher/WLAN/Messwerte; Timer 8, Variablen 3–5; Start bei `WiFi#Connected`/`ETH#Connected`, weil ESPEasy `System#Boot` nur in `rules1.txt` ausführt). Nur im Test, nie in der Auslieferung.
 2. **Menü 2 – prüfen** (jederzeit, auch ohne USB per IP): Messwerte plausibel, Dashboard vollständig.
-3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus (nach Neustart geprüft), Name `Sensorbox1`/Unit 0,
-   WLAN immer löschen (ohne Nachfrage) und prüfen, ob nach dem Neustart der AP startet. Protokoll unter `~/openandhome-testprotokolle/`.
+3. **Menü 3 – beenden** nach ~24 h: Abschlussprüfung, Syslog aus (nach Neustart geprüft), Testlog-Regel gelöscht (geprüft), Name `Sensorbox1`/Unit 0, Admin-Passwort `configesp` (geprüft),
+   WLAN immer löschen (ohne Nachfrage) und prüfen, ob nach dem Neustart der AP startet und wie ein Handy funktioniert: Captive-Portal führt zur WLAN-Auswahl (`/setup`) und `http://192.168.4.1/openandhome.esp` liefert das Dashboard – automatisch per `nmcli`, wenn der Werkstatt-PC einen WLAN-Adapter hat, sonst mit dem Handy prüfen und bestätigen. Protokoll unter `~/openandhome-testprotokolle/`.
 
 Helfer:
 - [`tools/ohwerkstatt/oh_werkstatt.sh`](tools/ohwerkstatt/oh_werkstatt.sh) — **intern, nur Linux**:
   Box aufsetzen + 24h-Test starten, Test prüfen, Test beenden, Einzelschritte.
   Standardweg USB (`/dev/ttyUSB*`, Benutzer braucht Gruppe `dialout`).
-  Namen: im Test `Testbox<Unit>`, bei Auslieferung `Sensorbox1`/Unit 0.
+  Namen: im Test `Sensorbox<Unit>`, bei Auslieferung `Sensorbox1`/Unit 0.
   Web-Zugriff: „Allow IP range" 192.168.0.0–192.168.255.255 (liegt in `security.dat`).
 - [`tools/ohtoolbox/`](tools/ohtoolbox/README.md) — **für Endkunden** (Toolbox und OH-Flasher, siehe Regel 4).
 - [`tools/bin/espeasy_configcheck.py`](tools/bin/espeasy_configcheck.py) — prüft `config.dat`/Backup-Tars

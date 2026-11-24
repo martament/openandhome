@@ -1,0 +1,25 @@
+---
+- name: Journal neu starten
+  ansible.builtin.systemd_service:
+    name: systemd-journald
+    state: restarted
+
+- name: Kernel-Parameter laden
+  ansible.builtin.systemd_service:
+    name: systemd-sysctl
+    state: restarted
+
+# Das mount-Modul liegt in ansible.posix; das Projekt kommt ohne Zusatz-Collections aus.
+- name: Wurzeldateisystem neu einhaengen
+  ansible.builtin.command: "mount -o remount,commit={{ oh_write_interval_s }} /"  # noqa: command-instead-of-module
+  changed_when: true
+
+- name: SSH neu laden
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: reloaded
+
+- name: Firewall neu laden
+  ansible.builtin.systemd_service:
+    name: nftables
+    state: restarted

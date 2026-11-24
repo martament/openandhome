@@ -1,0 +1,29 @@
+#cloud-config
+# Erzeugt von server/roles/image_customize (openandhome), {{ image_customize_build_time }}
+# Release: {{ image_download_release }}
+
+hostname: {{ oh_hostname }}
+manage_etc_hosts: true
+timezone: {{ oh_timezone }}
+locale: {{ oh_locale }}
+keyboard:
+  model: pc105
+  layout: {{ oh_keyboard_layout }}
+
+# Kein Standardbenutzer pi, nur der Admin mit SSH-Key
+ssh_pwauth: false
+users:
+  - name: {{ oh_admin_user }}
+    gecos: openandhome Admin
+    groups: [{{ image_customize_admin_groups | join(', ') }}]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+{% for key in image_customize_pubkeys %}
+      - {{ key }}
+{% endfor %}
+
+rpi:
+  interfaces:
+    i2c: true

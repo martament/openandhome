@@ -1,0 +1,90 @@
+{
+  "uid": "oh-logs",
+  "title": "Sensorboxen – Logs",
+  "tags": [
+    "openandhome"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "sensorbox",
+        "label": "Sensorbox",
+        "type": "query",
+        "datasource": {
+          "type": "influxdb",
+          "uid": "oh-logs"
+        },
+        "query": "SHOW TAG VALUES FROM \"syslog\" WITH KEY = \"sensorbox\"",
+        "definition": "SHOW TAG VALUES FROM \"syslog\" WITH KEY = \"sensorbox\"",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Meldungen der Sensorboxen",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "oh-logs"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 22
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "oh-logs"
+          },
+          "refId": "A",
+          "rawQuery": true,
+          "query": "SELECT \"message\", \"sensorbox\", \"severity\" FROM \"syslog\" WHERE \"sensorbox\" =~ /^$sensorbox$/ AND $timeFilter ORDER BY time DESC LIMIT 1000",
+          "resultFormat": "table",
+          "alias": ""
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      }
+    }
+  ],
+  "links": [
+    {
+      "type": "dashboards",
+      "tags": [
+        "openandhome"
+      ],
+      "asDropdown": true,
+      "title": "openandhome",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ]
+}

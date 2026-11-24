@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "stand": "mega-20260720",
+  "stand": "mega-20261119",
   "ressourcen": [
     {
       "pfad": "configs/espeasy/standalone/resources/header.txt",
-      "sha256": "d956bf6a684197c2d16dfca91feea69ef6189af5358863716b281ffd985f5ee1"
+      "sha256": "03b6793c0526db05991f4191effa30772953e19c374794391a23c1ba6744926d"
     },
     {
       "pfad": "configs/espeasy/standalone/resources/footer.txt",
-      "sha256": "a4b1790ce6e757f6b815a9c33cfa4e2be4ad5d5f63eb3722aaf1d8c8fc1e0c1a"
+      "sha256": "5d47ce4c17e9a285dea542e3f13437fca885aaf27ea079edb15e14858e395388"
     },
     {
       "pfad": "configs/espeasy/standalone/resources/temperature.png",
@@ -27,27 +27,27 @@
       "sha256": "1962111c8ac46bf70b855cd4abfb5f2f43255fca1a87dad31f9a580c2d76db88"
     },
     {
-      "pfad": "configs/espeasy/standalone/resources/openandhome_32.png",
-      "sha256": "e478bc19905cf5f01cd69404068e195a8374854003b2b61a77d9689734e47eaf"
+      "pfad": "configs/espeasy/standalone/resources/openandhome_logo.png",
+      "sha256": "0cae8ef977a9a60afbfb39c3701d3364d88a9e96c7953d32c34ea4d08a707eef"
     },
     {
       "pfad": "configs/espeasy/standalone/resources/openandhome.css",
-      "sha256": "b45afc1d1d59489b9946d2251d422a0e389db00aa711b8c8b3034dfae7bb814f"
+      "sha256": "c1ec07aec97e64db25c25a4b1f193d9cf270cf1136f4779658c465bb86d1e465"
     }
   ],
   "klassen": {
     "ESP8266": {
       "firmware": {
-        "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_climate_B_ESP8266_4M1M.bin",
-        "sha256": "1d661be97f12f5aa44d2f19e8001ac6b3557147d1b6191c5690fa13c1c77bf06"
+        "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20261119_climate_B_ESP8266_4M1M.bin",
+        "sha256": "1d1a5b9204061690931f43b4b043d9d59dcd42c8537729d715b885cf1d5cf736"
       },
       "basis_config": {
         "pfad": "configs/espeasy/standalone/basis/config.dat",
-        "sha256": "a98313614c8710fec19a2383e95b9f122623f5015efc345ba645166ef8f1fb6e"
+        "sha256": "8eb3b0da832ba48b8fb1f2af507fddc58a3e4399d6a53147ba45b311f5e86564"
       },
       "regeln": {
         "pfad": "configs/espeasy/standalone/basis/rules1.txt",
-        "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+        "sha256": "63f2c0fdb0b80dfc00003417fddd4bb3e0214fa7740149431512e81ae1b9da33"
       },
       "name": "standalone",
       "flash": [
@@ -62,31 +62,31 @@
       ],
       "am2320": {
         "firmware": {
-          "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20260720_collection_H_ESP8266_4M1M.bin",
-          "sha256": "d34d0cb7fe45b50dc7aae81366ff66a817c7679b15bc95725c2200e14a230d68"
+          "pfad": "configs/espeasy/standalone/ESP_Easy_mega_20261119_collection_H_ESP8266_4M1M.bin",
+          "sha256": "9406c8bd8cf77213f3b59ba55fdab738b682dd07e5b2f13443231f7ee5d551c2"
         },
         "basis_config": {
           "pfad": "configs/espeasy/standalone/basis_am2320/config.dat",
-          "sha256": "3442a13db1821aab9a22a2114d11d297a2a1cb81b60c6d67a6b6a15a99bcc9c6"
+          "sha256": "0bedd7df1911e6b6213956fec987f99ec88170003698a8b4a2ba078d3da74451"
         },
         "regeln": {
           "pfad": "configs/espeasy/standalone/basis_am2320/rules1.txt",
-          "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+          "sha256": "63f2c0fdb0b80dfc00003417fddd4bb3e0214fa7740149431512e81ae1b9da33"
         }
       }
     },
     "ESP32": {
       "firmware": {
-        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20260720_collection_A_ESP32_4M316k.factory.bin",
-        "sha256": "5074c21a74bff3ca3eb8f4274923ef13b64dc629bfc6048aef7848a605466a2d"
+        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20261119_collection_A_ESP32_4M316k.factory.bin",
+        "sha256": "61ebf50445a940b490b9a0f5c3c8b643b913af62327274cbdd8df3d0b4004903"
       },
       "basis_config": {
         "pfad": "configs/espeasy/professional/basis/config.dat",
-        "sha256": "7e3e0e10542000c89d100492dd81f38d6008d11b73a63b0105cb550548db601f"
+        "sha256": "b48c91b458496d640033b8a176db110a2d1e292e332ab00c5fc5f72f9be4262b"
       },
       "regeln": {
         "pfad": "configs/espeasy/professional/basis/rules1.txt",
-        "sha256": "f5152c1299687c121560f87bbaeffdf0178c06cae88e3e3a80565d525bd7df67"
+        "sha256": "63f2c0fdb0b80dfc00003417fddd4bb3e0214fa7740149431512e81ae1b9da33"
       },
       "name": "professional",
       "flash": [
@@ -96,8 +96,8 @@
         "0x10000"
       ],
       "firmware_update": {
-        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20260720_collection_A_ESP32_4M316k.bin",
-        "sha256": "075bc946a49137d30b8a15b4c5627c334eab2e30f34a1ac70a000d39bf742fbe"
+        "pfad": "configs/espeasy/professional/ESP_Easy_mega_20261119_collection_A_ESP32_4M316k.bin",
+        "sha256": "7165bd55b6b6ef8401a3fc567720a16e9c0cae5d0ea8b3a0070c6553e41d375c"
       },
       "update_loeschen": [
         "0xe000",

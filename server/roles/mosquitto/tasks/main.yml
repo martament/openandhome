@@ -1,0 +1,77 @@
+---
+- name: Mosquitto installieren
+  ansible.builtin.apt:
+    name: [mosquitto, mosquitto-clients]
+    state: present
+
+- name: Konfiguration und ACL (aus stack/)
+  ansible.builtin.copy:
+    src: "{{ oh_stack_dir }}/mosquitto/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: mosquitto
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: openandhome.conf, dest: /etc/mosquitto/conf.d/openandhome.conf, owner: root, mode: "0644" }
+    - { src: openandhome.acl, dest: "{{ mosquitto_acl_file }}", owner: mosquitto, mode: "0600" }
+  notify: Mosquitto neu starten
+
+# SD-Karte schonen: keine Persistenz-Datei (die Boxen melden ihren Status nach einem
+# Neustart des Brokers selbst neu), Log ins Journal (liegt im RAM) statt in eine Datei.
+# Steht in der Debian-Hauptdatei, weil log_dest sich nicht ueberschreiben, nur ergaenzen laesst.
+- name: Keine Persistenz, Log ins Journal
+  ansible.builtin.lineinfile:
+    path: /etc/mosquitto/mosquitto.conf
+    regexp: "^{{ item.key }}\\s"
+    line: "{{ item.key }} {{ item.value }}"
+  loop:
+    - { key: persistence, value: "false" }
+    - { key: log_dest, value: syslog }
+  notify: Mosquitto neu starten
+
+# mosquitto_passwd hasht mit Salz - die Datei waere bei jedem Lauf anders. Daher nur
+# neu erzeugen, wenn sich Benutzer/Passwoerter geaendert haben (Pruefsumme daneben).
+- name: Passwort-Pruefsumme bilden
+  ansible.builtin.set_fact:
+    mosquitto_users_sum: >-
+      {{ ('sensorbox:' ~ credentials_values.mqtt_sensorbox ~ '\n' ~ 'telegraf:' ~ credentials_values.mqtt_telegraf) | hash('sha256') }}
+  no_log: true
+
+- name: Vorhandene Pruefsumme lesen
+  ansible.builtin.slurp:
+    src: "{{ mosquitto_passwd_file }}.sum"
+  register: mosquitto_sum_existing
+  failed_when: false
+
+- name: Passwortdatei neu erzeugen
+  when: (mosquitto_sum_existing.content | default('') | b64decode | trim) != mosquitto_users_sum
+  block:
+    - name: Klartext schreiben
+      ansible.builtin.copy:
+        content: |
+          sensorbox:{{ credentials_values.mqtt_sensorbox }}
+          telegraf:{{ credentials_values.mqtt_telegraf }}
+        dest: "{{ mosquitto_passwd_file }}"
+        owner: mosquitto
+        group: mosquitto
+        mode: "0600"
+      no_log: true
+
+    - name: Passwoerter hashen
+      ansible.builtin.command: "mosquitto_passwd -U {{ mosquitto_passwd_file }}"
+      changed_when: true
+      notify: Mosquitto neu starten
+
+    - name: Pruefsumme speichern
+      ansible.builtin.copy:
+        content: "{{ mosquitto_users_sum }}\n"
+        dest: "{{ mosquitto_passwd_file }}.sum"
+        owner: root
+        group: root
+        mode: "0600"
+
+- name: Mosquitto einschalten
+  ansible.builtin.systemd_service:
+    name: mosquitto
+    enabled: true
+    state: started

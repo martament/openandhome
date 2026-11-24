@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(REPO, "tools", "bin"))
 from oh_klassen import MANIFEST, manifest_erzeugen  # noqa: E402
 
 MODULE = ["espeasy_autoconfig.py", "espeasy_configcheck.py", "espeasy_syslog.py", "espeasy_testbox.py",
-          "oh_klassen.py", "oh_kunde.py"]
+          "oh_klassen.py", "oh_kunde.py", "oh_server.py"]
 STARTER = ["start_toolbox.bat", "start_flasher.bat", "toolbox.sh", "flasher.sh", "README.md"]
 
 

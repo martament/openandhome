@@ -91,8 +91,8 @@ test_starten() {
     echo -e "\n\e[36m--- Box aufsetzen und 24h-Test starten ---\e[0m"
     echo "Flashen -> WLAN -> Basis-config.dat -> Testname/Zugriff ->"
     echo "Sensoren erkennen -> Dashboard -> Werte prüfen -> Syslog an ($SYSLOG_TEST_IP)"
-    read -p "Ohne Flashen (Box hat schon das aktuelle Image)? (j/n) [n]: " ohne
-    if [[ "$ohne" =~ ^[jJyY]$ ]]; then
+    read -p "Mit Flashen (Box hat kein aktuelles Image)? (j/n) [j]: " flashen
+    if [[ "$flashen" =~ ^[nN]$ ]]; then
         testbox aufsetzen --ohne-flash --syslog-ip "$SYSLOG_TEST_IP"
     else
         testbox aufsetzen --syslog-ip "$SYSLOG_TEST_IP"
@@ -107,7 +107,7 @@ test_beenden() {
 
 set_name() {
     echo -e "\n\e[36m--- Gerätename und Unit setzen ---\e[0m"
-    echo "Im Test: Testbox<Unit>, bei Auslieferung: Sensorbox1 / Unit 0."
+    echo "Im Test: Sensorbox<Unit>, bei Auslieferung: Sensorbox1 / Unit 0."
     read -p "Name: " name
     read -p "Unit-Nummer: " unit
     if [ -z "$name" ] || ! [[ "$unit" =~ ^[0-9]+$ ]]; then

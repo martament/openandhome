@@ -1,0 +1,12 @@
+---
+# Phase 3: Funktionstest des openandhome-Servers (Plan Abschnitt 5, T1-T11).
+# Schreibt Protokoll und Uebergabeblatt nach ~/openandhome-serverprotokolle/.
+#
+#   ansible-playbook test.yml
+#   ansible-playbook test.yml -e server_test_echte_box=Sensorbox1     # T10 mit echter Box
+#   ansible-playbook test.yml -e server_test_neustart=false -e server_test_idempotenz=false   # schnell
+- name: Funktionstest openandhome-Server
+  hosts: server
+  roles:
+    - { role: credentials, tags: [always] }
+    - { role: server_test }

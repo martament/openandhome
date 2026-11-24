@@ -1,0 +1,8 @@
+# Sensorboxen senden Messwerte und empfangen Befehle (ESPEasy-Subscribe openandhome/%sysname%/#)
+user sensorbox
+topic readwrite openandhome/#
+
+# Telegraf liest nur
+user telegraf
+topic read openandhome/#
+topic read $SYS/#

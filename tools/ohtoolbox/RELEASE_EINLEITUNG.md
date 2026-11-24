@@ -1,4 +1,4 @@
-Hier finden Sie die **openandhome-Toolbox** und den **OH-Flasher** für Ihre Sensorbox (Standalone und Professional).
+Hier finden Sie die **openandhome-Toolbox** und den **OH-Flasher** für Ihre Sensorbox (Typ 2025 und Typ 2026).
 
 **Für den normalen Betrieb Ihrer Sensorbox brauchen Sie diese Programme nicht.** Sie helfen Ihnen, wenn an der Konfiguration etwas nicht so funktioniert, wie es soll – etwa nach eigenen Änderungen, einem neuen WLAN oder dem Tausch eines Fühlers.
 
@@ -10,4 +10,4 @@ Bitte lesen Sie vorher unsere FAQs:
 
 Nicht jede eigene Änderung am Sensor können wir über unseren Support abdecken. Mit unserem offenen Ansatz unterstützen wir Sie aber gern bei Ihren eigenen Versuchen: Probieren Sie zuerst die Toolbox. Löst sie Ihr Problem nicht, senden Sie uns den Sensor einfach zu – wir stellen den Auslieferungszustand wieder her.
 
-**Sensorbox Professional:** Ziehen Sie vor dem Anschließen per USB das Netzwerkkabel (PoE) ab. USB und PoE dürfen nie gleichzeitig angeschlossen sein.
+**Sensorbox Typ 2026:** Ziehen Sie vor dem Anschließen per USB das Netzwerkkabel (PoE) ab. USB und PoE dürfen nie gleichzeitig angeschlossen sein.

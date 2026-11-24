@@ -1,0 +1,31 @@
+# openandhome: InfluxDB 2 ueber InfluxQL (v1-Benutzer "grafana", nur lesen)
+apiVersion: 1
+datasources:
+  - name: openandhome Messwerte
+    uid: oh-messwerte
+    type: influxdb
+    access: proxy
+    url: ${OH_INFLUX_URL}
+    user: grafana
+    isDefault: true
+    editable: false
+    jsonData: { dbName: openandhome, httpMode: GET, version: InfluxQL }
+    secureJsonData: { password: "${OH_INFLUX_GRAFANA_PASSWORD}" }
+  - name: openandhome Logs
+    uid: oh-logs
+    type: influxdb
+    access: proxy
+    url: ${OH_INFLUX_URL}
+    user: grafana
+    editable: false
+    jsonData: { dbName: sensorbox_logs, httpMode: GET, version: InfluxQL }
+    secureJsonData: { password: "${OH_INFLUX_GRAFANA_PASSWORD}" }
+  - name: openandhome Server
+    uid: oh-server
+    type: influxdb
+    access: proxy
+    url: ${OH_INFLUX_URL}
+    user: grafana
+    editable: false
+    jsonData: { dbName: system, httpMode: GET, version: InfluxQL }
+    secureJsonData: { password: "${OH_INFLUX_GRAFANA_PASSWORD}" }

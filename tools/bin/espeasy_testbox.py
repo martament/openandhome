@@ -40,7 +40,7 @@ import serial
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from espeasy_autoconfig import PLUGIN_DS18B20, PLUGIN_SYSINFO, PLUGINS_OLED, autokonfiguration, oeffne  # noqa: E402
 from espeasy_configcheck import lese_settings  # noqa: E402
-from espeasy_syslog import Box, FormParser, lies_formular, setze_syslog  # noqa: E402
+from espeasy_syslog import ADMIN_PASSWORT, Box, FormParser, lies_formular, setze_syslog  # noqa: E402
 from oh_klassen import DASHBOARD_DATEIEN, KLASSEN, manifest_schreiben  # noqa: E402
 from oh_klassen import RESSOURCEN as _RESSOURCEN  # noqa: E402
 
@@ -50,10 +50,17 @@ ESPTOOL_PFAD = os.path.join(ROOT, "tools/ohtoolbox/bin/pythonportable/Lib/site-p
 PROTOKOLLE = os.path.expanduser("~/openandhome-testprotokolle")
 # Erlaubter Web-Zugriff (Config -> Client IP filtering: Allow IP range)
 ZUGRIFF_VON, ZUGRIFF_BIS = "192.168.0.0", "192.168.255.255"
-# Name bei Auslieferung (wie bisher); im Test heisst die Box Testbox<Unit>
+# Name bei Auslieferung (wie bisher); im Test heisst die Box Sensorbox<Unit> (Vorgabe)
 AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT = "Sensorbox1", "0"
+AP_IP, AP_PASSWORT = "192.168.4.1", "configesp"    # ESPEasy-Standard fuer den Access Point
+# Admin-Passwort der Weboberflaeche: ab Werk ADMIN_PASSWORT (= AP-Schluessel). Hat der Kunde es
+# geaendert, fragt erreichbar() danach und merkt es sich hier fuer die laufende Sitzung.
+_passwort = [ADMIN_PASSWORT]
+DASHBOARD_DATEI = "openandhome.esp"
 BACKUPS = os.path.expanduser("~/openandhome-backups")
 # Werkstatt-WLAN: Zeile 1 SSID, Zeile 2 Passwort (chmod 600, nie ins Repo); fehlt sie, wird gefragt
+# Ab Werk kein Zeitserver (kein Internet); rules1.txt schaltet NTP ueber Gateway/192.168.178.1 ein
+NTP_AUS = ("UseNTP,0", "Save")
 WLAN_DATEI = os.path.expanduser("~/.config/openandhome/wlan.txt")
 
 # Plausibilitaet je Messwertname: (min, max, verdaechtige Werte)
@@ -118,7 +125,7 @@ def usb_da(port):
 
 
 def kommando(port, box, *kommandos):
-    """Sendet Kommandos per USB, sonst per HTTP (/control?cmd=), z. B. Professional am PoE."""
+    """Sendet Kommandos per USB, sonst per HTTP (/control?cmd=), z. B. Typ 2026 am PoE."""
     if usb_da(port):
         return sende(port, *kommandos)
     for k in kommandos:
@@ -198,8 +205,9 @@ def erreichbar(port, ip):
     """Box-Objekt, wenn die geschuetzten Seiten erreichbar sind, sonst None.
 
     /json antwortet auch bei Subnetz-Sperre, daher wird /advanced geprueft; eine
-    Sperre hebt ClearAccessBlock per USB auf (nur bis zum naechsten Reboot)."""
-    box = Box(ip, None)
+    Sperre hebt ClearAccessBlock per USB auf (nur bis zum naechsten Reboot). Lehnt die Box das
+    Admin-Passwort ab (vom Kunden geaendert), wird es abgefragt."""
+    box = neue_box(ip)
     for versuch in range(3):
         try:
             box.get("/advanced")
@@ -208,9 +216,44 @@ def erreichbar(port, ip):
             if e.code == 403 and port:
                 print("Web-Zugriff gesperrt (anderes Subnetz) -> ClearAccessBlock per USB")
                 sende(port, "ClearAccessBlock")
+            elif e.code == 401:
+                print("Die Box lehnt das Admin-Passwort ab (wurde es geaendert?). "
+                      "Ohne Eingabe: abbrechen; zuruecksetzen geht per Toolbox Menue 7.")
+                eingabe = getpass.getpass("Admin-Passwort der Weboberflaeche (Benutzer admin, unsichtbar): ")
+                if not eingabe:
+                    return None
+                _passwort[0] = eingabe
+                box = neue_box(ip)
         except OSError:
             time.sleep(2)
     return None
+
+
+def neue_box(ip):
+    """Box-Zugriff mit dem aktuell gueltigen Admin-Passwort."""
+    return Box(ip, _passwort[0])
+
+
+def setze_passwort(box, passwort=ADMIN_PASSWORT):
+    """Setzt das Admin-Passwort ueber die Config-Seite (geht per USB und per Netz) und prueft,
+    dass die Box ohne Passwort ablehnt und mit Passwort zulaesst. Liefert (Box, Berichtszeile)."""
+    felder = dict(lies_formular_config(box))
+    felder["password"] = passwort
+    box.post("/config", felder)
+    _passwort[0] = passwort
+    box = neue_box(box.basis.removeprefix("http://"))
+    try:
+        Box(box.basis.removeprefix("http://"), None).get("/config")
+        return box, "FEHLER  Admin-Passwort: Box laesst Konfiguration ohne Passwort zu"
+    except urllib.error.HTTPError as e:
+        if e.code != 401:
+            return box, f"FEHLER  Admin-Passwort: unerwartete Antwort HTTP {e.code}"
+    try:
+        box.get("/config")
+    except urllib.error.HTTPError as e:
+        return box, f"FEHLER  Admin-Passwort: Anmeldung mit neuem Passwort scheitert (HTTP {e.code})"
+    return box, (f"OK      Admin-Passwort gesetzt (Benutzer admin, Werksvorgabe {passwort})"
+                 if passwort == ADMIN_PASSWORT else "OK      Admin-Passwort gesetzt (Benutzer admin)")
 
 
 def http_bereit(port, ip, neustarts=3):
@@ -244,14 +287,55 @@ def setze_zugriff(box, von=ZUGRIFF_VON, bis=ZUGRIFF_BIS):
     """Erlaubt Web-Zugriffe dauerhaft aus dem IP-Bereich (Config-Seite, liegt in security.dat).
 
     Noetig, weil ein 'Save' nach ClearAccessBlock sonst 'Allow All' festschreibt
-    und eine frisch geflashte Box nur das eigene Subnetz erlaubt."""
+    und eine frisch geflashte Box nur das eigene Subnetz erlaubt. Schaltet ausserdem
+    'Append Unit Number to hostname' aus: Hostname/AP heissen wie der Name (Sensorbox1,
+    nicht Sensorbox1_1)."""
     felder = dict(lies_formular_config(box))
     felder.update({"ipblocklevel": "2", "iprangelow": von, "iprangehigh": bis})
+    felder.pop("appendunittohostname", None)     # Checkbox aus = Feld fehlt
     box.post("/config", felder)
     neu = lies_formular_config(box)
     if neu.get("ipblocklevel") != "2" or neu.get("iprangelow") != von or neu.get("iprangehigh") != bis:
         sys.exit(f"FEHLER: IP-Zugriff nicht gesetzt ({neu.get('ipblocklevel')}, {neu.get('iprangelow')}-{neu.get('iprangehigh')})")
-    print(f"Web-Zugriff erlaubt fuer {von} - {bis}")
+    if "appendunittohostname" in neu:
+        print("\033[33mWARNUNG: 'Append Unit Number to hostname' noch an\033[0m")
+    print(f"Web-Zugriff erlaubt fuer {von} - {bis}, Hostname ohne Unit-Nummer")
+    setze_ap_setup(box)
+
+
+AP_SEITE = "/network?index=2"          # Netzwerk-Interface 2 = WiFi-AP
+AP_SETUP_FELD = "force_/setup_in_ap-mode"
+
+
+def setze_ap_setup(box):
+    """'Force /setup in AP-Mode' einschalten: wer sich mit dem AP verbindet, landet auf /setup.
+    Die Basis-configs haben es aus. Images ohne diese Seite werden uebersprungen."""
+    try:
+        seite = box.get(AP_SEITE)
+    except urllib.error.HTTPError:
+        return
+    if AP_SETUP_FELD not in seite:
+        return
+    parser = FormParser()
+    parser.feed(seite)
+    if AP_SETUP_FELD in parser.felder:
+        return
+    felder = dict(parser.felder, **{AP_SETUP_FELD: "on"})
+    try:
+        box.post(AP_SEITE, felder)
+    except OSError:
+        pass        # Speichern startet das Netzwerk neu, die Antwort reisst ab
+    neu = FormParser()
+    for _ in range(30):
+        try:
+            neu.feed(box.get(AP_SEITE))
+            break
+        except OSError:
+            time.sleep(3)
+    if AP_SETUP_FELD in neu.felder:
+        print("Force /setup in AP-Mode eingeschaltet")
+    else:
+        print("\033[33mWARNUNG: 'Force /setup in AP-Mode' nicht uebernommen\033[0m")
 
 
 def lies_formular_config(box):
@@ -367,7 +451,80 @@ def aktive_messwerte(box, alle=False):
     return werte
 
 
+# --- Testlog-Regel (Ersatz fuer Syslog im 24h-Test) ---
+TESTLOG_DATEI = "rules2.txt"       # rules1.txt bleibt die Zeitserver-Regel
+TESTLOG_INTERVALL = 300            # Lebenszeichen alle 5 Minuten
+TESTLOG_JE_ZEILE = 4               # Messwerte je UDP-Paket (Zeilenlaenge)
+
+
+def testlog_regel(box, syslog_ip, port=514):
+    """Regeltext: beim Start Startgrund, dann alle 5 min Uptime, Speicher, WLAN und alle
+    aktiven Messwerte per SendToUDP an den Syslog-Server (Format wie ESPEasy-Syslog:
+    '<Name>_EspEasy: ...'). Timer 8, Variablen 3 (Start), 4 (WLAN-Abbrueche) und
+    5 (gestartet); rules1.txt nutzt Timer 1-3 und Variablen 1-2. Events aus rules1.txt
+    (System#Boot, Rules#Timer=1-3, Time#...) duerfen hier nicht vorkommen."""
+    senden = f"SendToUDP,{syslog_ip},{port},<14>%sysname%_EspEasy: TESTLOG"
+    werte = [f"{t}#{w}=[{t}#{w}]" for t, w, _, _ in aktive_messwerte(box)]
+    zeilen = [f"  {senden} up=%uptime% heap=%sysheap% rssi=%rssi% wlan_abbrueche=[var#4]"]
+    for i in range(0, len(werte), TESTLOG_JE_ZEILE):
+        zeilen.append(f"  {senden} " + " ".join(werte[i:i + TESTLOG_JE_ZEILE]))
+    return "\n".join([
+        "// openandhome Testlog - nur im 24h-Test, wird bei Testende geloescht (Werkstatt Menue 3)",
+        # Kein "On System#Boot": ESPEasy fuehrt ein Event nur im ersten passenden Block aus,
+        # und System#Boot steht schon in rules1.txt (Zeitlogik). Start daher beim ersten
+        # Netz-Connect nach dem Boot (Variable 5 = schon gestartet).
+        *[z for netz in ("WiFi", "ETH") for z in (
+            f"On {netz}#Connected do", "  if [var#5]=0", "    Let,5,1", "    Let,3,1",
+            "    TimerSet,8,10", "  endif", "endon", "")],
+        "On WiFi#Disconnected do", "  Let,4,[var#4]+1", "endon", "",
+        "On Rules#Timer=8 do",
+        "  if [var#3]=1",
+        f"    SendToUDP,{syslog_ip},{port},<13>%sysname%_EspEasy: TESTLOG START boot=%bootcause% "
+        "image=%sysbuild_filename%",
+        "    Let,3,0",
+        "  endif",
+        *zeilen,
+        f"  TimerSet,8,{TESTLOG_INTERVALL}",
+        "endon", ""])
+
+
+def testlog_an(port, box, syslog_ip):
+    """Testlog-Regel hochladen und sofort starten (ohne Neustart)."""
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
+        f.write(testlog_regel(box, syslog_ip))
+    try:
+        lade_hoch(box, f.name, TESTLOG_DATEI)
+    finally:
+        os.unlink(f.name)
+    kommando(port, box, "Let,3,1", "Let,4,0", "Let,5,1", "TimerSet,8,5")
+    print(f"Testlog-Regel ({TESTLOG_DATEI}) an {syslog_ip}:514 - Lebenszeichen alle {TESTLOG_INTERVALL // 60} min")
+
+
+def testlog_aus(port, box):
+    """Testlog-Regel stoppen und loeschen; True, wenn die Datei weg ist."""
+    kommando(port, box, "TimerSet,8,0")
+    try:
+        box.get(f"/filelist?delete={TESTLOG_DATEI}")
+    except urllib.error.HTTPError:
+        pass
+    try:
+        box.get("/" + TESTLOG_DATEI)
+    except urllib.error.HTTPError:
+        return True
+    return False
+
+
 # --- Dashboard ---
+def box_typ_name(box):
+    """'Typ 2026' (ESP32) bzw. 'Typ 2025' (ESP8266) laut Firmware-Name, sonst ''."""
+    try:
+        datei = json.loads(box.get("/json"))["System"].get("Binary Filename", "")
+    except (OSError, ValueError, KeyError):
+        return ""
+    return "Typ 2026" if "ESP32" in datei else "Typ 2025" if "ESP8266" in datei else ""
+
+
 def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
     """alle=True: Zeilen fuer alle Sensor-Tasks (Kundenpaket ohne Netzwerk)."""
     zeilen, fuehler_nr = [], 0
@@ -381,11 +538,15 @@ def erzeuge_dashboard(box, ressourcen=RESSOURCEN, alle=False):
         else:
             label = f"{wert} ({task})"
             icon = ICONS.get(art, "humidity.png")
-        zeilen.append(f" <tr>\n  <td>{html.escape(label)}:</td>\n  <td><img src=\"{icon}\"></td>\n"
+        zeilen.append(f" <tr>\n  <td><img src=\"{icon}\" alt=\"\"></td>\n  <td>{html.escape(label)}</td>\n"
                       f"  <td>[{task}#{wert}] {EINHEITEN.get(art, '')}</td>\n </tr>")
-    tabelle = "<table id=\"sensordata\" >\n" + "\n".join(zeilen) + "\n</table>\n"
+    tabelle = "<table id=\"sensordata\">\n" + "\n".join(zeilen) + "\n</table>\n"
     with open(os.path.join(ressourcen, "header.txt"), encoding="utf-8") as f:
         kopf = f.read()
+    typ = box_typ_name(box)
+    if typ:
+        # Im Code statt in header.txt: aeltere Toolboxen laden header.txt von GitHub master
+        kopf = kopf.replace("<p>openandhome Dashboard</p>", f"<p>Sensorbox {typ} &middot; openandhome Dashboard</p>")
     with open(os.path.join(ressourcen, "footer.txt"), encoding="utf-8") as f:
         fuss = f.read()
     return kopf + tabelle + fuss, len(zeilen)
@@ -474,7 +635,8 @@ def sicherung(args):
         try:
             # ESP32 liefert unter /download ein TAR mit allen Dateien
             with open(os.path.join(ziel, "config_download.dat_oder_tar"), "wb") as f:
-                f.write(urllib.request.urlopen(f"http://{ip}/download", timeout=20).read())
+                with neue_box(ip).oeffner.open(f"http://{ip}/download", timeout=20) as antwort:
+                    f.write(antwort.read())
         except OSError as e:
             print(f"config.dat nicht per HTTP ladbar ({e}) - Flash-Sicherung reicht zur Wiederherstellung.")
     print(f"Sicherung: {ziel} (enthaelt WLAN-Daten, nicht ins Repo!)")
@@ -532,18 +694,21 @@ def aufsetzen(args):
     lade_hoch(box, basis, "config.dat")
     regeln = os.path.join(os.path.dirname(basis), "rules1.txt")
     if os.path.exists(regeln):
-        # z. B. Professional: NTP-Rueckfall auf Gateway / 192.168.178.1
+        # Zeit nur lokal: Regeln schalten NTP mit Gateway / 192.168.178.1 ein
         lade_hoch(box, regeln, "rules1.txt")
     sende(port, "Reboot")
     time.sleep(10)
     box = http_bereit(port, warte_ip(port))
+    sende(port, *NTP_AUS)
     ip = box.basis.removeprefix("http://")
 
     schritt("5/9 Testname, Unit und Web-Zugriff")
     unit = frage("Unit-Nummer (eindeutig je Testbox)", "1")
-    name = frage("Name im Test", f"Testbox{unit}")
+    name = frage("Name im Test", f"Sensorbox{unit}")
     setze_name(port, box, name, unit)
     setze_zugriff(box)
+    box, passwort_zeile = setze_passwort(box)
+    melde(passwort_zeile)
 
     schritt("6/9 Sensoren erkennen")
     ow = klasse.get("ow_gpios")
@@ -563,8 +728,11 @@ def aufsetzen(args):
     if not ok and not ja("Pruefung mit Fehlern. Test trotzdem starten?", False):
         sys.exit("Abgebrochen - Box laeuft ohne Syslog.")
 
-    schritt("9/9 Syslog an, Test laeuft")
+    schritt("9/9 Syslog + Testlog-Regel an, Test laeuft")
     setze_syslog(box, "an", args.syslog_ip)
+    # Syslog sendet mit mega-20260720 nichts (ESP8266 und ESP32 getestet) - die Regel
+    # schickt Startgrund, Uptime, Speicher, WLAN und Messwerte per UDP an denselben Server
+    testlog_an(port, box, args.syslog_ip)
     start = datetime.datetime.now()
     protokoll = Protokoll(os.path.join(PROTOKOLLE, f"{name}_{start:%Y%m%d-%H%M}.txt"))
     info = json.loads(box.get("/json"))["System"]
@@ -572,7 +740,7 @@ def aufsetzen(args):
                        f"Box:      {chip} MAC {mac}, IP {ip}, Unit {unit}\n"
                        f"Firmware: {info.get('Binary Filename')} (Build {info.get('Build')})\n"
                        f"Config:   {basis}\nSyslog:   {args.syslog_ip}\n\nPruefung Start:")
-    for zeile in bericht:
+    for zeile in [passwort_zeile, *bericht]:
         protokoll.schreibe(f"  {zeile}")
     ende = start + datetime.timedelta(hours=24)
     print(f"\n24h-Test gestartet. Ende fruehestens {ende:%a %d.%m. %H:%M} -> Menue 'Test beenden'.")
@@ -586,7 +754,7 @@ def beenden(args):
     ip = args.host or (usb_ip(port) if port else None) or frage("IP der Box (z. B. aus dem Router)")
     if not ip:
         sys.exit("FEHLER: IP nicht per USB lesbar - --host angeben.")
-    box = http_bereit(port, ip) if port else Box(ip, None)
+    box = http_bereit(port, ip) if port else neue_box(ip)
     name = json.loads(box.get("/json"))["System"].get("Unit Name", "")
     protokoll = Protokoll.neuestes(name)
 
@@ -602,12 +770,22 @@ def beenden(args):
                 vorzeitig = True
                 print("\033[33mWARNUNG: weniger als 24 h - Test zaehlt nicht als bestanden.\033[0m")
 
-    schritt("Syslog aus")
+    schritt("Syslog und Testlog-Regel aus")
     setze_syslog(box, "aus")
+    zeile = (f"OK      Testlog-Regel ({TESTLOG_DATEI}) geloescht" if testlog_aus(port, box)
+             else f"FEHLER  Testlog-Regel ({TESTLOG_DATEI}) noch auf der Box")
+    ok = ok and zeile.startswith("OK")
+    bericht.append(zeile)
+    melde(zeile)
 
     schritt(f"Auslieferungsname {AUSLIEFERUNG_NAME}, Web-Zugriff")
+    kommando(port, box, NTP_AUS[0])     # Auslieferung: NTP aus, die Regeln nutzen den Router
     setze_name(port, box, AUSLIEFERUNG_NAME, AUSLIEFERUNG_UNIT)
     setze_zugriff(box)
+    box, zeile = setze_passwort(box)     # Auslieferung immer mit Werksvorgabe
+    ok = ok and zeile.startswith("OK")
+    bericht.append(zeile)
+    melde(zeile)
 
     schritt("Neustart, Syslog aus pruefen")
     box, zeile = syslog_nach_neustart(port, box, ip)
@@ -617,14 +795,14 @@ def beenden(args):
 
     chip = "ESP32" if "ESP32" in json.loads(box.get("/json"))["System"].get("Binary Filename", "") else "ESP8266"
     vorgabe = KLASSEN[chip].get("wlan_reset", False)
-    frage_text = ("WLAN-Daten der Werkstatt loeschen (Professional laeuft beim Kunden ueber LAN)?" if vorgabe
+    frage_text = ("WLAN-Daten der Werkstatt loeschen (Typ 2026 laeuft beim Kunden ueber LAN)?" if vorgabe
                   else "WLAN-Daten loeschen wie esp_resetap (nur WLAN-Boxen)?")
     wlan = args.wlan_reset or (not args.ohne_wlan_reset and ja(frage_text, vorgabe))
     if wlan:
         schritt("WLAN zuruecksetzen")
         kommando(port, box, "WifiSSID ssid", "WifiKey wpakey", "WifiSSID2 ssid", "WifiKey2 wpakey", "Save")
         schritt("Neustart, AP pruefen")
-        ap_ok, ap_info = ap_pruefen(port, box, AUSLIEFERUNG_NAME)
+        ap_ok, ap_info, ssid = ap_pruefen(port, box, AUSLIEFERUNG_NAME)
         if ap_ok:
             zeile = f"OK      AP nach Neustart offen ({ap_info})"
         elif chip == "ESP32":
@@ -633,6 +811,12 @@ def beenden(args):
             zeile, ok = f"FEHLER  AP nach Neustart nicht erkannt ({ap_info})", False
         bericht.append(zeile)
         melde(zeile)
+        if ap_ok:
+            schritt("AP wie ein Handy pruefen: WLAN-Auswahl und Dashboard")
+            for zeile in (ap_seiten_automatisch(ssid) if ssid and wlan_adapter() else ap_seiten_handy(ssid)):
+                ok = ok and not zeile.startswith("FEHLER")
+                bericht.append(zeile)
+                melde(zeile)
 
     ergebnis = "NICHT BESTANDEN" if not ok else "VORZEITIG BEENDET" if vorzeitig else "BESTANDEN"
     if protokoll:
@@ -640,7 +824,7 @@ def beenden(args):
         for zeile in bericht:
             protokoll.schreibe(f"  {zeile}")
         protokoll.schreibe(f"Syslog aus, Name {AUSLIEFERUNG_NAME}/Unit {AUSLIEFERUNG_UNIT}, "
-                           f"Zugriff {ZUGRIFF_VON}-{ZUGRIFF_BIS}, WLAN {'zurueckgesetzt' if wlan else 'unveraendert'}\n"
+                           f"Zugriff {ZUGRIFF_VON}-{ZUGRIFF_BIS}, Admin-Passwort {ADMIN_PASSWORT}, WLAN {'zurueckgesetzt' if wlan else 'unveraendert'}\n"
                            f"Ergebnis: {ergebnis}")
         print(f"Protokoll: {protokoll.pfad}")
     print(f"\nErgebnis: {ergebnis}")
@@ -656,7 +840,7 @@ def syslog_nach_neustart(port, box, ip, sekunden=90):
     ende = time.time() + sekunden
     while True:
         try:
-            box = Box(ip, None)
+            box = neue_box(ip)
             felder, level_feld = lies_formular(box.get("/advanced"))
             break
         except (OSError, SystemExit):
@@ -674,21 +858,19 @@ def ap_pruefen(port, box, name, sekunden=60):
 
     Per USB wird das Boot-Log nach 'AP Mode' durchsucht; zusaetzlich (und ohne USB)
     sucht der Werkstatt-PC per nmcli nach einem WLAN, das mit dem Box-Namen beginnt.
-    Liefert (ok, Hinweis)."""
+    Liefert (ok, Hinweis, SSID oder None)."""
+    treffer = []
     if usb_da(port):
         zeilen = sende(port, "Reboot", wartezeit=sekunden // 2)
         treffer = [z for z in zeilen if re.search(r"AP Mode.*(enabled|ssid)", z, re.I)]
-        if treffer:
-            return True, f"Boot-Log: {treffer[-1]}"
+        if treffer and not wlan_adapter():
+            return True, f"Boot-Log: {treffer[-1]}", None
     else:
         kommando(port, box, "Reboot")
         time.sleep(15)
-    log = "kein 'AP Mode' im Boot-Log, " if usb_da(port) else ""
-    if not shutil.which("nmcli"):
-        return False, log + "nmcli fehlt fuer WLAN-Scan"
-    geraete = subprocess.run(["nmcli", "-t", "-f", "TYPE", "dev"], capture_output=True, text=True).stdout
-    if "wifi" not in geraete.split():
-        return False, log + "kein WLAN-Adapter am PC fuer WLAN-Scan"
+    log = "kein 'AP Mode' im Boot-Log, " if usb_da(port) and not treffer else ""
+    if not wlan_adapter():
+        return False, log + "kein WLAN-Adapter am PC (nmcli) fuer WLAN-Scan", None
     ende = time.time() + sekunden
     while time.time() < ende:
         try:
@@ -698,9 +880,93 @@ def ap_pruefen(port, box, name, sekunden=60):
             ausgabe = ""
         for ssid in ausgabe.splitlines():
             if ssid.lower().startswith(name.lower()):
-                return True, f"WLAN '{ssid}' sichtbar"
+                return True, f"WLAN '{ssid}' sichtbar", ssid
         time.sleep(5)
-    return False, log + f"kein WLAN '{name}*' sichtbar"
+    return False, log + f"kein WLAN '{name}*' sichtbar", None
+
+
+def wlan_adapter():
+    """Name des ersten WLAN-Adapters am Werkstatt-PC (nmcli) oder None."""
+    if not shutil.which("nmcli"):
+        return None
+    ausgabe = subprocess.run(["nmcli", "-t", "-f", "TYPE,DEVICE", "dev"], capture_output=True, text=True).stdout
+    for zeile in ausgabe.splitlines():
+        typ, _, geraet = zeile.partition(":")
+        if typ == "wifi":
+            return geraet
+    return None
+
+
+def http_ap(pfad, host=AP_IP, sekunden=10):
+    """GET an die Box im AP (192.168.4.1) mit frei waehlbarem Host-Header; (Status, Location, Text)."""
+    import http.client
+    verbindung = http.client.HTTPConnection(AP_IP, 80, timeout=sekunden)
+    try:
+        verbindung.request("GET", pfad, headers={"Host": host})
+        antwort = verbindung.getresponse()
+        text = antwort.read(20000).decode("utf-8", "replace")
+        return antwort.status, antwort.getheader("Location", ""), text
+    finally:
+        verbindung.close()
+
+
+def ap_seiten_automatisch(ssid):
+    """Werkstatt-PC verbindet sich per nmcli mit dem AP der Box und prueft wie ein Handy:
+    1. Captive-Portal: Anfrage an eine Pruef-Adresse der Handys (Host-Name statt IP)
+       muss auf die WLAN-Auswahl (/setup) fuehren.
+    2. http://192.168.4.1/openandhome.esp muss das Dashboard liefern.
+    Danach wird die Verbindung wieder entfernt. Liefert Liste von Berichtszeilen."""
+    geraet = wlan_adapter()
+    verbindung = "oh-ap-test"
+    subprocess.run(["nmcli", "con", "delete", verbindung], capture_output=True)
+    erg = subprocess.run(["nmcli", "dev", "wifi", "connect", ssid, "password", AP_PASSWORT,
+                          "ifname", geraet, "name", verbindung], capture_output=True, text=True, timeout=60)
+    if erg.returncode != 0:
+        return [f"FEHLER  AP '{ssid}': PC kann sich nicht verbinden ({(erg.stderr or erg.stdout).strip()[:80]})"]
+    zeilen = []
+    try:
+        time.sleep(3)
+        # 1. Captive-Portal wie Android/iOS
+        try:
+            status, ziel, text = http_ap("/generate_204", host="connectivitycheck.gstatic.com")
+            if status in (301, 302, 303, 307) and "/setup" in ziel:
+                zeilen.append(f"OK      AP: Handy-Pruefadresse fuehrt zur WLAN-Auswahl ({ziel})")
+            elif status in (301, 302, 303, 307):
+                zeilen.append(f"FEHLER  AP: Umleitung, aber nicht zur WLAN-Auswahl ({ziel})")
+            else:
+                setup = 'name="ssid"' in text.lower() or "wifi setup" in text.lower()
+                zeilen.append(("OK      AP: WLAN-Auswahl kommt direkt" if setup else
+                               f"FEHLER  AP: keine Umleitung zur WLAN-Auswahl (HTTP {status})"))
+        except OSError as e:
+            zeilen.append(f"FEHLER  AP: Captive-Portal-Pruefung ohne Antwort ({e})")
+        # 2. Dashboard direkt
+        try:
+            status, ziel, text = http_ap("/" + DASHBOARD_DATEI)
+            if status == 200 and "openandhome" in text.lower():
+                zeilen.append(f"OK      AP: http://{AP_IP}/{DASHBOARD_DATEI} erreichbar")
+            else:
+                zeilen.append(f"FEHLER  AP: http://{AP_IP}/{DASHBOARD_DATEI} liefert HTTP {status} {ziel}")
+        except OSError as e:
+            zeilen.append(f"FEHLER  AP: http://{AP_IP}/{DASHBOARD_DATEI} nicht erreichbar ({e})")
+    finally:
+        subprocess.run(["nmcli", "con", "delete", verbindung], capture_output=True)
+    return zeilen
+
+
+def ap_seiten_handy(ssid):
+    """Ohne WLAN-Adapter am PC: Pruefung mit dem Handy, Ergebnis abfragen."""
+    print(f"\n  Bitte mit dem Handy pruefen: WLAN '{ssid or AUSLIEFERUNG_NAME + '...'}' verbinden "
+          f"(Passwort {AP_PASSWORT}).")
+    zeilen = []
+    if ja("  Oeffnet sich die WLAN-Auswahl der Box von selbst?"):
+        zeilen.append("OK      AP: WLAN-Auswahl oeffnet sich am Handy (manuell bestaetigt)")
+    else:
+        zeilen.append("FEHLER  AP: WLAN-Auswahl oeffnet sich am Handy nicht (manuell)")
+    if ja(f"  Zeigt http://{AP_IP}/{DASHBOARD_DATEI} am Handy die Messwerte?"):
+        zeilen.append(f"OK      AP: http://{AP_IP}/{DASHBOARD_DATEI} erreichbar (manuell bestaetigt)")
+    else:
+        zeilen.append(f"FEHLER  AP: http://{AP_IP}/{DASHBOARD_DATEI} nicht erreichbar (manuell)")
+    return zeilen
 
 
 def kundenpaket(args):
@@ -723,7 +989,7 @@ def main():
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--host", help="IP der Box (Standard: per USB gelesen)")
     parser.add_argument("--ohne-flash", action="store_true", help="aufsetzen ohne Sicherung/Flashen")
-    parser.add_argument("--zabbix", metavar="SERVER", help="aufsetzen (Professional): Zabbix-Controller mit diesem Server einschalten")
+    parser.add_argument("--zabbix", metavar="SERVER", help="aufsetzen (Typ 2026): Zabbix-Controller mit diesem Server einschalten")
     parser.add_argument("--am2320", action="store_true",
                         help="aufsetzen: AM2320-Variante erzwingen; kundenpaket: AM2320-Teil des Manifests erzeugen")
     parser.add_argument("--wlan-datei", help="Datei mit SSID (Zeile 1) und Key (Zeile 2), Standard ~/.config/openandhome/wlan.txt falls vorhanden")

@@ -1,0 +1,26 @@
+openandhome-Server - Funktionstest
+==================================
+Ergebnis:   {{ 'BESTANDEN' if server_test_bestanden else 'NICHT BESTANDEN' }}
+Start:      {{ server_test_start }}
+Ende:       {{ now(fmt='%Y-%m-%d %H:%M:%S') }}
+Server:     {{ oh_hostname }}, IP {{ ansible_facts['default_ipv4']['address'] }}, MAC {{ ansible_facts['default_ipv4']['macaddress'] }}
+Geraet:     {{ server_test_modell.stdout | default('?') }}, {{ (ansible_facts['memtotal_mb'] / 1024) | round(1) }} GB RAM
+Werkstatt:  {{ lookup('env', 'USER') }}@{{ lookup('pipe', 'hostname') }}
+
+Image
+-----
+{{ (server_test_build.content | default('') | b64decode) or 'openandhome-build.txt fehlt' }}
+
+Paketversionen
+--------------
+{{ server_test_pakete.stdout | default('?') }}
+
+Pruefungen (Plan plans/server-ansible.md, Abschnitt 5)
+------------------------------------------------------
+{% for e in server_test_ergebnisse %}
+{{ '%-4s' | format(e.nr) }} {{ 'OK     ' if e.ok else ('--     ' if e.ok is none else ('FEHLER ' if e.pflicht else 'HINWEIS')) }} {{ '(Pflicht) ' if e.pflicht else '' }}{{ e.titel }}
+     {{ e.info }}
+{% endfor %}
+
+Legende: OK = bestanden, FEHLER = Pflichtpruefung nicht bestanden, HINWEIS = keine Pflicht, -- = uebersprungen.
+Freigabe nach master nur, wenn alle Pflichtpruefungen bestanden sind.

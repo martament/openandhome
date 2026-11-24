@@ -1,0 +1,106 @@
+---
+# Schreibt das angepasste Image auf eine SD-Karte. Mehrere Schutzpruefungen,
+# weil dd das Ziel vollstaendig ueberschreibt. Nur dd/umount/cmp laufen mit sudo.
+
+- name: Geraetename pruefen
+  ansible.builtin.assert:
+    that:
+      - sd_device is match('^/dev/(sd[a-z]+|mmcblk[0-9]+)$')
+    fail_msg: "sd_device muss ein ganzes Geraet sein, z. B. /dev/sdb oder /dev/mmcblk0 (keine Partition)."
+    quiet: true
+
+- name: Image vorhanden
+  ansible.builtin.stat:
+    path: "{{ image_customize_image }}"
+  register: sd_write_image
+
+- name: Geraet lesen
+  ansible.builtin.command: >-
+    lsblk -J -b -o NAME,PATH,SIZE,RM,HOTPLUG,TRAN,MODEL,TYPE,MOUNTPOINTS {{ sd_device | quote }}
+  register: sd_write_lsblk
+  changed_when: false
+  check_mode: false
+
+- name: Geraetedaten setzen
+  ansible.builtin.set_fact:
+    sd_write_disk: "{{ (sd_write_lsblk.stdout | from_json).blockdevices[0] }}"
+    sd_write_mounts: >-
+      {{ ((sd_write_lsblk.stdout | from_json).blockdevices[0].children | default([]))
+         | map(attribute='mountpoints') | flatten | select | list
+         + ((sd_write_lsblk.stdout | from_json).blockdevices[0].mountpoints | select | list) }}
+    # Nur tatsaechlich eingehaengte Partitionen (umount-Meldungen sind sprachabhaengig)
+    sd_write_partitions: >-
+      {{ ((sd_write_lsblk.stdout | from_json).blockdevices[0].children | default([]))
+         | selectattr('mountpoints', 'ne', [none]) | selectattr('mountpoints', 'ne', [])
+         | map(attribute='path') | list }}
+
+- name: Geraet ist eine wechselbare Karte, kein Systemlaufwerk
+  ansible.builtin.assert:
+    that:
+      - sd_write_image.stat.exists
+      - sd_write_disk.type == 'disk'
+      - sd_write_disk.rm | bool or sd_write_disk.hotplug | bool or sd_write_disk.tran in ['usb', 'mmc']
+      - sd_write_disk.tran != 'nvme'
+      - (sd_write_disk.size | int) <= sd_write_max_size_gb * 1e9
+      - (sd_write_disk.size | int) >= sd_write_image.stat.size
+      - sd_write_mounts | select('match', '^(/|/boot.*|/home.*|/usr.*|/var.*|/opt.*|\[SWAP\])$') | list | length == 0
+    fail_msg: >-
+      {{ sd_device }} ({{ sd_write_disk.model | default('?') }}, {{ (sd_write_disk.size | int / 1e9) | round(1) }} GB,
+      Anschluss {{ sd_write_disk.tran | default('?') }}) wird nicht beschrieben: kein Image, kein wechselbares Geraet,
+      zu gross/zu klein oder als Systemlaufwerk eingehaengt ({{ sd_write_mounts | join(', ') }}).
+    quiet: true
+
+- name: Rueckfrage
+  ansible.builtin.pause:
+    prompt: |
+      ACHTUNG: {{ sd_device }} wird vollstaendig ueberschrieben.
+        Modell:      {{ sd_write_disk.model | default('?') }}
+        Groesse:     {{ (sd_write_disk.size | int / 1e9) | round(1) }} GB
+        Eingehaengt: {{ sd_write_mounts | join(', ') if sd_write_mounts else '-' }}
+        Image:       {{ image_customize_image | basename }}
+      Zum Bestaetigen den Geraetenamen eintippen ({{ sd_device }})
+  register: sd_write_answer
+  when: sd_write_confirm != sd_device
+
+- name: Bestaetigung pruefen
+  ansible.builtin.assert:
+    that:
+      - sd_write_confirm == sd_device or (sd_write_answer.user_input | default('') | trim) == sd_device
+    fail_msg: "Nicht bestaetigt - nichts geschrieben."
+    quiet: true
+
+- name: Mit sudo schreiben
+  become: true
+  block:
+    - name: Partitionen aushaengen
+      ansible.builtin.command: "umount {{ item | quote }}"
+      loop: "{{ sd_write_partitions }}"
+      changed_when: true
+
+    - name: Image schreiben (dauert einige Minuten)
+      ansible.builtin.command: >-
+        dd if={{ image_customize_image | quote }} of={{ sd_device | quote }} bs=4M conv=fsync status=none
+      changed_when: true
+
+    - name: Karte gegen das Image vergleichen
+      ansible.builtin.command: >-
+        cmp -n {{ sd_write_image.stat.size }} {{ image_customize_image | quote }} {{ sd_device | quote }}
+      changed_when: false
+      when: sd_write_verify | bool
+
+    - name: Partitionstabelle neu einlesen
+      ansible.builtin.command: "blockdev --rereadpt {{ sd_device | quote }}"
+      changed_when: false
+      failed_when: false
+
+# Neuer Server = neue Host-Keys unter demselben Namen
+- name: Alte Host-Keys des Servers vergessen
+  ansible.builtin.command: "ssh-keygen -R {{ item | quote }} -f {{ oh_known_hosts | quote }}"
+  loop:
+    - "{{ oh_hostname }}"
+    - "{{ oh_hostname }}.local"
+    - "{{ oh_server_address | default('') }}"
+  when: item | length > 0
+  register: sd_write_known_hosts
+  changed_when: "'updated' in sd_write_known_hosts.stdout"
+  failed_when: false

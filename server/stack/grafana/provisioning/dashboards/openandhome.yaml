@@ -1,0 +1,12 @@
+# openandhome: Dashboards aus Dateien. Editoren duerfen sie in der Oberflaeche aendern
+# (allowUiUpdates); geaenderte Dateien ueberschreiben das beim naechsten Einlesen.
+apiVersion: 1
+providers:
+  - name: openandhome
+    folder: openandhome
+    folderUid: openandhome
+    type: file
+    allowUiUpdates: true
+    disableDeletion: true
+    options:
+      path: /etc/grafana/dashboards/openandhome
