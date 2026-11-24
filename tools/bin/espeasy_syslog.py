@@ -19,6 +19,7 @@ import http.cookiejar
 import re
 import socket
 import sys
+import time
 import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
@@ -88,13 +89,24 @@ class Box:
             handler += [urllib.request.HTTPDigestAuthHandler(zugang), urllib.request.HTTPBasicAuthHandler(zugang)]
         self.oeffner = urllib.request.build_opener(*handler)
 
-    def get(self, pfad):
-        try:
-            with self.oeffner.open(self.basis + pfad, timeout=15) as antwort:
-                return antwort.read().decode("utf-8", "replace")
-        except http.client.BadStatusLine:
-            # ESPEasy liefert .esp-Seiten ohne HTTP-Header (nur Body) -> roh lesen
-            return self._get_roh(pfad)
+    def get(self, pfad, versuche=4):
+        # ESP32 (mega-20261119) bricht grosse Seiten wie /config gelegentlich mitten im
+        # Chunked-Transfer ab (IncompleteRead), v. a. kurz nach ClearAccessBlock/Neustart.
+        # Dann neu laden - nie eine halbe Seite zurueckgeben: Formulare werden komplett
+        # zurueckgeschickt, fehlende Felder wuerden Einstellungen loeschen.
+        for versuch in range(1, versuche + 1):
+            try:
+                with self.oeffner.open(self.basis + pfad, timeout=15) as antwort:
+                    return antwort.read().decode("utf-8", "replace")
+            except http.client.BadStatusLine:
+                # ESPEasy liefert .esp-Seiten ohne HTTP-Header (nur Body) -> roh lesen
+                return self._get_roh(pfad)
+            except (http.client.IncompleteRead, ConnectionResetError) as fehler:
+                if versuch == versuche:
+                    raise
+                print(f"  {pfad}: Antwort abgebrochen ({type(fehler).__name__}), "
+                      f"neuer Versuch {versuch + 1}/{versuche} ...")
+                time.sleep(2 * versuch)
 
     def _get_roh(self, pfad):
         host = urllib.parse.urlsplit(self.basis).netloc
