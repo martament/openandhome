@@ -430,14 +430,9 @@ def chip_info(port):
 def lade_hoch(box, pfad, name=None):
     with open(pfad, "rb") as f:
         daten = f.read()
-    grenze = uuid.uuid4().hex
-    body = (f"--{grenze}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{name or os.path.basename(pfad)}\"\r\n"
-            "Content-Type: application/octet-stream\r\n\r\n").encode() + daten + f"\r\n--{grenze}--\r\n".encode()
-    req = urllib.request.Request(
-        box.basis + "/upload", data=body, headers={"Content-Type": f"multipart/form-data; boundary={grenze}"})
-    with box.oeffner.open(req, timeout=30) as antwort:
-        if antwort.status != 200:
-            sys.exit(f"FEHLER: Upload {pfad} -> HTTP {antwort.status}")
+    status = box.post_datei("/upload", name or os.path.basename(pfad), daten)
+    if status != 200:
+        sys.exit(f"FEHLER: Upload {pfad} -> HTTP {status}")
 
 
 def aktive_messwerte(box, alle=False):

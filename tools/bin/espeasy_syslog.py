@@ -14,14 +14,17 @@ Beispiele:
 """
 
 import argparse
+import base64
 import http.client
 import http.cookiejar
 import re
 import socket
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from html.parser import HTMLParser
 
 # Admin-Zugang der Weboberflaeche ab Werk (Festlegung 20.11.2026: wie der AP-Schluessel).
@@ -83,11 +86,62 @@ class Box:
         self.basis = f"http://{host}"
         self.cookies = http.cookiejar.CookieJar()
         handler = [urllib.request.HTTPCookieProcessor(self.cookies)]
+        self.passwort, self.digest = passwort, None
         if passwort:
             zugang = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             zugang.add_password(None, self.basis, ADMIN_BENUTZER, passwort)
-            handler += [urllib.request.HTTPDigestAuthHandler(zugang), urllib.request.HTTPBasicAuthHandler(zugang)]
+            self.digest = urllib.request.HTTPDigestAuthHandler(zugang)
+            handler += [self.digest, urllib.request.HTTPBasicAuthHandler(zugang)]
         self.oeffner = urllib.request.build_opener(*handler)
+
+    def _vorab_auth(self, pfad, methode):
+        """Authorization-Header fuer eine Anfrage mit grossem Body vorab berechnen.
+
+        Bei einem POST antwortet ESPEasy sofort mit 401 und schliesst die Verbindung, waehrend
+        der Body noch gesendet wird -> 'Broken pipe' statt 401, urllib meldet sich nie an.
+        Deshalb erst ein GET ohne Anmeldung (liefert die Challenge), dann den Header selbst
+        bilden. Ohne Passwortschutz (200) -> None."""
+        try:
+            with urllib.request.urlopen(self.basis + pfad, timeout=15):
+                return None
+        except urllib.error.HTTPError as fehler:
+            if fehler.code != 401 or not self.passwort:
+                return None
+            challenge = fehler.headers.get("WWW-Authenticate", "")
+        art, _, rest = challenge.partition(" ")
+        if art.lower() == "digest" and self.digest:
+            chal = urllib.request.parse_keqv_list(urllib.request.parse_http_list(rest))
+            anfrage = urllib.request.Request(self.basis + pfad, method=methode)
+            auth = self.digest.get_authorization(anfrage, chal)
+            return f"Digest {auth}" if auth else None
+        if art.lower() == "basic":
+            return "Basic " + base64.b64encode(f"{ADMIN_BENUTZER}:{self.passwort}".encode()).decode()
+        return None
+
+    def post_datei(self, pfad, name, daten, versuche=4):
+        """Datei per multipart/form-data hochladen (Feld 'file', wie /upload). Wiederholt bei
+        abgerissener Verbindung (Netzwerk startet nach dem Speichern von Einstellungen neu)."""
+        grenze = uuid.uuid4().hex
+        body = (f"--{grenze}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{name}\"\r\n"
+                "Content-Type: application/octet-stream\r\n\r\n").encode() + daten + f"\r\n--{grenze}--\r\n".encode()
+        for versuch in range(1, versuche + 1):
+            kopf = {"Content-Type": f"multipart/form-data; boundary={grenze}"}
+            try:
+                auth = self._vorab_auth(pfad, "POST")
+                if auth:
+                    kopf["Authorization"] = auth
+                anfrage = urllib.request.Request(self.basis + pfad, data=body, headers=kopf, method="POST")
+                with self.oeffner.open(anfrage, timeout=30) as antwort:
+                    antwort.read()
+                    return antwort.status
+            except urllib.error.HTTPError:
+                raise
+            except (urllib.error.URLError, http.client.HTTPException, ConnectionError, TimeoutError) as fehler:
+                if versuch == versuche:
+                    raise
+                grund = getattr(fehler, "reason", fehler)
+                print(f"  Upload {name}: Verbindung abgebrochen ({grund}), neuer Versuch {versuch + 1}/{versuche} ...")
+                time.sleep(3 * versuch)
 
     def get(self, pfad, versuche=4):
         # ESP32 (mega-20261119) bricht grosse Seiten wie /config gelegentlich mitten im
